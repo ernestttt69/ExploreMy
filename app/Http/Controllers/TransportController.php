@@ -13,12 +13,18 @@ class TransportController extends Controller
     }
 
     /**
-     * Search Public Transport Routes using Google Directions API
+     * Search Public Transport Routes or Walking Directions using Google Directions API
      */
     public function search(Request $request)
     {
         $origin = trim($request->input('origin', ''));
         $destination = trim($request->input('destination', ''));
+        // Dynamic mode: defaults to 'transit' for step-by-step guidance, supports 'walking' for pedestrian directions
+        $mode = strtolower(trim($request->input('mode', 'transit')));
+        
+        if (!in_array($mode, ['transit', 'walking'])) {
+            $mode = 'transit';
+        }
 
         // Check if starting location or destination is missing
         if (empty($origin) && empty($destination)) {
@@ -40,17 +46,17 @@ class TransportController extends Controller
 
         // Check if inputs are too short to be valid locations
         if (strlen($origin) < 2 || strlen($destination) < 2) {
-            return view('transport', compact('origin', 'destination'))
+            return view('transport', compact('origin', 'destination', 'mode'))
                 ->with('error', 'Location unrecognized. Please enter valid location names.');
         }
 
         $apiKey = config('services.google.maps_api_key');
 
-        // Call Google Maps Directions API in TRANSIT mode
+        // Call Google Maps Directions API with the selected mode ('transit' or 'walking')
         $response = Http::get('https://maps.googleapis.com/maps/api/directions/json', [
             'origin' => $origin,
             'destination' => $destination,
-            'mode' => 'transit',
+            'mode' => $mode,
             'region' => 'my',
             'alternatives' => 'true',
             'key' => $apiKey,
@@ -59,8 +65,8 @@ class TransportController extends Controller
         $data = $response->json();
 
         if ($response->failed() || ($data['status'] ?? '') !== 'OK') {
-            $errorMessage = $data['error_message'] ?? 'Unable to find public transport route between these locations. Please check location names.';
-            return view('transport', compact('origin', 'destination'))->with('error', $errorMessage);
+            $errorMessage = $data['error_message'] ?? 'Unable to find route between these locations. Please check location names.';
+            return view('transport', compact('origin', 'destination', 'mode'))->with('error', $errorMessage);
         }
 
         $apiRoutes = $data['routes'] ?? [];
@@ -85,12 +91,14 @@ class TransportController extends Controller
                     $legsSummary[] = $lineName;
 
                     $steps[] = [
+                        'type' => 'transit',
                         'icon' => $icon,
                         'title' => "Board " . $lineName,
                         'instructions' => "Board at {$transitDetails['departure_stop']['name']} → Ride {$transitDetails['num_stops']} stops → Alight at {$transitDetails['arrival_stop']['name']}.",
                     ];
                 } elseif ($travelMode === 'WALKING') {
                     $steps[] = [
+                        'type' => 'walking',
                         'icon' => '🚶',
                         'title' => 'Walk',
                         'instructions' => $instructions . " ({$step['distance']['text']}, approx. {$step['duration']['text']})",
@@ -99,15 +107,40 @@ class TransportController extends Controller
             }
 
             $routes[] = [
+                'mode' => $mode,
                 'duration' => $leg['duration']['text'],
                 'distance' => $leg['distance']['text'],
-                'total_fare' => $totalFare ? number_format($totalFare, 2) : '3.50',
+                'total_fare' => ($mode === 'transit' && $totalFare) ? number_format($totalFare, 2) : ($mode === 'transit' ? '3.50' : 'Free'),
                 'legs_summary' => array_unique($legsSummary),
                 'steps' => $steps,
             ];
         }
 
-        return view('transport', compact('routes', 'origin', 'destination'));
+        return view('transport', compact('routes', 'origin', 'destination', 'mode'));
+    }
+
+    /**
+     * Dedicated API Endpoint for Pure Walking Directions (AJAX / Json responses)
+     */
+    public function walkingDirections(Request $request)
+    {
+        $origin = trim($request->input('origin', ''));
+        $destination = trim($request->input('destination', ''));
+        $apiKey = config('services.google.maps_api_key');
+
+        if (empty($origin) || empty($destination)) {
+            return response()->json(['status' => 'ERROR', 'message' => 'Origin and destination are required.'], 400);
+        }
+
+        $response = Http::get('https://maps.googleapis.com/maps/api/directions/json', [
+            'origin' => $origin,
+            'destination' => $destination,
+            'mode' => 'walking',
+            'region' => 'my',
+            'key' => $apiKey,
+        ]);
+
+        return response()->json($response->json());
     }
 
     /**

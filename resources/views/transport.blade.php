@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Public Transport Route Search - ExploreMy</title>
     <link rel="stylesheet" href="{{ asset('css/transport.css') }}">
+    <style>
+        /* Lightweight CSS styling for Mode Selector */
+        .mode-toggle-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .mode-btn-option {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #2d6a4f;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #2d6a4f;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .mode-btn-option input[type="radio"] {
+            display: none;
+        }
+        .mode-btn-option.active {
+            background: #2d6a4f;
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body>
 
@@ -48,12 +75,23 @@
 
     <!-- Section 1: Route Search Form & Nearby Search -->
     <div class="card-panel">
-        <h2 class="card-title">Search Public Transport Route</h2>
+        <h2 class="card-title">Search Transport & Walking Directions</h2>
         
         <div class="gmaps-card">
-            <form action="{{ route('transport.search') }}" method="POST" id="search-form">
-                @csrf
+            <form action="{{ route('transport.search') }}" method="GET" id="search-form">
                 
+                <!-- Travel Mode Selector Toggle (Transit vs Walking) -->
+                <div class="mode-toggle-group">
+                    <label class="mode-btn-option {{ ($mode ?? 'transit') === 'transit' ? 'active' : '' }}" onclick="selectMode(this)">
+                        <input type="radio" name="mode" value="transit" {{ ($mode ?? 'transit') === 'transit' ? 'checked' : '' }}>
+                        🚌 Step-by-Step Transit
+                    </label>
+                    <label class="mode-btn-option {{ ($mode ?? '') === 'walking' ? 'active' : '' }}" onclick="selectMode(this)">
+                        <input type="radio" name="mode" value="walking" {{ ($mode ?? '') === 'walking' ? 'checked' : '' }}>
+                        🚶 Walking Directions
+                    </label>
+                </div>
+
                 <!-- Starting Location -->
                 <div class="gmaps-field">
                     <span class="gmaps-dot start-dot"></span>
@@ -145,10 +183,13 @@
         </div>
     @endif
 
-    <!-- Section 4: Available Routes Results -->
+    <!-- Section 4: Available Routes / Directions Results -->
     @if(isset($routes) && count($routes) > 0)
         <div class="card-panel">
-            <h2 class="card-title">Available Routes ({{ count($routes) }} options found)</h2>
+            <h2 class="card-title">
+                {{ ($mode ?? 'transit') === 'walking' ? '🚶 Walking Routes' : '🚌 Public Transport Routes' }} 
+                ({{ count($routes) }} options found)
+            </h2>
 
             @foreach($routes as $index => $route)
                 <div class="station-item" style="margin-bottom: 16px;">
@@ -157,24 +198,28 @@
                             <strong style="color:#1b4332; font-size:16px;">Option {{ $index + 1 }}: {{ $route['duration'] }}</strong>
                             <span class="step-desc">({{ $route['distance'] }})</span>
                         </div>
-                        <span class="fare-tag">Total Fare: RM {{ $route['total_fare'] }}</span>
+                        <span class="fare-tag">
+                            {{ $route['mode'] === 'walking' ? 'Cost: Free 🚶' : 'Total Fare: RM ' . $route['total_fare'] }}
+                        </span>
                     </div>
 
-                    <!-- Transit Line Badges -->
-                    <div class="transport-modes">
-                        @foreach($route['legs_summary'] as $badge)
-                            <span class="mode-btn active">
-                                {{ $badge }}
-                            </span>
-                        @endforeach
-                    </div>
+                    <!-- Transit Line Badges (if Transit Mode) -->
+                    @if(!empty($route['legs_summary']))
+                        <div class="transport-modes">
+                            @foreach($route['legs_summary'] as $badge)
+                                <span class="mode-btn active">
+                                    {{ $badge }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
 
-                    <!-- Route Details Toggle -->
+                    <!-- Route Details Toggle Button -->
                     <button class="btn-toggle-route" onclick="showRouteDetails({{ $index }})">
-                        Select Route & View Step-by-Step Directions 👇
+                        {{ ($mode ?? 'transit') === 'walking' ? 'Select Route & View Walking Steps 👇' : 'Select Route & View Step-by-Step Directions 👇' }}
                     </button>
 
-                    <!-- Detailed Itinerary -->
+                    <!-- Detailed Itinerary Steps -->
                     <div id="route-details-{{ $index }}" class="timeline timeline-hidden">
                         @foreach($route['steps'] as $step)
                             <div class="timeline-step">
@@ -191,6 +236,13 @@
 </div>
 
 <script>
+function selectMode(element) {
+    document.querySelectorAll('.mode-btn-option').forEach(el => el.classList.remove('active'));
+    element.classList.add('active');
+    const radio = element.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+}
+
 function toggleServiceInfo() {
     const panel = document.getElementById('service-info-panel');
     const icon = document.getElementById('toggle-icon');
@@ -215,9 +267,16 @@ function findNearbyStations() {
     // Check if the starting location input is empty
     if (!originInput || originInput.value.trim() === '') {
         alert("Please enter a starting location before searching for nearby stations!");
-        originInput.focus();
-        return;
+        //ensure unput field become active
+        setTimeout(() => {
+            originInput.focus();
+            originInput.style.border = "2px solid #e63946";
+        }, 100);
+
+        return false; //stop execution completely
     }
+
+    originInput.style.border = ""; //reset input border styling if valid
 
     // Proceed to GPS/Geolocation if starting location is filled
     if (navigator.geolocation) {
