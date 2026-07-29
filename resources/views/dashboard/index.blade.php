@@ -13,21 +13,39 @@
 
 <div class="dashboard-page">
 	<div class="container content-area">
-		<div class="dashboard-card mb-4">
-			<div class="d-flex align-items-center gap-4">
-				<div class="profile-avatar-wrapper">
-					<img src="{{ Auth::user()->profile_picture }}" class="profile-avatar">
-				</div>
-				<div>
-					<h2 class="profile-name">
-						Welcome {{ Auth::user()->name }}
-					</h2>
-					<p class="text-muted mb-0">
-						{{ Auth::user()->email }}
+
+		<div class="row">
+
+			<div class="col-md-6">
+				<div class="dashboard-card">
+					<h3>Public Transportation</h3>
+
+					<p>
+						Explore MRT, LRT, bus and other transportation options.
 					</p>
+
+					<button class="btn btn-success">
+						View Transportation
+					</button>
 				</div>
 			</div>
+
+			<div class="col-md-6">
+				<div class="dashboard-card">
+					<h3>Start Your Plan Now</h3>
+
+					<p>
+						Create your travel plan and discover places around Malaysia.
+					</p>
+
+					<button class="btn btn-outline-success">
+						Start Planning
+					</button>
+				</div>
+			</div>
+
 		</div>
+
 	</div>
 </div>
 

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TravelPreferenceController;
 
 Route::get('/', function () {
 	return redirect('/login');
@@ -25,3 +27,18 @@ Route::post('/logout', function () {
 Route::get('/profile', function () {
 	return view('profile.index');
 })->middleware('auth');
+
+Route::get('/profile', function () {
+	return view('profile');
+})->middleware('auth');
+
+Route::post('/profile/update',[ProfileController::class,'update'])
+	->middleware('auth');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/travel-preferences', [TravelPreferenceController::class, 'edit'])
+        ->name('travel-preferences.edit');
+
+    Route::post('/travel-preferences', [TravelPreferenceController::class, 'update'])
+        ->name('travel-preferences.update');
+});
