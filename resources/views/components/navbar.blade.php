@@ -42,7 +42,7 @@
 					</a>
 				</li>
 				<li>
-					<a href="#" class="nav-link-custom">
+					<a href="/trips" class="nav-link-custom">
 						My Trips
 					</a>
 				</li>
