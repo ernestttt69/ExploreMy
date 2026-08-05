@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #eef6f3 0%, #e0f2fe 100%);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #2d3748;
+}
+
+/* Login Wrapper */
+.login-wrapper {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Login Card */
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 40px 30px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 20px 50px rgba(30, 60, 50, 0.12);
+    animation: fadeIn 0.6s ease;
+}
+
+/* Logo Section */
+.logo-container {
+    width: 150px;
+    height: 150px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #aed9cb;
+    box-shadow: 0 8px 24px rgba(45, 106, 79, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Brand Section */
+.brand-title {
+    margin-top: 12px;
+    color: #1b4332;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.brand-tagline {
+    color: #52796f;
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+/* Welcome Section */
+.welcome-title {
+    color: #1b4332;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.welcome-text {
+    color: #718096;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
+/* Google Button Wrapper */
+.g_id_signin {
+    display: inline-block;
+}
+
+/* Security Note */
+.security-note {
+    color: #718096;
+    font-size: 13px;
+}
+
+/* Keyframe Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 30px 20px;
+    }
+
+    .brand-title {
+        font-size: 28px;
+    }
+
+    .logo-container {
+        width: 80px;
+        height: 80px;
+    }
+}
