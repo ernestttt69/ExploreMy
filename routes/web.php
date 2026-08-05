@@ -21,7 +21,7 @@ Route::get('/transport/walking-directions', [TransportController::class, 'walkin
 Route::match(['get', 'post'], '/transport/nearby', [TransportController::class, 'nearbyStations'])->name('transport.nearby');
 
 // View Specific Station Details (AJAX Endpoint)
-Route::get('/transport/station/{placeId}', [TransportController::class, 'stationDetails'])->name('transport.station.details');
+Route::get('/transport/station/{placeId}', [TransportController::class, 'stationDetails'])->name('transport.station-details');
 
 // Check Transport Line Info
 Route::get('/transport/line-info', [TransportController::class, 'lineInfo'])->name('transport.line-info');

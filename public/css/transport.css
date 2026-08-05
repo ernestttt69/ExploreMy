@@ -439,3 +439,36 @@ body {
     object-fit: contain;
     border-radius: 6px;  
 }
+
+/* Transfer Station Badge Styling */
+.transfer-badge {
+    display: inline-block;
+    background-color: #ff9f1c;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.timeline-step.transfer-step {
+    border-left: 4px solid #ff9f1c !important;
+    background-color: #fff9f0;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+/* Individual Step Fare Tag */
+.step-fare-tag {
+    float: right;
+    font-size: 12px;
+    font-weight: bold;
+    color: #2d6a4f;
+    background: #e8f5e9;
+    padding: 2px 8px;
+    border-radius: 4px;
+}

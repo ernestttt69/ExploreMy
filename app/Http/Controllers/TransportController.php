@@ -19,40 +19,18 @@ class TransportController extends Controller
     {
         $origin = trim($request->input('origin', ''));
         $destination = trim($request->input('destination', ''));
-        // Dynamic mode: defaults to 'transit' for step-by-step guidance, supports 'walking' for pedestrian directions
         $mode = strtolower(trim($request->input('mode', 'transit')));
-        
+
         if (!in_array($mode, ['transit', 'walking'])) {
             $mode = 'transit';
         }
 
-        // Check if starting location or destination is missing
-        if (empty($origin) && empty($destination)) {
-            return redirect()->route('transport.index')
-                ->with('error', 'Please enter both a starting location and a destination.');
-        }
-
-        if (empty($origin)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Please enter a starting location.');
-        }
-
-        if (empty($destination)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Please enter a destination.');
-        }
-
-        // Check if inputs are too short to be valid locations
-        if (strlen($origin) < 2 || strlen($destination) < 2) {
-            return view('transport', compact('origin', 'destination', 'mode'))
-                ->with('error', 'Location unrecognized. Please enter valid location names.');
+        if (empty($origin) || empty($destination)) {
+            return redirect()->back()->withInput()->with('error', 'Please enter both origin and destination.');
         }
 
         $apiKey = config('services.google.maps_api_key');
 
-        // Call Google Maps Directions API with the selected mode ('transit' or 'walking')
         $response = Http::get('https://maps.googleapis.com/maps/api/directions/json', [
             'origin' => $origin,
             'destination' => $destination,
@@ -65,7 +43,7 @@ class TransportController extends Controller
         $data = $response->json();
 
         if ($response->failed() || ($data['status'] ?? '') !== 'OK') {
-            $errorMessage = $data['error_message'] ?? 'Unable to find route between these locations. Please check location names.';
+            $errorMessage = $data['error_message'] ?? 'Unable to find route between these locations.';
             return view('transport', compact('origin', 'destination', 'mode'))->with('error', $errorMessage);
         }
 
@@ -76,51 +54,92 @@ class TransportController extends Controller
             $leg = $route['legs'][0];
             $steps = [];
             $legsSummary = [];
-            $totalFare = $route['fare']['value'] ?? null;
+            $totalCalculatedFare = 0.0;
+        
+        $transitStepCount = 0;
+        $previousTransitLine = null;
 
-            foreach ($leg['steps'] as $step) {
-                $travelMode = $step['travel_mode'];
-                $instructions = strip_tags($step['html_instructions']);
+        foreach ($leg['steps'] as $index => $step) {
+            $travelMode = $step['travel_mode'];
+            $instructions = strip_tags($step['html_instructions']);
+            $distanceText = $step['distance']['text'] ?? '0 km';
+            $distanceMeters = $step['distance']['value'] ?? 0;
 
-                if ($travelMode === 'TRANSIT') {
-                    $transitDetails = $step['transit_details'];
-                    $lineName = $transitDetails['line']['short_name'] ?? $transitDetails['line']['name'] ?? 'Transit Line';
-                    $vehicleType = strtolower($transitDetails['line']['vehicle']['type'] ?? '');
+            if ($travelMode === 'TRANSIT') {
+                $transitStepCount++;
+                $transitDetails = $step['transit_details'];
+                $lineName = $transitDetails['line']['short_name'] ?? $transitDetails['line']['name'] ?? 'Transit Line';
+                $vehicleType = strtolower($transitDetails['line']['vehicle']['type'] ?? '');
+                $isBus = str_contains($vehicleType, 'bus');
+                $icon = $isBus ? '🚌' : '🚆';
 
-                    $icon = str_contains($vehicleType, 'bus') ? '🚌' : '🚆';
-                    $legsSummary[] = $lineName;
+                $legsSummary[] = $lineName;
 
-                    $steps[] = [
-                        'type' => 'transit',
-                        'icon' => $icon,
-                        'title' => "Board " . $lineName,
-                        'instructions' => "Board at {$transitDetails['departure_stop']['name']} → Ride {$transitDetails['num_stops']} stops → Alight at {$transitDetails['arrival_stop']['name']}.",
-                    ];
-                } elseif ($travelMode === 'WALKING') {
-                    $steps[] = [
-                        'type' => 'walking',
-                        'icon' => '🚶',
-                        'title' => 'Walk',
-                        'instructions' => $instructions . " ({$step['distance']['text']}, approx. {$step['duration']['text']})",
-                    ];
+                // Detect if this step is a Transfer Station
+                $isTransfer = ($previousTransitLine !== null && $previousTransitLine !== $lineName);
+                $previousTransitLine = $lineName;
+
+                // Estimate segment fare (MYR) based on vehicle type and distance
+                if ($isBus) {
+                    // Standard RapidKL Bus Flat/Tier Fare Estimate
+                    $segmentFare = ($distanceMeters > 10000) ? 2.50 : 1.00;
+                } else {
+                    // Rail Fare Tier Estimate (LRT/MRT/Monorail)
+                    $km = $distanceMeters / 1000;
+                    if ($km <= 4) $segmentFare = 1.30;
+                    elseif ($km <= 9) $segmentFare = 2.10;
+                    elseif ($km <= 15) $segmentFare = 3.20;
+                    else $segmentFare = 4.50;
                 }
-            }
 
-            $routes[] = [
-                'mode' => $mode,
-                'duration' => $leg['duration']['text'],
-                'distance' => $leg['distance']['text'],
-                'total_fare' => ($mode === 'transit' && $totalFare) ? number_format($totalFare, 2) : ($mode === 'transit' ? '3.50' : 'Free'),
-                'legs_summary' => array_unique($legsSummary),
-                'steps' => $steps,
-            ];
+                $totalCalculatedFare += $segmentFare;
+
+                $steps[] = [
+                    'type' => 'transit',
+                    'icon' => $icon,
+                    'is_transfer' => $isTransfer,
+                    'line_name' => $lineName,
+                    'vehicle_type' => $isBus ? 'Bus' : 'Train',
+                    'title' => "Board " . $lineName,
+                    'dep_station' => $transitDetails['departure_stop']['name'] ?? 'Departure Station',
+                    'arr_station' => $transitDetails['arrival_stop']['name'] ?? 'Arrival Station',
+                    'num_stops' => $transitDetails['num_stops'] ?? 0,
+                    'instructions' => "Board at {$transitDetails['departure_stop']['name']} → Ride {$transitDetails['num_stops']} stops → Alight at {$transitDetails['arrival_stop']['name']}.",
+                    'distance' => $distanceText,
+                    'fare' => number_format($segmentFare, 2),
+                ];
+            } elseif ($travelMode === 'WALKING') {
+                $steps[] = [
+                    'type' => 'walking',
+                    'icon' => '🚶',
+                    'is_transfer' => false,
+                    'title' => 'Walk',
+                    'instructions' => $instructions . " ({$distanceText}, approx. {$step['duration']['text']})",
+                    'distance' => $distanceText,
+                    'fare' => '0.00',
+                ];
+            }
         }
 
-        return view('transport', compact('routes', 'origin', 'destination', 'mode'));
+        // Use Google API total fare if provided, otherwise sum individual segment fares
+        $apiFare = $route['fare']['value'] ?? null;
+        $finalTotalFare = ($mode === 'transit') ? ($apiFare ?? $totalCalculatedFare) : 0;
+
+        $routes[] = [
+            'mode' => $mode,
+            'duration' => $leg['duration']['text'],
+            'distance' => $leg['distance']['text'],
+            'total_fare' => ($mode === 'transit') ? number_format($finalTotalFare, 2) : 'Free',
+            'legs_summary' => array_unique($legsSummary),
+            'steps' => $steps,
+        ];
     }
 
+    return view('transport', compact('routes', 'origin', 'destination', 'mode'));
+}
+
     /**
-     * Dedicated API Endpoint for Pure Walking Directions (AJAX / Json responses)
+     * Dedicated API Endpoint for Pure Walking Directions
      */
     public function walkingDirections(Request $request)
     {
@@ -153,13 +172,12 @@ class TransportController extends Controller
         $manualLocation = trim($request->input('manual_location', ''));
         $apiKey = config('services.google.maps_api_key');
 
-        // Check if neither GPS coordinates nor a manual starting location was provided
         if ((!$lat || !$lng) && empty($manualLocation)) {
             return redirect()->route('transport.index')
                 ->with('error', 'Please enter a starting location to find nearby stations.');
         }
 
-        // Convert manual address input into coordinates if GPS is unavailable
+
         if ((!$lat || !$lng) && !empty($manualLocation)) {
             $geoRes = Http::get('https://maps.googleapis.com/maps/api/geocode/json', [
                 'address' => $manualLocation,
@@ -171,7 +189,8 @@ class TransportController extends Controller
                 $lat = $locationData['lat'];
                 $lng = $locationData['lng'];
             } else {
-                return redirect()->route('transport.index')
+                $origin = $manualLocation;
+                return view('transport', compact('origin'))
                     ->with('error', 'Could not resolve starting location. Please enter a valid address.');
             }
         }
@@ -196,9 +215,10 @@ class TransportController extends Controller
         ]);
 
         $places = $response->json()['places'] ?? [];
+        $origin = $manualLocation;
 
         if (empty($places)) {
-            return redirect()->route('transport.index')->with('info', 'No public transport stations found near this location.');
+            return view('transport', compact('origin'))->with('info', 'No public transport stations found near this location.');
         }
 
         $nearbyStations = [];
@@ -217,8 +237,6 @@ class TransportController extends Controller
                 'rating' => $place['rating'] ?? 'N/A',
             ];
         }
-
-        $origin = $manualLocation;
 
         return view('transport', compact('nearbyStations', 'origin'));
     }

@@ -6,7 +6,6 @@
     <title>Public Transport Route Search - ExploreMy</title>
     <link rel="stylesheet" href="{{ asset('css/transport.css') }}">
     <style>
-        /* Lightweight CSS styling for Mode Selector */
         .mode-toggle-group {
             display: flex;
             gap: 10px;
@@ -59,9 +58,9 @@
         </div>
     @endif
 
-    @if(session('info'))
+    @if(session('info') || isset($info))
         <div class="alert alert-info">
-            ℹ️ {{ session('info') }}
+            ℹ️ {{ session('info') ?? $info }}
         </div>
     @endif
 
@@ -80,7 +79,7 @@
         <div class="gmaps-card">
             <form action="{{ route('transport.search') }}" method="GET" id="search-form">
                 
-                <!-- Travel Mode Selector Toggle (Transit vs Walking) -->
+                <!-- Travel Mode Selector Toggle -->
                 <div class="mode-toggle-group">
                     <label class="mode-btn-option {{ ($mode ?? 'transit') === 'transit' ? 'active' : '' }}" onclick="selectMode(this)">
                         <input type="radio" name="mode" value="transit" {{ ($mode ?? 'transit') === 'transit' ? 'checked' : '' }}>
@@ -183,55 +182,72 @@
         </div>
     @endif
 
-    <!-- Section 4: Available Routes / Directions Results -->
-    @if(isset($routes) && count($routes) > 0)
-        <div class="card-panel">
-            <h2 class="card-title">
-                {{ ($mode ?? 'transit') === 'walking' ? '🚶 Walking Routes' : '🚌 Public Transport Routes' }} 
-                ({{ count($routes) }} options found)
-            </h2>
+<!-- Section 4: Route Results -->
+@if(isset($routes) && count($routes) > 0)
+    <div class="card-panel">
+        <h2 class="card-title">
+            {{ ($mode ?? 'transit') === 'walking' ? '🚶 Walking Routes' : '🚌 Public Transport Routes' }} 
+            ({{ count($routes) }} options found)
+        </h2>
 
-            @foreach($routes as $index => $route)
-                <div class="station-item" style="margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong style="color:#1b4332; font-size:16px;">Option {{ $index + 1 }}: {{ $route['duration'] }}</strong>
-                            <span class="step-desc">({{ $route['distance'] }})</span>
-                        </div>
-                        <span class="fare-tag">
-                            {{ $route['mode'] === 'walking' ? 'Cost: Free 🚶' : 'Total Fare: RM ' . $route['total_fare'] }}
-                        </span>
+        @foreach($routes as $index => $route)
+            <div class="station-item" style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color:#1b4332; font-size:16px;">Option {{ $index + 1 }}: {{ $route['duration'] }}</strong>
+                        <span class="step-desc">({{ $route['distance'] }})</span>
                     </div>
+                    <span class="fare-tag">
+                        {{ $route['mode'] === 'walking' ? 'Cost: Free 🚶' : 'Total Fare: RM ' . $route['total_fare'] }}
+                    </span>
+                </div>
 
-                    <!-- Transit Line Badges (if Transit Mode) -->
-                    @if(!empty($route['legs_summary']))
-                        <div class="transport-modes">
-                            @foreach($route['legs_summary'] as $badge)
-                                <span class="mode-btn active">
-                                    {{ $badge }}
-                                </span>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    <!-- Route Details Toggle Button -->
-                    <button class="btn-toggle-route" onclick="showRouteDetails({{ $index }})">
-                        {{ ($mode ?? 'transit') === 'walking' ? 'Select Route & View Walking Steps 👇' : 'Select Route & View Step-by-Step Directions 👇' }}
-                    </button>
-
-                    <!-- Detailed Itinerary Steps -->
-                    <div id="route-details-{{ $index }}" class="timeline timeline-hidden">
-                        @foreach($route['steps'] as $step)
-                            <div class="timeline-step">
-                                <div class="step-title">{{ $step['icon'] }} {{ $step['title'] }}</div>
-                                <div class="step-desc">{{ $step['instructions'] }}</div>
-                            </div>
+                @if(!empty($route['legs_summary']))
+                    <div class="transport-modes" style="margin-top: 8px;">
+                        @foreach($route['legs_summary'] as $badge)
+                            <span class="mode-btn active">{{ $badge }}</span>
                         @endforeach
                     </div>
+                @endif
+
+                <button class="btn-toggle-route" onclick="showRouteDetails({{ $index }})" style="margin-top: 10px;">
+                    Select Route & View Step-by-Step Directions 👇
+                </button>
+
+                <div id="route-details-{{ $index }}" class="timeline timeline-hidden" style="margin-top: 12px;">
+                    @foreach($route['steps'] as $step)
+                        <div class="timeline-step {{ !empty($step['is_transfer']) ? 'transfer-step' : '' }}">
+                            <div class="step-title">
+                                {{ $step['icon'] }} {{ $step['title'] }}
+                                
+                                <!-- 1. HIGHLIGHT TRANSFER STATION -->
+                                @if(!empty($step['is_transfer']))
+                                    <span class="transfer-badge">🔄 Transfer Station</span>
+                                @endif
+
+                                <!-- 2. SHOW SEGMENT/STATION FARE -->
+                                <span class="step-fare-tag">
+                                    {{ $step['type'] === 'walking' ? 'Free' : 'Fare: RM ' . $step['fare'] }}
+                                </span>
+                            </div>
+
+                            <div class="step-desc" style="margin-top: 4px;">
+                                {{ $step['instructions'] }}
+                            </div>
+
+                            @if($step['type'] === 'transit')
+                                <div style="font-size: 12px; color: #555; margin-top: 4px;">
+                                    📍 <strong>Board:</strong> {{ $step['dep_station'] }} <br>
+                                    🏁 <strong>Alight:</strong> {{ $step['arr_station'] }} ({{ $step['num_stops'] }} stops, {{ $step['distance'] }})
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
-    @endif
+            </div>
+        @endforeach
+    </div>
+@endif
 
 </div>
 
@@ -260,40 +276,34 @@ function showRouteDetails(index) {
     detailPanel.classList.toggle('timeline-hidden');
 }
 
-// Find Nearby Stations (Enforces Starting Location)
 function findNearbyStations() {
     const originInput = document.getElementById('origin-input');
     
-    // Check if the starting location input is empty
     if (!originInput || originInput.value.trim() === '') {
         alert("Please enter a starting location before searching for nearby stations!");
-        //ensure unput field become active
         setTimeout(() => {
             originInput.focus();
             originInput.style.border = "2px solid #e63946";
         }, 100);
-
-        return false; //stop execution completely
+        return false;
     }
 
-    originInput.style.border = ""; //reset input border styling if valid
+    originInput.style.border = "";
 
-    // Proceed to GPS/Geolocation if starting location is filled
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 document.getElementById('latInput').value = position.coords.latitude;
                 document.getElementById('lngInput').value = position.coords.longitude;
+                document.getElementById('manualLocationInput').value = originInput.value.trim();
                 document.getElementById('nearbyForm').submit();
             },
             (error) => {
-                // If location permission is denied, use the starting location input as fallback
                 document.getElementById('manualLocationInput').value = originInput.value.trim();
                 document.getElementById('nearbyForm').submit();
             }
         );
     } else {
-        // Fallback for unsupported browsers
         document.getElementById('manualLocationInput').value = originInput.value.trim();
         document.getElementById('nearbyForm').submit();
     }
@@ -309,19 +319,22 @@ function viewStationDetails(placeId) {
 }
 
 function initAutocomplete() {
+    const originInput = document.getElementById("origin-input");
+    const destinationInput = document.getElementById("destination-input");
+    
+    if (!originInput || !destinationInput) return;
+
     const options = {
         componentRestrictions: { country: "my" },
         fields: ["formatted_address", "geometry", "name"],
     };
 
-    const originInput = document.getElementById("origin-input");
-    const destinationInput = document.getElementById("destination-input");
-
-    if (originInput && destinationInput && typeof google !== 'undefined' && google.maps && google.maps.places) {
+    if (window.google && google.maps && google.maps.places) {
         new google.maps.places.Autocomplete(originInput, options);
         new google.maps.places.Autocomplete(destinationInput, options);
     }
 }
+
 </script>
 
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&libraries=places&callback=initAutocomplete" async defer></script>
