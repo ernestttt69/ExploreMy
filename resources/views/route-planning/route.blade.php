@@ -27,6 +27,28 @@
         </div>
     @endif
 
+    @if (session('shortestRoute'))
+        @php($shortestRoute = session('shortestRoute'))
+        <section class="route-result">
+            <div class="card-heading">
+                <h2>Shortest Malaysian Route</h2>
+                <p>Exact route from Kuala Lumpur using straight-line distances</p>
+            </div>
+            <ol class="route-stops">
+                @foreach ($shortestRoute['stops'] as $stop)
+                    <li>
+                        <strong>{{ $stop['name'] }}</strong>
+                        <span>{{ $loop->first ? 'Starting point' : '+' . number_format($stop['distance_from_previous'], 2) . ' km' }}</span>
+                    </li>
+                @endforeach
+            </ol>
+            <div class="route-total">
+                Total shortest distance:
+                <strong>{{ number_format($shortestRoute['total_distance'], 2) }} km</strong>
+            </div>
+        </section>
+    @endif
+
     <form
         action="{{ route('route.preference') }}"
         method="POST"

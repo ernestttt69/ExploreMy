@@ -26,6 +26,45 @@
     color: #a52626;
 }
 
+.route-result {
+    margin-bottom: 18px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #b9d6ca;
+    border-radius: 16px;
+}
+
+.route-stops {
+    margin: 0;
+    padding: 16px 22px 8px 44px;
+}
+
+.route-stops li {
+    padding: 7px 0;
+    color: #2c4039;
+}
+
+.route-stops li span {
+    display: block;
+    margin-top: 2px;
+    color: #77817d;
+    font-size: 12px;
+}
+
+.route-total {
+    margin: 8px 22px 20px;
+    padding: 12px;
+    border-radius: 9px;
+    background: #e5f2ec;
+    color: #245943;
+}
+
+.route-total strong {
+    display: block;
+    margin-top: 3px;
+    font-size: 18px;
+}
+
 .preference-card {
     overflow: hidden;
     background: #ffffff;
