@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SavedPlaceController;
 use App\Http\Controllers\TravelPreferenceController;
 
 Route::get('/', function () {
@@ -36,6 +37,9 @@ Route::post('/profile/update',[ProfileController::class,'update'])
 	->middleware('auth');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/saved-places', [SavedPlaceController::class, 'index'])
+        ->name('saved-places.index');
+
     Route::get('/travel-preferences', [TravelPreferenceController::class, 'edit'])
         ->name('travel-preferences.edit');
 

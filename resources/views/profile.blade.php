@@ -97,6 +97,17 @@
 					</a>
 
 				</div>
+
+				<!-- Saved Place -->
+				<div class="profile-box">
+					<h4 class="section-title">
+						Saved Place
+					</h4>
+
+					<a href="{{ route('saved-places.index') }}" class="btn btn-profile-secondary">
+						♡ View Saved Places
+					</a>
+				</div>
 			</form>
 		</div>
 	</div>

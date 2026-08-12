@@ -1,0 +1,59 @@
+.saved-places-page {
+    padding-top: 165px;
+    padding-bottom: 60px;
+}
+
+.saved-places-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.page-kicker { color: #40916c; font-size: 13px; font-weight: 700; letter-spacing: .08em; margin-bottom: 5px; text-transform: uppercase; }
+.saved-places-heading h1 { color: #1b4332; font-size: 34px; font-weight: 800; margin-bottom: 7px; }
+.page-description { color: #64748b; margin: 0; }
+
+.btn-back {
+    background: #fff;
+    border: 2px solid #1b4332;
+    border-radius: 12px;
+    color: #1b4332;
+    flex-shrink: 0;
+    font-weight: 600;
+    padding: 9px 16px;
+    text-decoration: none;
+}
+
+.btn-back:hover { background: #1b4332; color: #fff; }
+
+.place-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(27, 67, 50, .08);
+    height: 100%;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.place-card:hover { box-shadow: 0 14px 30px rgba(27, 67, 50, .14); transform: translateY(-4px); }
+.place-image { height: 210px; object-fit: cover; width: 100%; }
+.place-content { padding: 22px; }
+.place-card-top { align-items: center; display: flex; justify-content: space-between; margin-bottom: 12px; }
+.place-category { background: #d8f3dc; border-radius: 20px; color: #1b4332; font-size: 12px; font-weight: 700; padding: 5px 10px; }
+.saved-heart { color: #e11d48; font-size: 22px; }
+.place-content h2 { color: #1e293b; font-size: 20px; font-weight: 700; margin-bottom: 7px; }
+.place-location { color: #40916c; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.place-description { color: #64748b; font-size: 14px; line-height: 1.65; margin: 0; }
+
+.empty-state { background: #fff; border: 1px dashed #94a3b8; border-radius: 20px; padding: 60px 20px; text-align: center; }
+.empty-heart { color: #40916c; font-size: 50px; }
+.empty-state h2 { color: #1b4332; font-size: 22px; font-weight: 700; }
+.empty-state p { color: #64748b; margin-bottom: 0; }
+
+@media (max-width: 768px) {
+    .saved-places-page { padding-top: 190px; }
+    .saved-places-heading { align-items: flex-start; flex-direction: column; }
+}
