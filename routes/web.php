@@ -3,11 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RecommendationController;
 
-
-Route::get('/', function () {
-	return redirect('/login');
-});
+// Set default homepage '/' AND '/recommendations' to public view
+Route::get('/', [RecommendationController::class, 'index'])->name('recommendations.index');
+Route::get('/recommendations', [RecommendationController::class, 'index']);
+Route::get('/attractions/{id}', [RecommendationController::class, 'show'])->name('attractions.show');
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 

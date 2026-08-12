@@ -1,28 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+:root {
+    --brand-dark-green: #1c4434;
+    --brand-dark-hover: #122d22;
+    --brand-light-bg: #f4f8f6;
+    --brand-pill-bg: #e8f3ee;
+    --brand-text-muted: #5e7166;
+    --brand-card-border: #e3ebe6;
+    --brand-pill-border: #d4e3dc;
+    --brand-card-bg: #ffffff;
 }
 
 body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #f4f8f6;
+    background-color: var(--brand-light-bg);
+    color: #2b3a32;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    color: #2d3748;
 }
 
-/* Header & Navigation */
+/* Header & Top Bar */
 .header-wrapper {
-    background: #ffffff;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--brand-card-border);
 }
 
 .top-header-bar {
-    padding: 16px 0;
+    padding: 14px 0;
 }
 
 .nav-brand-container {
@@ -32,8 +34,8 @@ body {
 }
 
 .nav-logo-badge {
-    width: 50px;
-    height: 50px;
+    width: 48px;
+    height: 48px;
     border-radius: 12px;
     overflow: hidden;
     background: #aed9cb;
@@ -48,7 +50,7 @@ body {
 .nav-brand-title {
     font-size: 22px;
     font-weight: 800;
-    color: #1b4332;
+    color: var(--brand-dark-green);
     text-decoration: none;
 }
 
@@ -66,37 +68,38 @@ body {
 
 .nav-link-custom {
     text-decoration: none;
-    color: #52796f;
+    color: var(--brand-text-muted);
     font-weight: 600;
     font-size: 15px;
-    padding-bottom: 8px;
+    padding-bottom: 6px;
     border-bottom: 2px solid transparent;
     transition: all 0.2s ease;
 }
 
 .nav-link-custom:hover, 
 .nav-link-custom.active {
-    color: #1b4332;
-    border-bottom-color: #1b4332;
+    color: var(--brand-dark-green);
+    border-bottom-color: var(--brand-dark-green);
 }
 
-/* User Pill & Auth Buttons */
+/* User Pill Header */
 .nav-user-pill {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #f1f5f9;
-    padding: 6px 16px;
+    background: #eef3f0;
+    padding: 5px 14px;
     border-radius: 30px;
     text-decoration: none;
     color: #2d3748;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 13px;
 }
 
 .avatar-initials {
     width: 28px;
     height: 28px;
-    background: #1b4332;
+    background: var(--brand-dark-green);
     color: white;
     border-radius: 50%;
     display: flex;
@@ -116,39 +119,41 @@ body {
     font-size: 14px;
 }
 
-/* Form Controls */
+/* Inputs & Buttons */
 .custom-search-input {
     border-radius: 14px;
-    border: 1px solid #d1d5db;
+    border: 1px solid #cddcd5;
     padding: 12px 18px;
     font-size: 14px;
+    background-color: #ffffff;
 }
 
 .btn-dark-green {
-    background: #1b4332;
-    color: white;
-    font-weight: 600;
+    background-color: var(--brand-dark-green);
+    color: #ffffff;
+    font-weight: 700;
     border-radius: 14px;
     padding: 12px 24px;
     border: none;
+    transition: background 0.2s ease;
 }
 
 .btn-dark-green:hover {
-    background: #2d6a4f;
-    color: white;
+    background-color: var(--brand-dark-hover);
+    color: #ffffff;
 }
 
-/* Banner Alert */
+/* Personalized Alert Banner */
 .info-banner {
-    background: #eaf4f0;
+    background-color: var(--brand-pill-bg);
     border-radius: 14px;
     padding: 12px 20px;
-    color: #2d6a4f;
+    color: var(--brand-dark-green);
     font-size: 14px;
     font-weight: 600;
 }
 
-/* Category Pills */
+/* Category Filter Pills */
 .category-pill-group {
     display: flex;
     gap: 10px;
@@ -156,11 +161,11 @@ body {
 }
 
 .category-pill-btn {
-    border: 1px solid #e2e8f0;
-    background: white;
-    color: #334155;
+    border: 1px solid var(--brand-pill-border);
+    background-color: #ffffff;
+    color: #3b4e43;
     border-radius: 30px;
-    padding: 8px 18px;
+    padding: 8px 20px;
     font-weight: 600;
     font-size: 14px;
     display: flex;
@@ -172,60 +177,60 @@ body {
 
 .category-pill-btn.active,
 .category-pill-btn:hover {
-    background: #1b4332;
-    color: white;
-    border-color: #1b4332;
+    background-color: var(--brand-dark-green);
+    color: #ffffff;
+    border-color: var(--brand-dark-green);
 }
 
-/* Checkbox Filter Cards */
+/* Detailed Filter Cards */
 .filter-card {
-    background: white;
+    background-color: #ffffff;
     border-radius: 16px;
     padding: 20px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--brand-card-border);
     box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
 .filter-card-title {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 16px;
-    color: #1e293b;
+    color: var(--brand-dark-green);
     margin-bottom: 2px;
 }
 
 .filter-sub-label {
     font-weight: 600;
     font-size: 13px;
-    color: #64748b;
-    margin-bottom: 10px;
+    color: var(--brand-text-muted);
+    margin-bottom: 12px;
 }
 
 .filter-checkbox-label {
     font-size: 14px;
-    color: #334155;
+    color: #3b4e43;
     cursor: pointer;
 }
 
 /* Attraction Cards */
 .attraction-card {
-    background: white;
+    background-color: #ffffff;
     border-radius: 18px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--brand-card-border);
     overflow: hidden;
     position: relative;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 12px rgba(28, 68, 52, 0.04);
 }
 
 .card-top-tag {
     position: absolute;
     top: 12px;
     left: 12px;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(223, 240, 233, 0.95);
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 700;
-    color: #1b4332;
+    color: var(--brand-dark-green);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -235,12 +240,12 @@ body {
     position: absolute;
     top: 12px;
     right: 12px;
-    background: white;
+    background: #ffffff;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    color: #334155;
+    color: #4a5568;
     cursor: pointer;
 }
 
@@ -252,22 +257,23 @@ body {
 
 .meta-icon-text {
     font-size: 13px;
-    color: #64748b;
+    color: var(--brand-text-muted);
 }
 
 .btn-card-action {
-    background: #1b4332;
-    color: white;
+    background-color: var(--brand-dark-green);
+    color: #ffffff;
     border-radius: 10px;
-    font-weight: 600;
+    font-weight: 700;
     width: 100%;
-    padding: 8px 0;
+    padding: 9px 0;
     text-align: center;
     display: block;
     text-decoration: none;
+    transition: background 0.2s ease;
 }
 
 .btn-card-action:hover {
-    background: #2d6a4f;
-    color: white;
+    background-color: var(--brand-dark-hover);
+    color: #ffffff;
 }

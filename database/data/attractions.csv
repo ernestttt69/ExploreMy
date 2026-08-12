@@ -1,0 +1,81 @@
+attraction_id,state_id,attraction_name,category,description,location,operating_hours,entrance_fee,budget_level,nearby_transport,rating
+1,1,Legoland Malaysia,Tourism,Popular attraction,Johor,9:00,20,Medium,Car/Grab,4.5
+2,1,Johor Premium Outlets,Tourism,Popular attraction,Johor,9:00,20,Medium,Car/Grab,4.5
+3,1,Desaru Beach,Tourism,Popular attraction,Johor,9:00,20,Medium,Car/Grab,4.5
+4,1,Sultan Abu Bakar Mosque,Tourism,Popular attraction,Johor,9:00,20,Medium,Car/Grab,4.5
+5,1,Gunung Ledang,Tourism,Popular attraction,Johor,9:00,20,Medium,Car/Grab,4.5
+6,2,Langkawi Sky Bridge,Tourism,Popular attraction,Kedah,9:00,20,Medium,Car/Grab,4.5
+7,2,Pantai Cenang,Tourism,Popular attraction,Kedah,9:00,20,Medium,Car/Grab,4.5
+8,2,Eagle Square,Tourism,Popular attraction,Kedah,9:00,20,Medium,Car/Grab,4.5
+9,2,Kilim Geoforest Park,Tourism,Popular attraction,Kedah,9:00,20,Medium,Car/Grab,4.5
+10,2,Alor Setar Tower,Tourism,Popular attraction,Kedah,9:00,20,Medium,Car/Grab,4.5
+11,3,Siti Khadijah Market,Tourism,Popular attraction,Kelantan,9:00,20,Medium,Car/Grab,4.5
+12,3,Pantai Cahaya Bulan,Tourism,Popular attraction,Kelantan,9:00,20,Medium,Car/Grab,4.5
+13,3,Istana Jahar,Tourism,Popular attraction,Kelantan,9:00,20,Medium,Car/Grab,4.5
+14,3,Wat Photivihan,Tourism,Popular attraction,Kelantan,9:00,20,Medium,Car/Grab,4.5
+15,3,Gunung Stong,Tourism,Popular attraction,Kelantan,9:00,20,Medium,Car/Grab,4.5
+16,4,A Famosa,Tourism,Popular attraction,Melaka,9:00,20,Medium,Car/Grab,4.5
+17,4,Jonker Street,Tourism,Popular attraction,Melaka,9:00,20,Medium,Car/Grab,4.5
+18,4,Stadthuys,Tourism,Popular attraction,Melaka,9:00,20,Medium,Car/Grab,4.5
+19,4,Melaka River Cruise,Tourism,Popular attraction,Melaka,9:00,20,Medium,Car/Grab,4.5
+20,4,Klebang Beach,Tourism,Popular attraction,Melaka,9:00,20,Medium,Car/Grab,4.5
+21,5,Port Dickson Beach,Tourism,Popular attraction,Negeri Sembilan,9:00,20,Medium,Car/Grab,4.5
+22,5,Army Museum,Tourism,Popular attraction,Negeri Sembilan,9:00,20,Medium,Car/Grab,4.5
+23,5,Cape Rachado,Tourism,Popular attraction,Negeri Sembilan,9:00,20,Medium,Car/Grab,4.5
+24,5,PD Ostrich Farm,Tourism,Popular attraction,Negeri Sembilan,9:00,20,Medium,Car/Grab,4.5
+25,5,Sri Menanti Palace,Tourism,Popular attraction,Negeri Sembilan,9:00,20,Medium,Car/Grab,4.5
+26,6,Cameron Highlands,Tourism,Popular attraction,Pahang,9:00,20,Medium,Car/Grab,4.5
+27,6,Genting Highlands,Tourism,Popular attraction,Pahang,9:00,20,Medium,Car/Grab,4.5
+28,6,Taman Negara,Tourism,Popular attraction,Pahang,9:00,20,Medium,Car/Grab,4.5
+29,6,Sungai Lembing,Tourism,Popular attraction,Pahang,9:00,20,Medium,Car/Grab,4.5
+30,6,Cherating Beach,Tourism,Popular attraction,Pahang,9:00,20,Medium,Car/Grab,4.5
+31,7,Penang Hill,Tourism,Popular attraction,Penang,9:00,20,Medium,Car/Grab,4.5
+32,7,Kek Lok Si,Tourism,Popular attraction,Penang,9:00,20,Medium,Car/Grab,4.5
+33,7,George Town,Tourism,Popular attraction,Penang,9:00,20,Medium,Car/Grab,4.5
+34,7,ESCAPE Penang,Tourism,Popular attraction,Penang,9:00,20,Medium,Car/Grab,4.5
+35,7,Batu Ferringhi,Tourism,Popular attraction,Penang,9:00,20,Medium,Car/Grab,4.5
+36,8,Lost World of Tambun,Tourism,Popular attraction,Perak,9:00,20,Medium,Car/Grab,4.5
+37,8,Kellie's Castle,Tourism,Popular attraction,Perak,9:00,20,Medium,Car/Grab,4.5
+38,8,Concubine Lane,Tourism,Popular attraction,Perak,9:00,20,Medium,Car/Grab,4.5
+39,8,Royal Belum,Tourism,Popular attraction,Perak,9:00,20,Medium,Car/Grab,4.5
+40,8,Pangkor Island,Tourism,Popular attraction,Perak,9:00,20,Medium,Car/Grab,4.5
+41,9,Gua Kelam,Tourism,Popular attraction,Perlis,9:00,20,Medium,Car/Grab,4.5
+42,9,Perlis State Park,Tourism,Popular attraction,Perlis,9:00,20,Medium,Car/Grab,4.5
+43,9,Wang Kelian,Tourism,Popular attraction,Perlis,9:00,20,Medium,Car/Grab,4.5
+44,9,Tasik Melati,Tourism,Popular attraction,Perlis,9:00,20,Medium,Car/Grab,4.5
+45,9,Bukit Keteri,Tourism,Popular attraction,Perlis,9:00,20,Medium,Car/Grab,4.5
+46,10,Mount Kinabalu,Tourism,Popular attraction,Sabah,9:00,20,Medium,Car/Grab,4.5
+47,10,Sipadan Island,Tourism,Popular attraction,Sabah,9:00,20,Medium,Car/Grab,4.5
+48,10,Manukan Island,Tourism,Popular attraction,Sabah,9:00,20,Medium,Car/Grab,4.5
+49,10,Mari Mari Cultural Village,Tourism,Popular attraction,Sabah,9:00,20,Medium,Car/Grab,4.5
+50,10,Kinabatangan River,Tourism,Popular attraction,Sabah,9:00,20,Medium,Car/Grab,4.5
+51,11,Mulu National Park,Tourism,Popular attraction,Sarawak,9:00,20,Medium,Car/Grab,4.5
+52,11,Bako National Park,Tourism,Popular attraction,Sarawak,9:00,20,Medium,Car/Grab,4.5
+53,11,Semenggoh,Tourism,Popular attraction,Sarawak,9:00,20,Medium,Car/Grab,4.5
+54,11,Sarawak Cultural Village,Tourism,Popular attraction,Sarawak,9:00,20,Medium,Car/Grab,4.5
+55,11,Kuching Waterfront,Tourism,Popular attraction,Sarawak,9:00,20,Medium,Car/Grab,4.5
+56,12,Sunway Lagoon,Tourism,Popular attraction,Selangor,9:00,20,Medium,Car/Grab,4.5
+57,12,i-City,Tourism,Popular attraction,Selangor,9:00,20,Medium,Car/Grab,4.5
+58,12,Batu Caves,Tourism,Popular attraction,Selangor,9:00,20,Medium,Car/Grab,4.5
+59,12,FRIM,Tourism,Popular attraction,Selangor,9:00,20,Medium,Car/Grab,4.5
+60,12,Sky Mirror,Tourism,Popular attraction,Selangor,9:00,20,Medium,Car/Grab,4.5
+61,13,Redang Island,Tourism,Popular attraction,Terengganu,9:00,20,Medium,Car/Grab,4.5
+62,13,Perhentian Islands,Tourism,Popular attraction,Terengganu,9:00,20,Medium,Car/Grab,4.5
+63,13,Crystal Mosque,Tourism,Popular attraction,Terengganu,9:00,20,Medium,Car/Grab,4.5
+64,13,Tasik Kenyir,Tourism,Popular attraction,Terengganu,9:00,20,Medium,Car/Grab,4.5
+65,13,Rantau Abang,Tourism,Popular attraction,Terengganu,9:00,20,Medium,Car/Grab,4.5
+66,14,Petronas Twin Towers,Tourism,Popular attraction,Kuala Lumpur,9:00,20,Medium,Car/Grab,4.5
+67,14,KL Tower,Tourism,Popular attraction,Kuala Lumpur,9:00,20,Medium,Car/Grab,4.5
+68,14,Aquaria KLCC,Tourism,Popular attraction,Kuala Lumpur,9:00,20,Medium,Car/Grab,4.5
+69,14,Central Market,Tourism,Popular attraction,Kuala Lumpur,9:00,20,Medium,Car/Grab,4.5
+70,14,Batu Caves KL,Tourism,Popular attraction,Kuala Lumpur,9:00,20,Medium,Car/Grab,4.5
+71,15,Putra Mosque,Tourism,Popular attraction,Putrajaya,9:00,20,Medium,Car/Grab,4.5
+72,15,Putrajaya Lake,Tourism,Popular attraction,Putrajaya,9:00,20,Medium,Car/Grab,4.5
+73,15,Seri Wawasan Bridge,Tourism,Popular attraction,Putrajaya,9:00,20,Medium,Car/Grab,4.5
+74,15,Putrajaya Botanical Garden,Tourism,Popular attraction,Putrajaya,9:00,20,Medium,Car/Grab,4.5
+75,15,Perdana Putra,Tourism,Popular attraction,Putrajaya,9:00,20,Medium,Car/Grab,4.5
+76,16,Labuan Marine Park,Tourism,Popular attraction,Labuan,9:00,20,Medium,Car/Grab,4.5
+77,16,Chimney Museum,Tourism,Popular attraction,Labuan,9:00,20,Medium,Car/Grab,4.5
+78,16,Peace Park,Tourism,Popular attraction,Labuan,9:00,20,Medium,Car/Grab,4.5
+79,16,Papan Island,Tourism,Popular attraction,Labuan,9:00,20,Medium,Car/Grab,4.5
+80,16,Surrender Point,Tourism,Popular attraction,Labuan,9:00,20,Medium,Car/Grab,4.5
