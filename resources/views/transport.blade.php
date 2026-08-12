@@ -5,32 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Public Transport Route Search - ExploreMy</title>
     <link rel="stylesheet" href="{{ asset('css/transport.css') }}">
-    <style>
-        .mode-toggle-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .mode-btn-option {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #2d6a4f;
-            border-radius: 8px;
-            background: #ffffff;
-            color: #2d6a4f;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-        .mode-btn-option input[type="radio"] {
-            display: none;
-        }
-        .mode-btn-option.active {
-            background: #2d6a4f;
-            color: #ffffff;
-        }
-    </style>
 </head>
 <body>
 
@@ -90,7 +64,8 @@
                         🚶 Walking Directions
                     </label>
                 </div>
-
+<div class="gmaps-input-group">
+            <div class='gmaps-fields-wrapper'>
                 <!-- Starting Location -->
                 <div class="gmaps-field">
                     <span class="gmaps-dot start-dot"></span>
@@ -105,10 +80,6 @@
                         autocomplete="off">
                 </div>
 
-                <!-- Connecting Line -->
-                <div class="gmaps-connector">
-                    <span class="connector-dots">⋮</span>
-                </div>
 
                 <!-- Destination -->
                 <div class="gmaps-field">
@@ -123,12 +94,19 @@
                         required 
                         autocomplete="off">
                 </div>
-
+            </div>
+                <!-- Connecting Line -->
+                <div class="gmaps-connector">
+                    <button type="button" class="btn-swap" onclick="swapLocations()" title="Swap Starting Location and Destination">
+                        ⇅
+                    </button>
+                </div>
+        </div>
                 <button type="submit" class="gmaps-btn">Search Route</button>
             </form>
 
             <!-- Trigger for View Nearby Stations -->
-            <button type="button" class="btn-nearby" onclick="findNearbyStations()">
+            <button type="button" class="btn-nearby" onclick="fetchNearbyStations()">
                 📍 View Nearby Stations
             </button>
 
@@ -163,15 +141,20 @@
         </div>
     </div>
 
-    <!-- Section 3: Nearby Stations Results -->
+<!-- Section 3: Nearby Stations Results -->
     @if(isset($nearbyStations) && count($nearbyStations) > 0)
         <div class="card-panel">
             <h2 class="card-title">Nearby Public Transport Stations</h2>
             <div class="stations-grid">
                 @foreach($nearbyStations as $station)
                     <div class="station-item">
-                        <div class="station-name">🚉 {{ $station['name'] }}</div>
-                        <div class="step-desc">📍 {{ $station['vicinity'] }}</div>
+                        <div style="margin-bottom: 6px;">
+                            <span class="mode-btn active" style="font-size: 11px; padding: 2px 8px;">
+                                {{ $station['category_badge'] }}
+                            </span>
+                        </div>
+                        <div class="station-name">{{ $station['name'] }}</div>
+                        <div class="step-desc">📍 {{ $station['address'] }}</div>
                         <div class="station-distance">📏 Distance: <strong>{{ $station['distance'] }}</strong></div>
                         <button onclick="viewStationDetails('{{ $station['place_id'] }}')" class="btn-toggle-route" style="margin-top:8px;">
                             View Details
@@ -181,6 +164,50 @@
             </div>
         </div>
     @endif
+
+    <!-- Station Details Modal / Card -->
+<div id="station-details-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <button type="button" class="close-btn" onclick="closeStationDetails()">&times;</button>
+        
+        <h3 id="detail-station-name">Station Name</h3>
+        <p id="detail-station-address" class="station-address">Station Address</p>
+
+        <div class="details-grid">
+            <div class="detail-item">
+                <span class="detail-label">♿ Wheelchair Access</span>
+                <span id="detail-wheelchair" class="detail-value">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">🕒 Current Status</span>
+                <span id="detail-status" class="detail-value">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">⭐ Rating</span>
+                <span id="detail-rating" class="detail-value">-</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">📞 Phone</span>
+                <span id="detail-phone" class="detail-value">-</span>
+            </div>
+        </div>
+
+        <div class="hours-section">
+            <h4>Operating Hours</h4>
+            <ul id="detail-opening-hours"></ul>
+        </div>
+
+        <div id="reviews-section" class="reviews-section">
+            <h4>Recent Reviews</h4>
+            <div id="detail-reviews-list"></div>
+        </div>
+
+        <div class="modal-actions">
+            <a id="detail-maps-link" href="#" target="_blank" class="btn-primary-modal">View on Google Maps 🗺️</a>
+            <button type="button" class="btn-secondary-modal" onclick="setAsOriginFromModal()">Set as Starting Point 📍</button>
+        </div>
+    </div>
+</div>
 
 <!-- Section 4: Route Results -->
 @if(isset($routes) && count($routes) > 0)
@@ -309,13 +336,83 @@ function findNearbyStations() {
     }
 }
 
+let selectedStationName = '';
+
 function viewStationDetails(placeId) {
     fetch(`/transport/station/${placeId}`)
-        .then(res => res.json())
-        .then(data => {
-            alert(`Station Name: ${data.displayName?.text || 'N/A'}\nAddress: ${data.formattedAddress || 'N/A'}\nRating: ${data.rating || 'N/A'}`);
+        .then(response => response.json())
+        .then(res => {
+            if (!res.success) {
+                alert('Could not load station details.');
+                return;
+            }
+
+            const data = res.data;
+            selectedStationName = data.name;
+
+            // Fill basic info
+            document.getElementById('detail-station-name').innerText = data.name;
+            document.getElementById('detail-station-address').innerText = data.address;
+            document.getElementById('detail-wheelchair').innerText = data.wheelchair;
+            document.getElementById('detail-phone').innerText = data.phone;
+            document.getElementById('detail-rating').innerText = `${data.rating} ★ (${data.user_ratings_total} reviews)`;
+            document.getElementById('detail-maps-link').href = data.google_maps_url;
+
+            // Open/Closed Status
+            const statusEl = document.getElementById('detail-status');
+            if (data.is_open_now === true) {
+                statusEl.innerText = 'Open Now';
+                statusEl.style.color = '#2d6a4f';
+            } else if (data.is_open_now === false) {
+                statusEl.innerText = 'Closed';
+                statusEl.style.color = '#d90429';
+            } else {
+                statusEl.innerText = 'N/A';
+                statusEl.style.color = '#555';
+            }
+
+            // Render Operating Hours
+            const hoursList = document.getElementById('detail-opening-hours');
+            hoursList.innerHTML = '';
+            data.opening_hours.forEach(day => {
+                const li = document.createElement('li');
+                li.innerText = day;
+                hoursList.appendChild(li);
+            });
+
+            // Render Reviews
+            const reviewsContainer = document.getElementById('detail-reviews-list');
+            reviewsContainer.innerHTML = '';
+            if (data.reviews && data.reviews.length > 0) {
+                data.reviews.forEach(review => {
+                    const div = document.createElement('div');
+                    div.className = 'review-card';
+                    div.innerHTML = `
+                        <strong>${review.author_name}</strong> (${review.rating} ★)
+                        <p>${review.text}</p>
+                    `;
+                    reviewsContainer.appendChild(div);
+                });
+            } else {
+                reviewsContainer.innerHTML = '<p>No reviews available.</p>';
+            }
+
+            // Display Modal
+            document.getElementById('station-details-modal').style.display = 'flex';
         })
-        .catch(err => alert("Unable to load station details."));
+        .catch(err => console.error('Error fetching station details:', err));
+}
+
+function closeStationDetails() {
+    document.getElementById('station-details-modal').style.display = 'none';
+}
+
+function setAsOriginFromModal() {
+    const originInput = document.getElementById('origin-input');
+    if (originInput) {
+        originInput.value = selectedStationName;
+    }
+    closeStationDetails();
 }
 
 function initAutocomplete() {
@@ -332,6 +429,51 @@ function initAutocomplete() {
     if (window.google && google.maps && google.maps.places) {
         new google.maps.places.Autocomplete(originInput, options);
         new google.maps.places.Autocomplete(destinationInput, options);
+    }
+}
+
+function swapLocations() {
+    const originInput = document.getElementById('origin-input');
+    const destinationInput = document.getElementById('destination-input');
+
+    if (originInput && destinationInput) {
+        // Swap values
+        const temp = originInput.value;
+        originInput.value = destinationInput.value;
+        destinationInput.value = temp;
+
+        // Visual feedback (small button rotation)
+        const swapBtn = document.querySelector('.btn-swap');
+        if (swapBtn) {
+            swapBtn.style.transform = swapBtn.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+    }
+}
+
+function fetchNearbyStations() {
+    const originInput = document.getElementById('origin-input');
+    const originValue = originInput ? originInput.value.trim() : '';
+
+    // If starting point has text (e.g., "TARUMT"), search using that location text
+    if (originValue !== '') {
+        window.location.href = `/transport/nearby?origin=${encodeURIComponent(originValue)}&t=${new Date().getTime()}`;
+        return;
+    }
+
+    // If starting point input is empty, fallback to browser GPS location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                window.location.href = `/transport/nearby?lat=${lat}&lng=${lng}&t=${new Date().getTime()}`;
+            },
+            (error) => {
+                alert('Unable to retrieve current location. Please type a starting point in the box.');
+            }
+        );
+    } else {
+        alert('Geolocation is not supported by your browser. Please type a starting point in the box.');
     }
 }
 

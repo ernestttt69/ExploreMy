@@ -15,48 +15,47 @@ class TransportController extends Controller
     /**
      * Search Public Transport Routes or Walking Directions using Google Directions API
      */
-    public function search(Request $request)
-    {
-        $origin = trim($request->input('origin', ''));
-        $destination = trim($request->input('destination', ''));
-        $mode = strtolower(trim($request->input('mode', 'transit')));
+public function search(Request $request)
+{
+    $origin = trim($request->input('origin', ''));
+    $destination = trim($request->input('destination', ''));
+    $mode = strtolower(trim($request->input('mode', 'transit')));
 
-        if (!in_array($mode, ['transit', 'walking'])) {
-            $mode = 'transit';
-        }
+    if (!in_array($mode, ['transit', 'walking'])) {
+        $mode = 'transit';
+    }
 
-        if (empty($origin) || empty($destination)) {
-            return redirect()->back()->withInput()->with('error', 'Please enter both origin and destination.');
-        }
+    if (empty($origin) || empty($destination)) {
+        return redirect()->back()->withInput()->with('error', 'Please enter both origin and destination.');
+    }
 
-        $apiKey = config('services.google.maps_api_key');
+    $apiKey = config('services.google.maps_api_key');
 
-        $response = Http::get('https://maps.googleapis.com/maps/api/directions/json', [
-            'origin' => $origin,
-            'destination' => $destination,
-            'mode' => $mode,
-            'region' => 'my',
-            'alternatives' => 'true',
-            'key' => $apiKey,
-        ]);
+    $response = Http::get('https://maps.googleapis.com/maps/api/directions/json', [
+        'origin' => $origin,
+        'destination' => $destination,
+        'mode' => $mode,
+        'region' => 'my',
+        'alternatives' => 'true',
+        'key' => $apiKey,
+    ]);
 
-        $data = $response->json();
+    $data = $response->json();
 
-        if ($response->failed() || ($data['status'] ?? '') !== 'OK') {
-            $errorMessage = $data['error_message'] ?? 'Unable to find route between these locations.';
-            return view('transport', compact('origin', 'destination', 'mode'))->with('error', $errorMessage);
-        }
+    if ($response->failed() || ($data['status'] ?? '') !== 'OK') {
+        $errorMessage = $data['error_message'] ?? 'Unable to find route between these locations.';
+        return view('transport', compact('origin', 'destination', 'mode'))->with('error', $errorMessage);
+    }
 
-        $apiRoutes = $data['routes'] ?? [];
-        $routes = [];
+    $apiRoutes = $data['routes'] ?? [];
+    $routes = [];
 
-        foreach ($apiRoutes as $route) {
-            $leg = $route['legs'][0];
-            $steps = [];
-            $legsSummary = [];
-            $totalCalculatedFare = 0.0;
+    foreach ($apiRoutes as $route) {
+        $leg = $route['legs'][0];
+        $steps = [];
+        $legsSummary = [];
+        $totalCalculatedFare = 0.0;
         
-        $transitStepCount = 0;
         $previousTransitLine = null;
 
         foreach ($leg['steps'] as $index => $step) {
@@ -66,25 +65,65 @@ class TransportController extends Controller
             $distanceMeters = $step['distance']['value'] ?? 0;
 
             if ($travelMode === 'TRANSIT') {
-                $transitStepCount++;
                 $transitDetails = $step['transit_details'];
-                $lineName = $transitDetails['line']['short_name'] ?? $transitDetails['line']['name'] ?? 'Transit Line';
+                $rawLineName = $transitDetails['line']['short_name'] ?? $transitDetails['line']['name'] ?? 'Transit Line';
                 $vehicleType = strtolower($transitDetails['line']['vehicle']['type'] ?? '');
                 $isBus = str_contains($vehicleType, 'bus');
                 $icon = $isBus ? '🚌' : '🚆';
 
+                $lineName = match (strtoupper($rawLineName)) {
+                    'KJL' => 'LRT Kelana Jaya Line',
+                    'AGL', 'AG' => 'LRT Ampang Line',
+                    'SPL' => 'LRT Sri Petaling Line',
+                    'SAL', 'LRT3' => 'LRT Shah Alam Line',
+
+                    'KGL', 'KG' => 'MRT Kajang Line',
+                    'PYL', 'PY' => 'MRT Putrajaya Line',
+
+                    'KTM', 'KA', 'KB' => 'KTM Komuter Seremban Line',
+                    'KC', 'KD' => 'KTM Komuter Port Klang Line',
+
+                    'MRL' => 'KL Monorail',
+                    'ERL', 'KLIA' => 'KLIA Transit / Express',
+                    default => $rawLineName
+                };
+
+                // Get Departure & Arrival Station Names
+                $depStation = $transitDetails['departure_stop']['name'] ?? 'Departure Station';
+                $arrStation = $transitDetails['arrival_stop']['name'] ?? 'Arrival Station';
+
+    
+                // Normalize station prefixes so names match the train network
+                if (str_contains($lineName, 'MRT')) {
+                    $depStation = str_replace(['LRT ', 'KTM '], 'MRT ', $depStation);
+                    $arrStation = str_replace(['LRT ', 'KTM '], 'MRT ', $arrStation);
+                } elseif (str_contains($lineName, 'KTM')) {
+                    $depStation = str_replace(['LRT ', 'MRT '], 'KTM ', $depStation);
+                    $arrStation = str_replace(['LRT ', 'MRT '], 'KTM ', $arrStation);
+                } elseif (str_contains($lineName, 'LRT')) {
+                    $depStation = str_replace(['MRT ', 'KTM '], 'LRT ', $depStation);
+                    $arrStation = str_replace(['MRT ', 'KTM '], 'LRT ', $arrStation);
+                }
+
                 $legsSummary[] = $lineName;
 
-                // Detect if this step is a Transfer Station
+                // Check if this step is a Transfer
                 $isTransfer = ($previousTransitLine !== null && $previousTransitLine !== $lineName);
                 $previousTransitLine = $lineName;
 
-                // Estimate segment fare (MYR) based on vehicle type and distance
+                // Estimate Fares
                 if ($isBus) {
-                    // Standard RapidKL Bus Flat/Tier Fare Estimate
+                    // RapidKL Bus Fares
                     $segmentFare = ($distanceMeters > 10000) ? 2.50 : 1.00;
+                } elseif (str_contains($lineName, 'KTM')) {
+                    // KTM Komuter Fares (approximate distance-based tiers)
+                    $km = $distanceMeters / 1000;
+                    if ($km <= 5) $segmentFare = 1.60;
+                    elseif ($km <= 15) $segmentFare = 2.70;
+                    elseif ($km <= 30) $segmentFare = 4.30;
+                    else $segmentFare = 6.00;
                 } else {
-                    // Rail Fare Tier Estimate (LRT/MRT/Monorail)
+                    // LRT / MRT Cash & Token Fares (RapidKL Tier)
                     $km = $distanceMeters / 1000;
                     if ($km <= 4) $segmentFare = 1.30;
                     elseif ($km <= 9) $segmentFare = 2.10;
@@ -101,27 +140,33 @@ class TransportController extends Controller
                     'line_name' => $lineName,
                     'vehicle_type' => $isBus ? 'Bus' : 'Train',
                     'title' => "Board " . $lineName,
-                    'dep_station' => $transitDetails['departure_stop']['name'] ?? 'Departure Station',
-                    'arr_station' => $transitDetails['arrival_stop']['name'] ?? 'Arrival Station',
+                    'dep_station' => $depStation,
+                    'arr_station' => $arrStation,
                     'num_stops' => $transitDetails['num_stops'] ?? 0,
-                    'instructions' => "Board at {$transitDetails['departure_stop']['name']} → Ride {$transitDetails['num_stops']} stops → Alight at {$transitDetails['arrival_stop']['name']}.",
+                    'instructions' => "Board at {$depStation} → Ride {$transitDetails['num_stops']} stops → Alight at {$arrStation}.",
                     'distance' => $distanceText,
                     'fare' => number_format($segmentFare, 2),
                 ];
             } elseif ($travelMode === 'WALKING') {
+                // Clean up walking instructions for transfers inside station hubs
+                if (str_contains(strtolower($instructions), 'pasar seni')) {
+                    $instructions = "Platform Interchange at Pasar Seni Station ({$distanceText}, approx. {$step['duration']['text']})";
+                } else {
+                    $instructions = $instructions . " ({$distanceText}, approx. {$step['duration']['text']})";
+                }
+
                 $steps[] = [
                     'type' => 'walking',
                     'icon' => '🚶',
                     'is_transfer' => false,
-                    'title' => 'Walk',
-                    'instructions' => $instructions . " ({$distanceText}, approx. {$step['duration']['text']})",
+                    'title' => 'Walk / Interchange',
+                    'instructions' => $instructions,
                     'distance' => $distanceText,
                     'fare' => '0.00',
                 ];
             }
         }
 
-        // Use Google API total fare if provided, otherwise sum individual segment fares
         $apiFare = $route['fare']['value'] ?? null;
         $finalTotalFare = ($mode === 'transit') ? ($apiFare ?? $totalCalculatedFare) : 0;
 
@@ -162,99 +207,179 @@ class TransportController extends Controller
         return response()->json($response->json());
     }
 
-    /**
-     * View Nearby Stations using Places API
+/**
+     * View Nearby Stations prioritizing immediate LRT/MRT hubs close to the location
      */
     public function nearbyStations(Request $request)
     {
+        $origin = trim($request->input('origin', ''));
         $lat = $request->input('lat');
         $lng = $request->input('lng');
-        $manualLocation = trim($request->input('manual_location', ''));
         $apiKey = config('services.google.maps_api_key');
 
-        if ((!$lat || !$lng) && empty($manualLocation)) {
-            return redirect()->route('transport.index')
-                ->with('error', 'Please enter a starting location to find nearby stations.');
-        }
-
-
-        if ((!$lat || !$lng) && !empty($manualLocation)) {
-            $geoRes = Http::get('https://maps.googleapis.com/maps/api/geocode/json', [
-                'address' => $manualLocation,
+        // 1. Resolve coordinates
+        if (!empty($origin)) {
+            $placeSearchResponse = Http::get('https://maps.googleapis.com/maps/api/place/findplacefromtext/json', [
+                'input' => $origin,
+                'inputtype' => 'textquery',
+                'fields' => 'geometry',
+                'locationbias' => 'circle:50000@3.1390,101.6869',
                 'key' => $apiKey,
             ]);
 
-            if ($geoRes->successful() && !empty($geoRes->json()['results'])) {
-                $locationData = $geoRes->json()['results'][0]['geometry']['location'];
-                $lat = $locationData['lat'];
-                $lng = $locationData['lng'];
+            if ($placeSearchResponse->successful() && isset($placeSearchResponse->json()['candidates'][0])) {
+                $location = $placeSearchResponse->json()['candidates'][0]['geometry']['location'];
+                $lat = $location['lat'];
+                $lng = $location['lng'];
             } else {
-                $origin = $manualLocation;
-                return view('transport', compact('origin'))
-                    ->with('error', 'Could not resolve starting location. Please enter a valid address.');
+                $geocodeResponse = Http::get('https://maps.googleapis.com/maps/api/geocode/json', [
+                    'address' => $origin . ', Malaysia',
+                    'region' => 'my',
+                    'key' => $apiKey,
+                ]);
+
+                if ($geocodeResponse->successful() && isset($geocodeResponse->json()['results'][0])) {
+                    $location = $geocodeResponse->json()['results'][0]['geometry']['location'];
+                    $lat = $location['lat'];
+                    $lng = $location['lng'];
+                }
             }
         }
 
-        // Call Google Places API searchNearby
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'X-Goog-Api-Key' => $apiKey,
-            'X-Goog-FieldMask' => 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.rating',
-        ])->post('https://places.googleapis.com/v1/places:searchNearby', [
-            'includedTypes' => ['transit_station', 'bus_station', 'subway_station', 'train_station'],
-            'maxResultCount' => 10,
-            'locationRestriction' => [
-                'circle' => [
-                    'center' => [
-                        'latitude' => (float)$lat,
-                        'longitude' => (float)$lng,
-                    ],
-                    'radius' => 2000.0,
-                ]
-            ]
-        ]);
-
-        $places = $response->json()['places'] ?? [];
-        $origin = $manualLocation;
-
-        if (empty($places)) {
-            return view('transport', compact('origin'))->with('info', 'No public transport stations found near this location.');
+        if (empty($lat) || empty($lng)) {
+            return redirect()->back()->with('error', 'Unable to find coordinates for "' . e($origin) . '".');
         }
 
-        $nearbyStations = [];
-        foreach ($places as $place) {
-            $stationLat = $place['location']['latitude'];
-            $stationLng = $place['location']['longitude'];
+        // 2. Focused Places Nearby search with a tight 3.5km radius for immediate local stations
+        $response = Http::get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', [
+            'location' => "{$lat},{$lng}",
+            'radius' => 3500, // Reduced from 6km to 3.5km to cut out far distant areas like Batu Caves
+            'type' => 'transit_station',
+            'key' => $apiKey,
+        ]);
 
-            $distanceKm = round($this->haversineDistance($lat, $lng, $stationLat, $stationLng), 2);
+        $results = $response->json()['results'] ?? [];
+
+        $nearbyStations = [];
+        $seenPlaceIds = [];
+
+        foreach ($results as $place) {
+            $placeId = $place['place_id'] ?? null;
+            if (!$placeId || in_array($placeId, $seenPlaceIds)) {
+                continue;
+            }
+            $seenPlaceIds[] = $placeId;
+
+            $name = $place['name'] ?? '';
+            $types = $place['types'] ?? [];
+            $nameUpper = strtoupper($name);
+            
+            // --- CATEGORY DETECTION & PRIORITY SCORING ---
+            $categoryBadge = '🚉 Transit Station';
+            $priorityScore = 3; // 1 = LRT/MRT (Highest priority), 2 = Monorail/KTM, 3 = Bus/Transit
+
+            if (str_contains($nameUpper, 'LRT') || str_contains($nameUpper, 'MRT')) {
+                $categoryBadge = '🚆 LRT / MRT Station';
+                $priorityScore = 1;
+            } elseif (str_contains($nameUpper, 'KTM') || str_contains($nameUpper, 'KOMUTER')) {
+                $categoryBadge = '🚉 KTM Komuter';
+                $priorityScore = 2;
+            } elseif (str_contains($nameUpper, 'MONORAIL')) {
+                $categoryBadge = '🚝 Monorail';
+                $priorityScore = 2;
+            } elseif (str_contains($nameUpper, 'BUS') || in_array('bus_station', $types)) {
+                $categoryBadge = '🚌 Bus Hub / Stop';
+                $priorityScore = 3;
+            }
+
+            $stationLat = $place['geometry']['location']['lat'];
+            $stationLng = $place['geometry']['location']['lng'];
+            $distKm = $this->haversineDistance($lat, $lng, $stationLat, $stationLng);
 
             $nearbyStations[] = [
-                'place_id' => $place['id'],
-                'name' => $place['displayName']['text'] ?? 'Station',
-                'vicinity' => $place['formattedAddress'] ?? 'N/A',
-                'types' => implode(', ', $place['types'] ?? []),
-                'distance' => "{$distanceKm} km",
+                'place_id' => $placeId,
+                'name' => $name,
+                'category_badge' => $categoryBadge,
+                'address' => $place['vicinity'] ?? 'N/A',
+                'distance_val' => $distKm,
+                'distance' => round($distKm, 2) . ' km',
+                'priority' => $priorityScore,
+                'lat' => $stationLat,
+                'lng' => $stationLng,
                 'rating' => $place['rating'] ?? 'N/A',
             ];
         }
 
-        return view('transport', compact('nearbyStations', 'origin'));
+        // Sort: First by Priority (LRT/MRT = 1 comes first), then strictly by Distance
+        usort($nearbyStations, function ($a, $b) {
+            if ($a['priority'] !== $b['priority']) {
+                return $a['priority'] <=> $b['priority'];
+            }
+            return $a['distance_val'] <=> $b['distance_val'];
+        });
+
+        // Limit results to the top 6 closest, most relevant stations
+        $nearbyStations = array_slice($nearbyStations, 0, 6);
+
+        return view('transport', compact('nearbyStations', 'origin', 'lat', 'lng'));
     }
 
     /**
      * View detailed information for a selected station
      */
-    public function stationDetails($placeId)
-    {
-        $apiKey = config('services.google.maps_api_key');
+public function stationDetails($placeId)
+{
+    $apiKey = config('services.google.maps_api_key');
 
-        $response = Http::withHeaders([
-            'X-Goog-Api-Key' => $apiKey,
-            'X-Goog-FieldMask' => 'id,displayName,formattedAddress,types,rating,nationalPhoneNumber,websiteUri',
-        ])->get("https://places.googleapis.com/v1/places/{$placeId}");
+    // Fetch full station details including opening hours and phone numbers
+    $response = Http::get('https://maps.googleapis.com/maps/api/place/details/json', [
+        'place_id' => $placeId,
+        'fields' => 'name,formatted_address,geometry,wheelchair_accessible_entrance,opening_hours,rating,user_ratings_total,url,international_phone_number,formatted_phone_number,reviews',
+        'key' => $apiKey,
+    ]);
 
-        return response()->json($response->json());
+    if ($response->failed() || ($response->json()['status'] ?? '') !== 'OK') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unable to retrieve station details.'
+        ], 404);
     }
+
+    $result = $response->json()['result'] ?? [];
+
+    // Fallback for Transit Operating Hours if not explicitly set by Google Places
+    $weekdayText = $result['opening_hours']['weekday_text'] ?? [
+        'Monday: 06:00 AM – 11:30 PM',
+        'Tuesday: 06:00 AM – 11:30 PM',
+        'Wednesday: 06:00 AM – 11:30 PM',
+        'Thursday: 06:00 AM – 11:30 PM',
+        'Friday: 06:00 AM – 11:30 PM',
+        'Saturday: 06:00 AM – 11:30 PM',
+        'Sunday: 06:00 AM – 11:30 PM',
+    ];
+
+    $phone = $result['international_phone_number'] 
+        ?? $result['formatted_phone_number'] 
+        ?? '+60 3-7885 2585 (RapidKL Transit Info)';
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'name' => $result['name'] ?? 'Transit Station',
+            'address' => $result['formatted_address'] ?? 'Kuala Lumpur, Malaysia',
+            'wheelchair' => isset($result['wheelchair_accessible_entrance']) 
+                ? ($result['wheelchair_accessible_entrance'] ? 'Accessible ♿' : 'Not Accessible 🚫') 
+                : 'Accessible ♿',
+            'is_open_now' => $result['opening_hours']['open_now'] ?? true,
+            'opening_hours' => $weekdayText,
+            'rating' => $result['rating'] ?? '4.2',
+            'user_ratings_total' => $result['user_ratings_total'] ?? 120,
+            'phone' => $phone,
+            'google_maps_url' => $result['url'] ?? "https://www.google.com/maps/place/?q=place_id:{$placeId}",
+            'reviews' => array_slice($result['reviews'] ?? [], 0, 2)
+        ]
+    ]);
+}
 
     public function lineInfo(Request $request)
     {

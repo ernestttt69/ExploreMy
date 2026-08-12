@@ -472,3 +472,203 @@ body {
     padding: 2px 8px;
     border-radius: 4px;
 }
+
+.mode-toggle-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.mode-btn-option {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #2d6a4f;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #2d6a4f;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+        
+.mode-btn-option input[type="radio"] {
+    display: none;
+}
+        
+.mode-btn-option.active {
+    background: #2d6a4f;
+    color: #ffffff;
+}
+
+.gmaps-connector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.btn-swap {
+    background: #2d6a4f;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+/* Layout Wrapper for Inputs and Side Swap Button */
+.gmaps-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.gmaps-fields-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Modal Overlay & Card Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.close-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.station-address {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.detail-item {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.detail-label {
+    display: block;
+    font-size: 11px;
+    color: #777;
+}
+
+.detail-value {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.hours-section, .reviews-section {
+    margin-top: 12px;
+}
+
+.hours-section ul {
+    list-style: none;
+    padding-left: 0;
+    font-size: 12px;
+    color: #444;
+}
+
+.review-card {
+    background: #f1f3f4;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-primary-modal {
+    flex: 1;
+    background-color: #2d6a4f;
+    color: #ffffff !important;
+    text-decoration: none !important; /* Removes link underline */
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-primary-modal:hover {
+    background-color: #1b4332;
+    text-decoration: none !important;
+}
+
+.btn-secondary-modal {
+    flex: 1;
+    background-color: #f1f3f4;
+    color: #202124;
+    border: 1px solid #dadce0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-secondary-modal:hover {
+    background-color: #e8eaed;
+    border-color: #bdc1c6;
+}
