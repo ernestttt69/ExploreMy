@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TripController;
 
 
 Route::get('/', function () {
@@ -18,7 +19,7 @@ Route::get('/dashboard', function () {
 })->middleware('auth');
 
 Route::get('/trips', function () {
-    return view('index', compact('trips'));
+    return view('trips.index');
 })->middleware('auth');
 
 Route::post('/logout', function () {
@@ -30,3 +31,11 @@ Route::post('/logout', function () {
 Route::get('/profile', function () {
 	return view('profile.index');
 })->middleware('auth');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/trips', [TripController::class, 'index'])->name('trips.index');
+
+    Route::get('/itineraries/create', [TripController::class, 'create'])->name('itineraries.create');
+    Route::post('/itineraries', [TripController::class, 'store'])->name('itineraries.store');
+    Route::get('/itineraries/{trip}', [TripController::class, 'show'])->name('itineraries.show');
+});

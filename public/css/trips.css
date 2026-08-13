@@ -1,0 +1,90 @@
+body {
+	background: #eef2f0;
+	padding-top: 130px; /* offset for fixed-top header */
+}
+
+.trips-page-header h1 {
+	font-size: 28px;
+	font-weight: 700;
+	color: #1f3d2b;
+}
+
+.btn-create-itinerary {
+	background: #14532d;
+	color: #fff;
+	border: none;
+	padding: 12px 20px;
+	border-radius: 10px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.btn-create-itinerary:hover {
+	background: #123c22;
+	color: #fff;
+}
+
+.trip-card {
+	background: #fff;
+	border-radius: 14px;
+	padding: 24px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+	height: 100%;
+}
+
+.trip-icon {
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: #e3f3e8;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 16px;
+	font-size: 20px;
+}
+
+.trip-card h2 {
+	font-size: 20px;
+	font-weight: 700;
+	margin-bottom: 6px;
+	color: #111827;
+}
+
+.trip-meta {
+	font-size: 14px;
+	color: #6b7280;
+	margin-bottom: 16px;
+}
+
+.co2-badge {
+	display: inline-block;
+	background: #dcf3e2;
+	color: #1f6b3a;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 6px 14px;
+	border-radius: 999px;
+	margin-bottom: 20px;
+}
+
+.btn-view-itinerary {
+	border: 1px solid #e5e7eb;
+	background: transparent;
+	color: #111827;
+	padding: 10px 18px;
+	border-radius: 10px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.btn-view-itinerary:hover {
+	background: #f3f4f6;
+	color: #111827;
+}
+
+.footer-text {
+	color: #6b7280;
+	font-size: 13px;
+	margin: 0;
+}
