@@ -3,23 +3,41 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>My Planned Trips — ExploreMY</title>
-
+	<title>ExploreMY - My Trips</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link href="{{ asset('css/trips.css') }}" rel="stylesheet">
+	<link rel="stylesheet" href="{{ asset('css/trips.css') }}">
 </head>
 <body>
 
-	@include('components.navbar')
+@include('components.navbar')
 
-	<main class="container py-4">
+<div class="trips-page">
+	<div class="container content-area">
 
 		<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 trips-page-header mb-4">
 			<h1 class="mb-0">My Planned Trips</h1>
-			<a href="{{ route('itineraries.create') }}" class="btn btn-create-itinerary">
+			<a href="#" class="btn btn-create-itinerary">
 				+ Create New Itinerary
 			</a>
 		</div>
+
+		@php
+			// Temporary sample data — remove once real trips come from the database.
+			$trips = [
+				(object) [
+					'title'      => 'Penang Eco-Tour',
+					'date_range' => 'Aug 12 - Aug 15, 2026',
+					'days'       => 4,
+					'co2_kg'     => 45,
+				],
+				(object) [
+					'title'      => 'Langkawi Retreat',
+					'date_range' => 'Sep 05 - Sep 10, 2026',
+					'days'       => 6,
+					'co2_kg'     => 120,
+				],
+			];
+		@endphp
 
 		<div class="row g-4">
 			@forelse ($trips as $trip)
@@ -28,14 +46,13 @@
 						<div class="trip-icon">🌍</div>
 						<h2>{{ $trip->title }}</h2>
 						<p class="trip-meta">
-							{{ $trip->start_date->format('M d') }} - {{ $trip->end_date->format('M d, Y') }}
-							&bull; {{ $trip->days }} Days
+							{{ $trip->date_range }} &bull; {{ $trip->days }} Days
 						</p>
 						<div class="co2-badge">
 							Estimated: {{ $trip->co2_kg }}kg CO&#8322;
 						</div>
 						<div>
-							<a href="{{ route('itineraries.show', $trip->id) }}" class="btn btn-view-itinerary">
+							<a href="#" class="btn btn-view-itinerary">
 								View Itinerary &rarr;
 							</a>
 						</div>
@@ -50,9 +67,10 @@
 			@endforelse
 		</div>
 
-	</main>
+	</div>
+</div>
 
-	@include('components.footer')
+@include('components.footer')
 
 </body>
 </html>
