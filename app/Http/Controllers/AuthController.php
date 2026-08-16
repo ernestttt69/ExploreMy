@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Google\Client;
 
 class AuthController extends Controller
@@ -16,9 +17,13 @@ class AuthController extends Controller
 
 	public function googleLogin(Request $request)
 	{
+		$request->validate([
+			'credential' => ['required', 'string'],
+		]);
+
 		try {
 			$client = new Client([
-				'client_id' => env('GOOGLE_CLIENT_ID')
+				'client_id' => config('services.google.client_id'),
 			]);
 
 			$payload = $client->verifyIdToken($request->credential);
@@ -27,7 +32,7 @@ class AuthController extends Controller
 				return response()->json([
 					'success' => false,
 					'message' => 'Invalid Google Token'
-				]);
+				], 401);
 			}
 
 			$user = User::updateOrCreate(
@@ -42,18 +47,20 @@ class AuthController extends Controller
 			);
 
             Auth::login($user);
+            $request->session()->regenerate();
 
             return response()->json([
                 'success' => true,
                 'redirect' => '/dashboard'
             ]);
 
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
+            Log::error('Google login failed', ['exception' => $e]);
+
             return response()->json([
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-            ]);
+				'success' => false,
+				'message' => 'Google login failed. Please try again.',
+            ], 500);
         }
 	}
 }

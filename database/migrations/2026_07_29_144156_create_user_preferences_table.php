@@ -10,10 +10,18 @@ return new class extends Migration
     {
         Schema::create('user_preferences', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('preference_id');
+            $table->unsignedInteger('user_id');
+            $table->unsignedInteger('preference_id');
 
             $table->unique(['user_id', 'preference_id']);
+            $table->foreign('user_id')
+                ->references('user_id')
+                ->on('user')
+                ->cascadeOnDelete();
+            $table->foreign('preference_id')
+                ->references('preference_id')
+                ->on('preference_categories')
+                ->cascadeOnDelete();
         });
     }
 

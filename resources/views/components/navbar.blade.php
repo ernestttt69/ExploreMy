@@ -19,7 +19,7 @@
 
 				<div class="d-flex align-items-center gap-3">
 
-					<a href="/profile" class="nav-user-pill text-decoration-none text-dark">
+					<a href="{{ route('profile') }}" class="nav-user-pill text-decoration-none text-dark">
 
 						<img src="{{ Auth::user()->profile_picture }}" class="nav-avatar">
 
@@ -29,7 +29,7 @@
 
 					</a>
 
-					<form method="POST" action="/logout">
+					<form method="POST" action="{{ route('logout') }}">
 						@csrf
 
 						<button class="btn btn-logout">

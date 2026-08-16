@@ -17,14 +17,14 @@
 		@if(session('success'))
 
 			<script>
-				alert("{{ session('success') }}");
+				alert(@json(session('success')));
 			</script>
 
 		@endif
 
 		<div class="profile-header">
 
-			<form method="POST" action="/profile/update" enctype="multipart/form-data">
+			<form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
 
 				@csrf
 

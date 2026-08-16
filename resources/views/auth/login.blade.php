@@ -41,7 +41,7 @@
 
 		<div class="d-flex justify-content-center">
 			<div id="g_id_onload"
-				data-client_id="887451143456-j0tnockk57m8j2oafep8jqi2sj3q28b0.apps.googleusercontent.com"
+				data-client_id="{{ config('services.google.client_id') }}"
 				data-callback="handleCredentialResponse"
 				data-auto_prompt="false">
 			</div>

@@ -37,6 +37,12 @@
                     </div>
                 @endif
 
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        {{ $errors->first() }}
+                    </div>
+                @endif
+
                 <form
                     action="{{ route('travel-preferences.update') }}"
                     method="POST"
@@ -78,7 +84,7 @@
 
                     </div>
 
-                    <div class="mt-4">
+                    <div class="preference-actions mt-4">
 
                         <button
                             type="submit"
@@ -89,7 +95,7 @@
 
                         <a
                             href="/profile"
-                            class="btn btn-profile-secondary ms-2"
+                            class="btn btn-profile-secondary"
                         >
                             Back to Profile
                         </a>

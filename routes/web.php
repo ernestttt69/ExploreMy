@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SavedPlaceController;
@@ -19,22 +19,21 @@ Route::get('/dashboard', function () {
 	return view('dashboard.index');
 })->middleware('auth');
 
-Route::post('/logout', function () {
-	Auth::logout();
+Route::post('/logout', function (Request $request) {
+	auth()->logout();
+	$request->session()->invalidate();
+	$request->session()->regenerateToken();
 
 	return redirect('/login');
-});
-
-Route::get('/profile', function () {
-	return view('profile.index');
-})->middleware('auth');
+})->middleware('auth')->name('logout');
 
 Route::get('/profile', function () {
 	return view('profile');
-})->middleware('auth');
+})->middleware('auth')->name('profile');
 
 Route::post('/profile/update',[ProfileController::class,'update'])
-	->middleware('auth');
+	->middleware('auth')
+	->name('profile.update');
 
 Route::middleware('auth')->group(function () {
     Route::get('/saved-places', [SavedPlaceController::class, 'index'])

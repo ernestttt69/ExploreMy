@@ -6,6 +6,7 @@ use App\Models\PreferenceCategory;
 use App\Models\UserPreference;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TravelPreferenceController extends Controller
 {
@@ -25,14 +26,21 @@ class TravelPreferenceController extends Controller
 
     public function update(Request $request)
     {
-        UserPreference::where('user_id', Auth::id())->delete();
+        $validated = $request->validate([
+            'preferences' => ['nullable', 'array'],
+            'preferences.*' => ['integer', 'distinct', 'exists:preference_categories,preference_id'],
+        ]);
 
-        foreach ($request->preferences ?? [] as $preferenceId) {
-            UserPreference::create([
-                'user_id' => Auth::id(),
-                'preference_id' => $preferenceId,
-            ]);
-        }
+        DB::transaction(function () use ($validated) {
+            UserPreference::where('user_id', Auth::id())->delete();
+
+            foreach ($validated['preferences'] ?? [] as $preferenceId) {
+                UserPreference::create([
+                    'user_id' => Auth::id(),
+                    'preference_id' => $preferenceId,
+                ]);
+            }
+        });
 
         return redirect()->back()->with('success', 'Travel preferences updated.');
     }
