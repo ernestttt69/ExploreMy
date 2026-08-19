@@ -20,9 +20,14 @@ public function search(Request $request)
     $origin = trim($request->input('origin', ''));
     $destination = trim($request->input('destination', ''));
     $mode = strtolower(trim($request->input('mode', 'transit')));
+    $sortBy = strtolower(trim($request->input('sort_by', 'duration'))); // Default to duration (fastest)
 
     if (!in_array($mode, ['transit', 'walking'])) {
         $mode = 'transit';
+    }
+
+    if (!in_array($sortBy, ['duration', 'distance', 'fare'])) {
+        $sortBy = 'duration';
     }
 
     if (empty($origin) || empty($destination)) {
@@ -44,7 +49,7 @@ public function search(Request $request)
 
     if ($response->failed() || ($data['status'] ?? '') !== 'OK') {
         $errorMessage = $data['error_message'] ?? 'Unable to find route between these locations.';
-        return view('transport', compact('origin', 'destination', 'mode'))->with('error', $errorMessage);
+        return view('transport', compact('origin', 'destination', 'mode', 'sortBy'))->with('error', $errorMessage);
     }
 
     $apiRoutes = $data['routes'] ?? [];
@@ -76,24 +81,18 @@ public function search(Request $request)
                     'AGL', 'AG' => 'LRT Ampang Line',
                     'SPL' => 'LRT Sri Petaling Line',
                     'SAL', 'LRT3' => 'LRT Shah Alam Line',
-
                     'KGL', 'KG' => 'MRT Kajang Line',
                     'PYL', 'PY' => 'MRT Putrajaya Line',
-
                     'KTM', 'KA', 'KB' => 'KTM Komuter Seremban Line',
                     'KC', 'KD' => 'KTM Komuter Port Klang Line',
-
                     'MRL' => 'KL Monorail',
                     'ERL', 'KLIA' => 'KLIA Transit / Express',
                     default => $rawLineName
                 };
 
-                // Get Departure & Arrival Station Names
                 $depStation = $transitDetails['departure_stop']['name'] ?? 'Departure Station';
                 $arrStation = $transitDetails['arrival_stop']['name'] ?? 'Arrival Station';
 
-    
-                // Normalize station prefixes so names match the train network
                 if (str_contains($lineName, 'MRT')) {
                     $depStation = str_replace(['LRT ', 'KTM '], 'MRT ', $depStation);
                     $arrStation = str_replace(['LRT ', 'KTM '], 'MRT ', $arrStation);
@@ -107,23 +106,18 @@ public function search(Request $request)
 
                 $legsSummary[] = $lineName;
 
-                // Check if this step is a Transfer
                 $isTransfer = ($previousTransitLine !== null && $previousTransitLine !== $lineName);
                 $previousTransitLine = $lineName;
 
-                // Estimate Fares
                 if ($isBus) {
-                    // RapidKL Bus Fares
                     $segmentFare = ($distanceMeters > 10000) ? 2.50 : 1.00;
                 } elseif (str_contains($lineName, 'KTM')) {
-                    // KTM Komuter Fares (approximate distance-based tiers)
                     $km = $distanceMeters / 1000;
                     if ($km <= 5) $segmentFare = 1.60;
                     elseif ($km <= 15) $segmentFare = 2.70;
                     elseif ($km <= 30) $segmentFare = 4.30;
                     else $segmentFare = 6.00;
                 } else {
-                    // LRT / MRT Cash & Token Fares (RapidKL Tier)
                     $km = $distanceMeters / 1000;
                     if ($km <= 4) $segmentFare = 1.30;
                     elseif ($km <= 9) $segmentFare = 2.10;
@@ -148,7 +142,6 @@ public function search(Request $request)
                     'fare' => number_format($segmentFare, 2),
                 ];
             } elseif ($travelMode === 'WALKING') {
-                // Clean up walking instructions for transfers inside station hubs
                 if (str_contains(strtolower($instructions), 'pasar seni')) {
                     $instructions = "Platform Interchange at Pasar Seni Station ({$distanceText}, approx. {$step['duration']['text']})";
                 } else {
@@ -170,17 +163,32 @@ public function search(Request $request)
         $apiFare = $route['fare']['value'] ?? null;
         $finalTotalFare = ($mode === 'transit') ? ($apiFare ?? $totalCalculatedFare) : 0;
 
+        // Raw metrics stored for accurate array sorting
         $routes[] = [
             'mode' => $mode,
             'duration' => $leg['duration']['text'],
+            'duration_val' => $leg['duration']['value'] ?? 0, // seconds
             'distance' => $leg['distance']['text'],
+            'distance_val' => $leg['distance']['value'] ?? 0, // meters
             'total_fare' => ($mode === 'transit') ? number_format($finalTotalFare, 2) : 'Free',
+            'fare_val' => floatval($finalTotalFare), // numerical float for sorting
             'legs_summary' => array_unique($legsSummary),
             'steps' => $steps,
         ];
     }
 
-    return view('transport', compact('routes', 'origin', 'destination', 'mode'));
+    // Dynamic Route Sorting based on user selection
+    usort($routes, function ($a, $b) use ($sortBy) {
+        if ($sortBy === 'distance') {
+            return $a['distance_val'] <=> $b['distance_val'];
+        } elseif ($sortBy === 'fare') {
+            return $a['fare_val'] <=> $b['fare_val'];
+        }
+        // Default: Sort by Duration (Fastest)
+        return $a['duration_val'] <=> $b['duration_val'];
+    });
+
+    return view('transport', compact('routes', 'origin', 'destination', 'mode', 'sortBy'));
 }
 
     /**
@@ -381,34 +389,98 @@ public function stationDetails($placeId)
     ]);
 }
 
-    public function lineInfo(Request $request)
-    {
-        $lineCode = $request->query('line_code');
+//line info
+public function lineInfo(Request $request)
+{
+    $lineCode = strtoupper(trim($request->query('line_code', '')));
 
-        $lineDetails = [
-            'KG' => ['name' => 'MRT Kajang Line', 'hours' => '06:00 - 23:30', 'status' => 'Normal Service'],
-            'PY' => ['name' => 'MRT Putrajaya Line', 'hours' => '06:00 - 23:30', 'status' => 'Normal Service'],
-            'KJ' => ['name' => 'LRT Kelana Jaya Line', 'hours' => '06:00 - 23:45', 'status' => 'Normal Service'],
-            'AG' => ['name' => 'LRT Ampang Line', 'hours' => '06:00 - 23:30', 'status' => 'Normal Service'],
-            'MR' => ['name' => 'KL Monorail Line', 'hours' => '06:00 - 23:30', 'status' => 'Normal Service'],
-        ];
-
-        $info = $lineDetails[$lineCode] ?? null;
-
-        return redirect()->back()->with('selected_info', $info);
+    if (empty($lineCode)) {
+        return redirect()->back()->with('error', 'Please select a valid transport line.');
     }
 
+    // Transit Line Configuration
+    $lines = [
+        'KG'  => ['name' => 'MRT Kajang Line (KG)', 'color' => '#841315', 'operator' => 'Rapid Rail (Rapid KL)', 'agency' => 'prasarana'],
+        'PY'  => ['name' => 'MRT Putrajaya Line (PY)', 'color' => '#fdb813', 'operator' => 'Rapid Rail (Rapid KL)', 'agency' => 'prasarana'],
+        'KJ'  => ['name' => 'LRT Kelana Jaya Line (KJ)', 'color' => '#d01c27', 'operator' => 'Rapid Rail (Rapid KL)', 'agency' => 'prasarana'],
+        'AG'  => ['name' => 'LRT Ampang Line (AG)', 'color' => '#f4821f', 'operator' => 'Rapid Rail (Rapid KL)', 'agency' => 'prasarana'],
+        'MR'  => ['name' => 'KL Monorail Line (MR)', 'color' => '#89a02c', 'operator' => 'Rapid Rail (Rapid KL)', 'agency' => 'prasarana'],
+        'SA'  => ['name' => 'LRT Shah Alam Line (SA)', 'color' => '#189dae', 'operator' => 'Rapid Rail (Rapid KL)', 'agency' => 'prasarana'],
+        'KTM' => ['name' => 'KTM Komuter (Central Sector)', 'color' => '#003366', 'operator' => 'Keretapi Tanah Melayu Berhad (KTMB)', 'agency' => 'ktmb'],
+    ];
+
+    if (!array_key_exists($lineCode, $lines)) {
+        return redirect()->back()->with('error', "Transport line code '{$lineCode}' was not found.");
+    }
+
+    $selectedLine = $lines[$lineCode];
+
+
+    // Query data.gov.my Service Alerts API
+    $agency = $selectedLine['agency'];
+    $apiUrl = "https://api.data.gov.my/gtfs-realtime/alerts/{$agency}";
+
+    $disruptionText = 'All systems operating smoothly. No active delays or disruptions reported on this line.';
+    $statusText = 'Normal Service';
+
+    try {
+        $response = Http::withHeaders([
+            'User-Agent' => 'ExploreMY/1.0',
+            'Accept'     => 'application/json',
+        ])
+        ->withoutVerifying()
+        ->timeout(8)
+        ->get($apiUrl);
+
+        if ($response->successful()) {
+            $alertsData = $response->json();
+
+            // If active service alerts exist for this line, display the official message
+            if (!empty($alertsData) && is_array($alertsData)) {
+                foreach ($alertsData as $alert) {
+                    $header = $alert['header_text']['translation'][0]['text'] ?? '';
+                    if (!empty($header)) {
+                        $disruptionText = $header;
+                        $statusText = 'Service Advisory / Special Schedule';
+                        break;
+                    }
+                }
+            }
+        }
+    } catch (\Exception $e) {
+        // Fallback message if external server is undergoing maintenance
+        $disruptionText = 'All stations and train operations are running according to the standard operational schedule.';
+    }
+
+    $info = [
+        'name'        => $selectedLine['name'],
+        'operator'    => $selectedLine['operator'],
+        'hours'       => '06:00 - 23:45 (Mon-Sat) / 06:00 - 23:30 (Sun & PH)',
+        'frequency'   => 'Peak: 3-5 mins | Off-Peak: 7-10 mins',
+        'status'      => $statusText,
+        'disruptions' => $disruptionText,
+        'color'       => $selectedLine['color'],
+    ];
+
+    return redirect()->back()->with('selected_info', $info);
+}
+
+/**
+     * Calculate straight-line distance between two coordinates using the Haversine formula (in KM)
+     */
     private function haversineDistance($lat1, $lon1, $lat2, $lon2)
     {
-        $earthRadius = 6371;
-        $dLat = deg2rad((float)$lat2 - (float)$lat1);
-        $dLon = deg2rad((float)$lon2 - (float)$lon1);
+        $earthRadius = 6371; // Earth's radius in kilometers
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
 
         $a = sin($dLat / 2) * sin($dLat / 2) +
-            cos(deg2rad((float)$lat1)) * cos(deg2rad((float)$lat2)) *
-            sin($dLon / 2) * sin($dLon / 2);
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
         return $earthRadius * $c;
     }
 }

@@ -119,25 +119,63 @@
         </div>
     </div>
 
-    <!-- Section 2: Optional Transport Service Information Lookup -->
+<!-- Section 2: Transport Line Info & Static Route Map -->
     <div class="card-panel">
         <div class="service-header" onclick="toggleServiceInfo()">
-            <h2 class="card-title">ℹ️ Optional: Check Transport Line Info & Operating Hours</h2>
+            <h2 class="card-title">ℹ️ Check Transport Line Info & Service Status</h2>
             <span id="toggle-icon">+</span>
         </div>
 
         <div id="service-info-panel" class="service-panel-hidden">
-            <p class="service-panel-desc">Select a line to view service status, schedule, and operating hours:</p>
+            <p class="service-panel-desc">Select a public transport line to view operators, operating hours, frequency, and real-time disruptions:</p>
             <form action="{{ route('transport.line-info') }}" method="GET" class="service-form">
-                <select name="line_code" class="form-control">
-                    <option value="KG">MRT Kajang Line (KG)</option>
-                    <option value="PY">MRT Putrajaya Line (PY)</option>
+                <select name="line_code" class="form-control" style="max-width: 320px;">
+                    <option value="">-- Select Transport Line --</option>
                     <option value="KJ">LRT Kelana Jaya Line (KJ)</option>
                     <option value="AG">LRT Ampang Line (AG)</option>
+                    <option value="KG">MRT Kajang Line (KG)</option>
+                    <option value="PY">MRT Putrajaya Line (PY)</option>
                     <option value="MR">KL Monorail Line (MR)</option>
+                    <option value="SA">LRT Shah Alam Line (SA)</option>
+                    <option value="KTM">KTM Komuter Line</option>
                 </select>
-                <button type="submit" class="btn-service">Check Info</button>
+                <button type="submit" class="btn-service">Check Line Info</button>
             </form>
+
+            <!-- Display Line Info Result -->
+            @if(session('selected_info'))
+                @php $info = session('selected_info'); @endphp
+                <div class="line-status-card" style="border-left: 5px solid {{ $info['color'] }}; background: #f8fafc; padding: 16px; border-radius: 12px; margin-top: 16px;">
+                    <h3 style="color: #1b4332; margin-bottom: 8px;">{{ $info['name'] }}</h3>
+                    <div style="font-size: 13px; display: grid; gap: 6px;">
+                        <div>🏢 <strong>Operator:</strong> {{ $info['operator'] }}</div>
+                        <div>🕒 <strong>Operating Hours:</strong> {{ $info['hours'] }}</div>
+                        <div>⚡ <strong>Service Frequency:</strong> {{ $info['frequency'] }}</div>
+                        <div>
+                            🟢 <strong>Status:</strong> 
+                            <span class="fare-tag" style="background: {{ $info['status'] === 'Normal Service' ? '#dcfce7' : '#fef3c7' }}; color: {{ $info['status'] === 'Normal Service' ? '#166534' : '#92400e' }};">
+                                {{ $info['status'] }}
+                            </span>
+                        </div>
+                        <div>⚠️ <strong>Disruptions / Notes:</strong> {{ $info['disruptions'] }}</div>
+                    </div>
+                </div>
+            @endif
+
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+            
+            <!-- Static Image Map inside the panel -->
+            <h3 style="color: #1b4332; margin-bottom: 12px; font-size: 18px;">🗺️ Klang Valley Integrated Transit Map</h3>
+            <div style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; text-align: center; padding: 10px;">
+                <a href="{{ asset('images/route_map.png') }}" target="_blank" title="Click to view full size">
+                    <img 
+                        src="{{ asset('images/route_map.png') }}" 
+                        alt="Klang Valley Integrated Transit Map" 
+                        style="width: 100%; height: auto; max-height: 700px; object-fit: contain; cursor: zoom-in;"
+                    >
+                </a>
+                <p style="font-size: 12px; color: #718096; margin-top: 8px;">Click on the map to view it in full size.</p>
+            </div>
         </div>
     </div>
 
@@ -212,67 +250,97 @@
 <!-- Section 4: Route Results -->
 @if(isset($routes) && count($routes) > 0)
     <div class="card-panel">
-        <h2 class="card-title">
-            {{ ($mode ?? 'transit') === 'walking' ? '🚶 Walking Routes' : '🚌 Public Transport Routes' }} 
-            ({{ count($routes) }} options found)
-        </h2>
+        
+        <!-- Header & Instant Sorting Controls Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+            <h2 class="card-title" style="margin-bottom: 0;">
+                {{ ($mode ?? 'transit') === 'walking' ? '🚶 Walking Routes' : '🚌 Public Transport Routes' }} 
+                ({{ count($routes) }} options found)
+            </h2>
 
-        @foreach($routes as $index => $route)
-            <div class="station-item" style="margin-bottom: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="color:#1b4332; font-size:16px;">Option {{ $index + 1 }}: {{ $route['duration'] }}</strong>
-                        <span class="step-desc">({{ $route['distance'] }})</span>
+            <!-- Sorting Dropdown Bar -->
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 13px; font-weight: 600; color: #475569;">⚡ Sort by:</span>
+                
+                <select id="routeSortSelect" onchange="sortRoutes(this.value)" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 13px; font-weight: 500; cursor: pointer; color: #1e293b;">
+                    <option value="duration">⏱️ Fastest Duration</option>
+                    <option value="distance">📏 Shortest Distance</option>
+                    <option value="fare">💰 Lowest Fare</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Container holding the route option cards -->
+        <div id="routes-container">
+            @foreach($routes as $index => $route)
+                <div class="station-item route-card" 
+                     style="margin-bottom: 16px;" 
+                     data-duration="{{ $route['duration_val'] }}" 
+                     data-distance="{{ $route['distance_val'] }}" 
+                     data-fare="{{ $route['fare_val'] }}">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong class="option-title" style="color:#1b4332; font-size:16px;">Option {{ $index + 1 }}: {{ $route['duration'] }}</strong>
+                            <span class="step-desc">({{ $route['distance'] }})</span>
+                        </div>
+                        <span class="fare-tag">
+                            {{ $route['mode'] === 'walking' ? 'Cost: Free 🚶' : 'Total Fare: RM ' . $route['total_fare'] }}
+                        </span>
                     </div>
-                    <span class="fare-tag">
-                        {{ $route['mode'] === 'walking' ? 'Cost: Free 🚶' : 'Total Fare: RM ' . $route['total_fare'] }}
-                    </span>
-                </div>
 
-                @if(!empty($route['legs_summary']))
-                    <div class="transport-modes" style="margin-top: 8px;">
-                        @foreach($route['legs_summary'] as $badge)
-                            <span class="mode-btn active">{{ $badge }}</span>
+                    @if(!empty($route['legs_summary']))
+                        <div class="transport-modes" style="margin-top: 8px;">
+                            @foreach($route['legs_summary'] as $badge)
+                                <span class="mode-btn active">{{ $badge }}</span>
+                            @endforeach
+                        </div>
+                    @endif
+
+<div style="display: flex; gap: 8px; margin-top: 10px;">
+    <!-- Toggle Step-by-Step Directions -->
+    <button class="btn-toggle-route" onclick="showRouteDetails({{ $index }})" style="flex: 1;">
+        Select Route & View Step-by-Step Directions 👇
+    </button>
+
+    <!-- Export / Print PDF Button -->
+    <button type="button" class="btn-toggle-route" onclick="exportRoute({{ $index }})" style="background-color: #2d6a4f; color: white; width: auto; padding: 0 16px;">
+        📄 Export / Save PDF
+    </button>
+</div>
+
+                    <div id="route-details-{{ $index }}" class="timeline timeline-hidden" style="margin-top: 12px;">
+                        @foreach($route['steps'] as $step)
+                            <div class="timeline-step {{ !empty($step['is_transfer']) ? 'transfer-step' : '' }}">
+                                <div class="step-title">
+                                    {{ $step['icon'] }} {{ $step['title'] }}
+                                    
+                                    @if(!empty($step['is_transfer']))
+                                        <span class="transfer-badge">🔄 Transfer Station</span>
+                                    @endif
+
+                                    <span class="step-fare-tag">
+                                        {{ $step['type'] === 'walking' ? 'Free' : 'Fare: RM ' . $step['fare'] }}
+                                    </span>
+                                </div>
+
+                                <div class="step-desc" style="margin-top: 4px;">
+                                    {{ $step['instructions'] }}
+                                </div>
+
+                                @if($step['type'] === 'transit')
+                                    <div style="font-size: 12px; color: #555; margin-top: 4px;">
+                                        📍 <strong>Board:</strong> {{ $step['dep_station'] }} <br>
+                                        🏁 <strong>Alight:</strong> {{ $step['arr_station'] }} ({{ $step['num_stops'] }} stops, {{ $step['distance'] }})
+                                    </div>
+                                @endif
+                            </div>
                         @endforeach
                     </div>
-                @endif
-
-                <button class="btn-toggle-route" onclick="showRouteDetails({{ $index }})" style="margin-top: 10px;">
-                    Select Route & View Step-by-Step Directions 👇
-                </button>
-
-                <div id="route-details-{{ $index }}" class="timeline timeline-hidden" style="margin-top: 12px;">
-                    @foreach($route['steps'] as $step)
-                        <div class="timeline-step {{ !empty($step['is_transfer']) ? 'transfer-step' : '' }}">
-                            <div class="step-title">
-                                {{ $step['icon'] }} {{ $step['title'] }}
-                                
-                                <!-- 1. HIGHLIGHT TRANSFER STATION -->
-                                @if(!empty($step['is_transfer']))
-                                    <span class="transfer-badge">🔄 Transfer Station</span>
-                                @endif
-
-                                <!-- 2. SHOW SEGMENT/STATION FARE -->
-                                <span class="step-fare-tag">
-                                    {{ $step['type'] === 'walking' ? 'Free' : 'Fare: RM ' . $step['fare'] }}
-                                </span>
-                            </div>
-
-                            <div class="step-desc" style="margin-top: 4px;">
-                                {{ $step['instructions'] }}
-                            </div>
-
-                            @if($step['type'] === 'transit')
-                                <div style="font-size: 12px; color: #555; margin-top: 4px;">
-                                    📍 <strong>Board:</strong> {{ $step['dep_station'] }} <br>
-                                    🏁 <strong>Alight:</strong> {{ $step['arr_station'] }} ({{ $step['num_stops'] }} stops, {{ $step['distance'] }})
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
                 </div>
-            </div>
-        @endforeach
+            @endforeach
+        </div>
+
     </div>
 @endif
 
@@ -475,6 +543,58 @@ function fetchNearbyStations() {
     } else {
         alert('Geolocation is not supported by your browser. Please type a starting point in the box.');
     }
+}
+
+function sortRoutes(criterion) {
+    const container = document.getElementById('routes-container');
+    if (!container) return;
+
+    // Convert cards NodeList into array for client-side sorting
+    const cards = Array.from(container.getElementsByClassName('route-card'));
+
+    cards.sort((a, b) => {
+        let valA = parseFloat(a.getAttribute(`data-${criterion}`)) || 0;
+        let valB = parseFloat(b.getAttribute(`data-${criterion}`)) || 0;
+        return valA - valB;
+    });
+
+    // Re-append sorted card elements and dynamically update "Option 1, Option 2..." titles
+    cards.forEach((card, index) => {
+        container.appendChild(card);
+        const titleEl = card.querySelector('.option-title');
+        if (titleEl) {
+            const timeSpan = card.querySelector('.step-desc');
+            const fullTitleText = titleEl.textContent;
+            const timePart = fullTitleText.split(': ')[1] || '';
+            titleEl.textContent = `Option ${index + 1}: ${timePart}`;
+        }
+    });
+}
+
+function exportRoute(index) {
+    // 1. Expand step-by-step directions for this card
+    const detailPanel = document.getElementById('route-details-' + index);
+    if (detailPanel) {
+        detailPanel.classList.remove('timeline-hidden');
+    }
+
+    // 2. Add 'print-active' class exclusively to the selected option
+    const cards = document.querySelectorAll('.route-card');
+    cards.forEach((card, i) => {
+        if (i === index) {
+            card.classList.add('print-active');
+        } else {
+            card.classList.remove('print-active');
+        }
+    });
+
+    // 3. Trigger native print dialog
+    window.print();
+
+    // 4. Clean up classes after printing window closes
+    setTimeout(() => {
+        cards.forEach(card => card.classList.remove('print-active'));
+    }, 1000);
 }
 
 </script>
