@@ -15,5 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call(PreferenceCategorySeeder::class);
+        $this->call(StateSeeder::class);
+        $this->call(AttractionSeeder::class);
     }
 }

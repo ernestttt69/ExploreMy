@@ -33,7 +33,7 @@
 						@csrf
 
 						<button class="btn btn-logout">
-							Logout
+							{{ __('ui.nav.logout') }}
 						</button>
 
 					</form>
@@ -49,22 +49,29 @@
 			<ul class="nav-menu">
 
 				<li>
-					<a href="/dashboard" class="nav-link-custom active">
-						Dashboard
+					<a href="{{ route('dashboard') }}" class="nav-link-custom {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+						{{ __('ui.nav.dashboard') }}
 					</a>
 				</li>
 
 				<li>
-					<a href="#" class="nav-link-custom">
-						Explore
+					<a href="{{ route('saved-places.index') }}" class="nav-link-custom {{ request()->routeIs('saved-places.*') ? 'active' : '' }}">
+						{{ __('ui.nav.explore') }}
 					</a>
 				</li>
 
 				<li>
-					<a href="#" class="nav-link-custom">
-						My Trips
+					<a href="{{ route('transportation') }}" class="nav-link-custom {{ request()->routeIs('transportation') ? 'active' : '' }}">
+						{{ __('ui.nav.transportation') }}
 					</a>
 				</li>
+
+				<li>
+					<a href="{{ route('about-malaysia') }}" class="nav-link-custom {{ request()->routeIs('about-malaysia') ? 'active' : '' }}">
+						{{ __('ui.nav.about') }}
+					</a>
+				</li>
+
 
 			</ul>
 
@@ -72,3 +79,4 @@
 
 	</div>
 </header>
+<script src="{{ asset('js/site-interactions.js') }}" defer></script>

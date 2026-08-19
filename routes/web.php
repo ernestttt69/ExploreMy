@@ -6,6 +6,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SavedPlaceController;
 use App\Http\Controllers\TravelPreferenceController;
+use App\Http\Controllers\Admin\AttractionController as AdminAttractionController;
+use App\Http\Controllers\Admin\AdminAuthController;
 
 Route::get('/', function () {
 	return redirect('/login');
@@ -16,8 +18,13 @@ Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
 Route::get('/dashboard', function () {
-	return view('dashboard.index');
-})->middleware('auth');
+	$user = auth()->user();
+	$preferences = collect();
+	if ($user->personalisation_consent) {
+		$preferences = $user->preferenceCategories()->orderBy('category_name')->get();
+	}
+	return view('dashboard.index', compact('user', 'preferences'));
+})->middleware('auth')->name('dashboard');
 
 Route::post('/logout', function (Request $request) {
 	auth()->logout();
@@ -27,21 +34,44 @@ Route::post('/logout', function (Request $request) {
 	return redirect('/login');
 })->middleware('auth')->name('logout');
 
-Route::get('/profile', function () {
-	return view('profile');
-})->middleware('auth')->name('profile');
+Route::get('/profile', [ProfileController::class, 'show'])
+	->middleware('auth')->name('profile');
 
 Route::post('/profile/update',[ProfileController::class,'update'])
 	->middleware('auth')
 	->name('profile.update');
 
+Route::delete('/profile', [ProfileController::class, 'destroy'])
+	->middleware('auth')->name('profile.destroy');
+
 Route::middleware('auth')->group(function () {
+    Route::view('/transportation', 'transportation.index')->name('transportation');
+
+    Route::view('/about-malaysia', 'about-malaysia')->name('about-malaysia');
+
     Route::get('/saved-places', [SavedPlaceController::class, 'index'])
         ->name('saved-places.index');
+
+    Route::post('/saved-places/{attraction}', [SavedPlaceController::class, 'store'])
+        ->name('saved-places.store');
+
+    Route::delete('/saved-places/{attraction}', [SavedPlaceController::class, 'destroy'])
+        ->name('saved-places.destroy');
 
     Route::get('/travel-preferences', [TravelPreferenceController::class, 'edit'])
         ->name('travel-preferences.edit');
 
     Route::post('/travel-preferences', [TravelPreferenceController::class, 'update'])
         ->name('travel-preferences.update');
+});
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'login'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'authenticate'])
+        ->middleware('throttle:5,1')->name('authenticate');
+
+    Route::middleware('admin')->group(function () {
+        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+        Route::resource('attractions', AdminAttractionController::class)->except('show');
+    });
 });

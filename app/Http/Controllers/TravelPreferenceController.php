@@ -42,6 +42,6 @@ class TravelPreferenceController extends Controller
             }
         });
 
-        return redirect()->back()->with('success', 'Travel preferences updated.');
+        return redirect()->back()->with('success', __('ui.messages.preferences_saved'));
     }
 }

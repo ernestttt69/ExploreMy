@@ -26,4 +26,12 @@ class PreferenceCategory extends Model
             'user_id'
         );
     }
+
+    public function getLocalizedNameAttribute(): string
+    {
+        $key = 'ui.categories.'.strtolower($this->category_name);
+        $translated = __($key);
+
+        return $translated === $key ? $this->category_name : $translated;
+    }
 }
