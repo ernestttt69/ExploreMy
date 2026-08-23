@@ -27,14 +27,19 @@ class SavedPlaceController extends Controller
 
     public function store(Attraction $attraction): RedirectResponse
     {
-        Auth::user()->savedAttractions()->syncWithoutDetaching([$attraction->attraction_id]);
+        Wishlist::firstOrCreate([
+            'user_id' => Auth::id(),
+            'attraction_id' => $attraction->attraction_id,
+        ]);
 
         return back()->with('success', 'Place saved successfully.');
     }
 
     public function destroy(Attraction $attraction): RedirectResponse
     {
-        Auth::user()->savedAttractions()->detach($attraction->attraction_id);
+        Wishlist::where('user_id', Auth::id())
+            ->where('attraction_id', $attraction->attraction_id)
+            ->delete();
 
         return back()->with('success', 'Place removed from your saved collection.');
     }

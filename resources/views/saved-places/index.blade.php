@@ -204,7 +204,7 @@
 
                                 <form
                                     method="POST"
-                                    action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}"
+                                    action="{{ route('saved-places.destroy', $attraction) }}"
                                     onsubmit="return confirm('Remove this attraction from your wishlist?');"
                                 >
 
