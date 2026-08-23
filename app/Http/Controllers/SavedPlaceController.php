@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attraction;
+use App\Models\Wishlist;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,12 +11,18 @@ class SavedPlaceController extends Controller
 {
     public function index()
     {
-        $savedPlaces = Auth::user()->savedAttractions()
-            ->with('state')
-            ->orderByPivot('created_at', 'desc')
+        $savedPlaces = Wishlist::with([
+            'attraction.images',
+            'attraction.state',
+            'attraction.preferences',
+        ])
+            ->where('user_id', Auth::id())
             ->get();
 
-        return view('saved-places.index', compact('savedPlaces'));
+        return view(
+            'saved-places.index',
+            compact('savedPlaces')
+        );
     }
 
     public function store(Attraction $attraction): RedirectResponse

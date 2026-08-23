@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SavedPlaceController;
 use App\Http\Controllers\TravelPreferenceController;
 use App\Http\Controllers\TransportController;
+use App\Http\Controllers\AttractionController;
 use App\Http\Controllers\Admin\AttractionController as AdminAttractionController;
 use App\Http\Controllers\Admin\AdminAuthController;
 
@@ -51,6 +52,15 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])
 	->middleware('auth')->name('profile.destroy');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/attractions', [AttractionController::class, 'index'])
+        ->name('attractions.index');
+    Route::get('/attractions/{id}', [AttractionController::class, 'show'])
+        ->name('attractions.show');
+    Route::post('/attractions/{id}/wishlist', [AttractionController::class, 'addToWishlist'])
+        ->name('attractions.wishlist.add');
+    Route::delete('/attractions/{id}/wishlist', [AttractionController::class, 'removeFromWishlist'])
+        ->name('attractions.wishlist.remove');
+
     Route::get('/transportation', [TransportController::class, 'index'])
         ->name('transportation');
 
