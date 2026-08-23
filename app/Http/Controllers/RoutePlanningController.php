@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Wishlist;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 use UnexpectedValueException;
@@ -19,10 +21,17 @@ class RoutePlanningController extends Controller
         ['name' => 'The Exchange TRX', 'latitude' => 3.1420, 'longitude' => 101.7185],
     ];
 
-    public function index()
+    public function index(Request $request)
     {
+        $usingSavedPlaces = $request->query('source') === 'saved';
+        $savedPlaces = $usingSavedPlaces
+            ? $this->savedPlacesForCurrentUser()
+            : collect();
+
         return view('route-planning.route', [
             'googleMapsBrowserKey' => config('services.google_maps.browser_api_key'),
+            'usingSavedPlaces' => $usingSavedPlaces,
+            'savedPlaces' => $savedPlaces,
         ]);
     }
 
@@ -38,7 +47,24 @@ class RoutePlanningController extends Controller
                 'integer',
                 'between:0,2',
             ],
+            'source' => ['nullable', 'in:saved'],
         ]);
+
+        $places = self::PLACES;
+        if (($validated['source'] ?? null) === 'saved') {
+            $savedPlaces = $this->savedPlacesForCurrentUser();
+
+            if ($savedPlaces->count() < 2) {
+                return back()->withInput()->withErrors([
+                    'route' => 'Save at least two places before generating an itinerary.',
+                ]);
+            }
+
+            $places = $savedPlaces->take(8)->map(fn ($wishlist): array => [
+                'name' => $wishlist->attraction->attraction_name,
+                'place_id' => $wishlist->attraction->place_id,
+            ])->values()->all();
+        }
 
         if (empty(config('services.google_maps.routes_api_key'))) {
             return back()
@@ -49,9 +75,9 @@ class RoutePlanningController extends Controller
         }
 
         try {
-            $metrics = $this->getGoogleTransitMetrics(self::PLACES);
+            $metrics = $this->getGoogleTransitMetrics($places);
             $routeOptions = $this->findOptimalRoutes(
-                self::PLACES,
+                $places,
                 $metrics,
                 $validated['optimization_preference'],
                 3
@@ -187,8 +213,9 @@ class RoutePlanningController extends Controller
         foreach ($path as $position => $placeIndex) {
             $stops[] = [
                 'name' => $places[$placeIndex]['name'],
-                'latitude' => $places[$placeIndex]['latitude'],
-                'longitude' => $places[$placeIndex]['longitude'],
+                'place_id' => $places[$placeIndex]['place_id'] ?? null,
+                'latitude' => $places[$placeIndex]['latitude'] ?? null,
+                'longitude' => $places[$placeIndex]['longitude'] ?? null,
                 'distance_from_previous' => $position === 0
                     ? 0.0
                     : round($metrics['distances'][$path[$position - 1]][$placeIndex] / 1000, 2),
@@ -213,16 +240,16 @@ class RoutePlanningController extends Controller
 
         $labels = [
             'fastest' => [
-                'title' => 'Fastest Kuala Lumpur Route',
-                'description' => 'Fastest landmark order from KLCC using Google transit times',
+                'title' => 'Fastest Saved Places Itinerary',
+                'description' => 'The fastest order for visiting your selected places using Google transit times',
             ],
             'shortest' => [
-                'title' => 'Shortest Kuala Lumpur Route',
-                'description' => 'Shortest landmark order from KLCC using Google transit distances',
+                'title' => 'Shortest Saved Places Itinerary',
+                'description' => 'The shortest order for visiting your selected places using Google transit distances',
             ],
             'lowest_cost' => [
-                'title' => 'Lowest Cost Kuala Lumpur Route',
-                'description' => 'Lowest-fare landmark order from KLCC using Google transit fares',
+                'title' => 'Lowest Cost Saved Places Itinerary',
+                'description' => 'The lowest-fare order for visiting your selected places using Google transit fares',
             ],
         ];
 
@@ -247,14 +274,7 @@ class RoutePlanningController extends Controller
     private function getGoogleTransitMetrics(array $places): array
     {
         $waypoints = array_map(fn (array $place): array => [
-            'waypoint' => [
-                'location' => [
-                    'latLng' => [
-                        'latitude' => $place['latitude'],
-                        'longitude' => $place['longitude'],
-                    ],
-                ],
-            ],
+            'waypoint' => $this->routeWaypoint($place),
         ], $places);
 
         $elements = Http::acceptJson()
@@ -511,6 +531,10 @@ class RoutePlanningController extends Controller
 
     private function routeWaypoint(array $place): array
     {
+        if (!empty($place['place_id'])) {
+            return ['placeId' => $place['place_id']];
+        }
+
         return [
             'location' => [
                 'latLng' => [
@@ -519,6 +543,14 @@ class RoutePlanningController extends Controller
                 ],
             ],
         ];
+    }
+
+    private function savedPlacesForCurrentUser()
+    {
+        return Wishlist::with('attraction')
+            ->where('user_id', Auth::id())
+            ->whereHas('attraction', fn ($query) => $query->whereNotNull('place_id'))
+            ->get();
     }
 
     private function durationToSeconds(string $duration): float

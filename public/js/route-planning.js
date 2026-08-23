@@ -26,11 +26,14 @@ window.initRouteMap = () => {
         return;
     }
 
+    const firstLocatedStop = route.stops.find(
+        stop => stop.latitude !== null && stop.longitude !== null
+    );
     const map = new google.maps.Map(mapElement, {
-        center: {
-            lat: route.stops[0].latitude,
-            lng: route.stops[0].longitude,
-        },
+        center: firstLocatedStop ? {
+            lat: firstLocatedStop.latitude,
+            lng: firstLocatedStop.longitude,
+        } : {lat: 4.2105, lng: 101.9758},
         zoom: 14,
         mapTypeControl: false,
         streetViewControl: false,
@@ -39,6 +42,10 @@ window.initRouteMap = () => {
     const colours = ['#1565c0', '#7b1fa2', '#00897b', '#ef6c00', '#c62828'];
 
     route.stops.forEach((stop, index) => {
+        if (stop.latitude === null || stop.longitude === null) {
+            return;
+        }
+
         const position = {lat: stop.latitude, lng: stop.longitude};
         bounds.extend(position);
 

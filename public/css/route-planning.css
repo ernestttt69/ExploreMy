@@ -43,6 +43,50 @@
     color: #a52626;
 }
 
+.saved-route-summary {
+    background: #eef8f2;
+    border: 1px solid #b7dfc5;
+    border-radius: 16px;
+    margin: 0 auto 24px;
+    max-width: 980px;
+    padding: 20px 24px;
+}
+
+.saved-route-summary > span {
+    color: #2d6a4f;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.saved-route-summary h2 {
+    color: #1b4332;
+    font-size: 22px;
+    margin: 5px 0 12px;
+}
+
+.saved-route-summary div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.saved-route-summary div span {
+    background: #fff;
+    border: 1px solid #d5eadc;
+    border-radius: 999px;
+    color: #315b45;
+    font-size: 13px;
+    padding: 7px 11px;
+}
+
+.saved-route-summary small {
+    color: #697a70;
+    display: block;
+    margin-top: 12px;
+}
+
 .route-result {
     order: 2;
     min-width: 0;

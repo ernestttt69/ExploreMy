@@ -225,6 +225,50 @@
     margin-bottom: 25px;
 }
 
+.trip-cta {
+    align-items: center;
+    background: linear-gradient(135deg, #1b4332, #40916c);
+    border-radius: 20px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding: 26px 30px;
+}
+
+.trip-cta span {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.trip-cta h2 {
+    font-size: 25px;
+    margin: 4px 0;
+}
+
+.trip-cta p {
+    margin: 0;
+    opacity: .85;
+}
+
+.trip-cta > a,
+.trip-cta-disabled {
+    background: #fff;
+    border-radius: 12px;
+    color: #1b4332;
+    flex-shrink: 0;
+    font-weight: 800;
+    margin-left: 24px;
+    padding: 13px 18px;
+    text-decoration: none;
+}
+
+.trip-cta-disabled {
+    opacity: .7;
+}
+
 @media (max-width: 768px) {
 
     .saved-places-page {
@@ -243,6 +287,16 @@
 
     .view-place-button {
         flex: none;
+    }
+
+    .trip-cta {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .trip-cta > a,
+    .trip-cta-disabled {
+        margin: 18px 0 0;
     }
 
 }

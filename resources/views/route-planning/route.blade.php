@@ -15,6 +15,23 @@
         Choose your preferred route optimisation option.
     </p>
 
+    @if($usingSavedPlaces)
+        <section class="saved-route-summary">
+            <span>Your saved places</span>
+            <h2>{{ $savedPlaces->count() }} destinations ready</h2>
+            <div>
+                @foreach($savedPlaces->take(8) as $savedPlace)
+                    <span>{{ $savedPlace->attraction->attraction_name }}</span>
+                @endforeach
+            </div>
+            @if($savedPlaces->count() > 8)
+                <small>The first 8 saved places will be used for this itinerary.</small>
+            @elseif($savedPlaces->count() < 2)
+                <small>Save at least two places to generate an itinerary.</small>
+            @endif
+        </section>
+    @endif
+
     @if (session('success'))
         <div class="route-success">
             {{ session('success') }}
@@ -99,6 +116,7 @@
                             @else
                                 <form action="{{ route('route.preference') }}" method="POST">
                                     @csrf
+                                    @if($usingSavedPlaces)<input type="hidden" name="source" value="saved">@endif
                                     <input type="hidden" name="optimization_preference" value="{{ $routeResult['preference'] }}">
                                     <input type="hidden" name="route_option_index" value="{{ $optionIndex }}">
                                     <button type="submit" class="select-route-button">
@@ -207,6 +225,10 @@
     >
         @csrf
 
+        @if($usingSavedPlaces)
+            <input type="hidden" name="source" value="saved">
+        @endif
+
         <section class="preference-card">
             <div class="card-heading">
                 <h2>Travel Preference</h2>
@@ -272,7 +294,7 @@
             </div>
         </section>
 
-        <button type="submit" class="continue-button">
+        <button type="submit" class="continue-button" @disabled($usingSavedPlaces && $savedPlaces->count() < 2)>
             Continue
         </button>
     </form>

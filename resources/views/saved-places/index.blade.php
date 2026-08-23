@@ -56,6 +56,23 @@
 
     </div>
 
+    @if($savedPlaces->count() > 0)
+        <section class="trip-cta">
+            <div>
+                <span>Ready to turn favourites into a journey?</span>
+                <h2>Start Your Trip Now</h2>
+                <p>Use your saved places to generate an optimised itinerary.</p>
+            </div>
+            @if($savedPlaces->count() >= 2)
+                <a href="{{ route('route.index', ['source' => 'saved']) }}">
+                    Generate Itinerary &rarr;
+                </a>
+            @else
+                <span class="trip-cta-disabled">Save one more place to continue</span>
+            @endif
+        </section>
+    @endif
+
 
     @if(session('success'))
 
