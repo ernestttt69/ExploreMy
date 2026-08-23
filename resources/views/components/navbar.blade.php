@@ -67,6 +67,12 @@
 				</li>
 
 				<li>
+					<a href="{{ route('trips.index') }}" class="nav-link-custom {{ request()->routeIs('trips.*') ? 'active' : '' }}">
+						My Trips
+					</a>
+				</li>
+
+				<li>
 					<a href="{{ route('about-malaysia') }}" class="nav-link-custom {{ request()->routeIs('about-malaysia') ? 'active' : '' }}">
 						{{ __('ui.nav.about') }}
 					</a>

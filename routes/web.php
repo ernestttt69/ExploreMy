@@ -10,6 +10,7 @@ use App\Http\Controllers\TransportController;
 use App\Http\Controllers\Admin\AttractionController as AdminAttractionController;
 use App\Http\Controllers\Admin\AdminAuthController;
 
+
 Route::get('/', function () {
 	return redirect('/login');
 });
@@ -26,6 +27,10 @@ Route::get('/dashboard', function () {
 	}
 	return view('dashboard.index', compact('user', 'preferences'));
 })->middleware('auth')->name('dashboard');
+
+Route::get('/trips', function () {
+    return view('trips.index');
+})->middleware('auth')->name('trips.index');
 
 Route::post('/logout', function (Request $request) {
 	auth()->logout();
