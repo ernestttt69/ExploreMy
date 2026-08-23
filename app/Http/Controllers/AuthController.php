@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Google\Client;
+use App\Models\LoginActivity;
+use Illuminate\Support\Carbon;
 
 class AuthController extends Controller
 {
@@ -16,9 +19,13 @@ class AuthController extends Controller
 
 	public function googleLogin(Request $request)
 	{
+		$request->validate([
+			'credential' => ['required', 'string'],
+		]);
+
 		try {
 			$client = new Client([
-				'client_id' => env('GOOGLE_CLIENT_ID')
+				'client_id' => config('services.google.client_id'),
 			]);
 
 			$payload = $client->verifyIdToken($request->credential);
@@ -27,33 +34,40 @@ class AuthController extends Controller
 				return response()->json([
 					'success' => false,
 					'message' => 'Invalid Google Token'
-				]);
+				], 401);
 			}
 
-			$user = User::updateOrCreate(
-				[
-					'google_id' => $payload['sub']
-				],
-				[
-					'name' => $payload['name'],
-					'email' => $payload['email'],
-					'profile_picture' => $payload['picture']
-				]
-			);
+			$user = User::firstOrNew(['google_id' => $payload['sub']]);
+			if (! $user->exists) {
+				$user->name = $payload['name'];
+				$user->profile_picture = $payload['picture'];
+			}
+			$user->email = $payload['email'];
+			$user->save();
 
             Auth::login($user);
+            $request->session()->regenerate();
+
+            $user->forceFill(['last_login_at' => Carbon::now()])->save();
+            LoginActivity::create([
+                'user_id' => $user->user_id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'logged_in_at' => Carbon::now(),
+            ]);
 
             return response()->json([
                 'success' => true,
                 'redirect' => '/dashboard'
             ]);
 
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
+            Log::error('Google login failed', ['exception' => $e]);
+
             return response()->json([
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-            ]);
+				'success' => false,
+				'message' => 'Google login failed. Please try again.',
+            ], 500);
         }
 	}
 }

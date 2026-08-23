@@ -1,0 +1,38 @@
+[
+    {
+        "preference_id": 1,
+        "category_name": "Nature"
+    },
+    {
+        "preference_id": 2,
+        "category_name": "Adventure"
+    },
+    {
+        "preference_id": 3,
+        "category_name": "Culture & Heritage"
+    },
+    {
+        "preference_id": 4,
+        "category_name": "Family"
+    },
+    {
+        "preference_id": 5,
+        "category_name": "Food & Drinks"
+    },
+    {
+        "preference_id": 6,
+        "category_name": "Shopping"
+    },
+    {
+        "preference_id": 7,
+        "category_name": "Beach"
+    },
+    {
+        "preference_id": 8,
+        "category_name": "City"
+    },
+    {
+        "preference_id": 9,
+        "category_name": "Relaxation"
+    }
+]
