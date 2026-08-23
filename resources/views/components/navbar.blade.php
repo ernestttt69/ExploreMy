@@ -5,7 +5,7 @@
 
 			<div class="d-flex justify-content-between align-items-center">
 
-				<div class="nav-brand-container">
+				<a href="{{ route('dashboard') }}" class="nav-brand-container text-decoration-none" aria-label="Back to dashboard">
 
 					<div class="nav-logo-badge">
 						<img src="{{ asset('images/ExploreMy_icon.jpeg') }}">
@@ -15,7 +15,7 @@
 						ExploreMY
 					</h2>
 
-				</div>
+				</a>
 
 				<div class="d-flex align-items-center gap-3">
 
@@ -61,7 +61,7 @@
 				</li>
 
 				<li>
-					<a href="{{ route('transportation') }}" class="nav-link-custom {{ request()->routeIs('transportation') ? 'active' : '' }}">
+					<a href="{{ route('transportation') }}" class="nav-link-custom {{ request()->routeIs('transportation', 'transport.*') ? 'active' : '' }}">
 						{{ __('ui.nav.transportation') }}
 					</a>
 				</li>
