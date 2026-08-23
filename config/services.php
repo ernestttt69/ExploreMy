@@ -30,6 +30,11 @@ return [
         'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
+    'google_maps' => [
+        'routes_api_key' => env('GOOGLE_MAPS_ROUTES_API_KEY'),
+        'browser_api_key' => env('GOOGLE_MAPS_BROWSER_API_KEY'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

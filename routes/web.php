@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AttractionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoutePlanningController;
 use App\Http\Controllers\SavedPlaceController;
 use App\Http\Controllers\TravelPreferenceController;
 use App\Http\Controllers\TransportController;
@@ -52,6 +53,12 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])
 	->middleware('auth')->name('profile.destroy');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/route-planning', [RoutePlanningController::class, 'index'])
+        ->name('route.index');
+
+    Route::post('/route-preference', [RoutePlanningController::class, 'storePreference'])
+        ->name('route.preference');
+
     Route::get('/transportation', [TransportController::class, 'index'])
         ->name('transportation');
 
