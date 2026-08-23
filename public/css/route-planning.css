@@ -87,6 +87,18 @@
     margin-top: 12px;
 }
 
+.route-mode-badge {
+    background: #e8f5ed;
+    border-radius: 999px;
+    color: #23613f;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 800;
+    margin-top: 8px;
+    padding: 6px 10px;
+    text-transform: uppercase;
+}
+
 .route-result {
     order: 2;
     min-width: 0;

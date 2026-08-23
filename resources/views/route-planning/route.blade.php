@@ -51,6 +51,9 @@
             <div class="card-heading">
                 <h2>{{ $routeResult['title'] }}</h2>
                 <p>{{ $routeResult['description'] }}</p>
+                <span class="route-mode-badge">
+                    {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'Driving route' : 'Public transit route' }}
+                </span>
             </div>
 
             @if (session('routeOptions'))
@@ -161,7 +164,9 @@
             </div>
 
             <div class="transit-legs">
-                <h3>Public transport trip plan</h3>
+                <h3>
+                    {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'Driving trip plan' : 'Public transport trip plan' }}
+                </h3>
                 @foreach ($routeResult['transit_legs'] as $leg)
                     <section class="transit-leg">
                         <div class="transit-leg-heading">

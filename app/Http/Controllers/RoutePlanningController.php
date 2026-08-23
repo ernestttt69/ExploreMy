@@ -75,16 +75,31 @@ class RoutePlanningController extends Controller
         }
 
         try {
-            $metrics = $this->getGoogleTransitMetrics($places);
+            $travelMode = 'TRANSIT';
+            try {
+                $metrics = $this->getGoogleTransitMetrics($places, $travelMode);
+            } catch (\RuntimeException $exception) {
+                if (($validated['source'] ?? null) !== 'saved') {
+                    throw $exception;
+                }
+
+                $travelMode = 'DRIVE';
+                $metrics = $this->getGoogleTransitMetrics($places, $travelMode);
+            }
+
             $routeOptions = $this->findOptimalRoutes(
                 $places,
                 $metrics,
                 $validated['optimization_preference'],
-                3
+                3,
+                $travelMode
             );
             $selectedOptionIndex = (int) ($validated['route_option_index'] ?? 0);
             $routeResult = $routeOptions[$selectedOptionIndex] ?? $routeOptions[0];
-            $routeResult['transit_legs'] = $this->getTransitLegs($routeResult['stops']);
+            $routeResult['transit_legs'] = $this->getTransitLegs(
+                $routeResult['stops'],
+                $travelMode
+            );
 
             if ($routeResult['transit_legs'] !== []) {
                 $routeResult['departure_time'] = $routeResult['transit_legs'][0]['departure_time'];
@@ -120,7 +135,8 @@ class RoutePlanningController extends Controller
         array $places,
         array $metrics,
         string $preference,
-        int $optionCount
+        int $optionCount,
+        string $travelMode = 'TRANSIT'
     ): array
     {
         $placeCount = count($places);
@@ -195,7 +211,8 @@ class RoutePlanningController extends Controller
                 $metrics,
                 $preference,
                 $candidate['path'],
-                $index
+                $index,
+                $travelMode
             ),
             array_slice($completedRoutes, 0, $optionCount),
             range(0, min($optionCount, count($completedRoutes)) - 1)
@@ -207,7 +224,8 @@ class RoutePlanningController extends Controller
         array $metrics,
         string $preference,
         array $path,
-        int $optionIndex
+        int $optionIndex,
+        string $travelMode
     ): array {
         $stops = [];
         foreach ($path as $position => $placeIndex) {
@@ -267,11 +285,15 @@ class RoutePlanningController extends Controller
             'total_duration_display' => $this->formatDuration($totals['duration']),
             'total_fare' => $hasCompleteFare ? round($totals['fare'], 2) : null,
             'fare_currency' => $metrics['fare_currency'],
+            'travel_mode' => $travelMode,
         ];
     }
 
     /** Fetch distance, duration, and available fare for every pair of places. */
-    private function getGoogleTransitMetrics(array $places): array
+    private function getGoogleTransitMetrics(
+        array $places,
+        string $travelMode = 'TRANSIT'
+    ): array
     {
         $waypoints = array_map(fn (array $place): array => [
             'waypoint' => $this->routeWaypoint($place),
@@ -286,7 +308,7 @@ class RoutePlanningController extends Controller
             ->post('https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix', [
                 'origins' => $waypoints,
                 'destinations' => $waypoints,
-                'travelMode' => 'TRANSIT',
+                'travelMode' => $travelMode,
             ])
             ->throw()
             ->json();
@@ -347,7 +369,10 @@ class RoutePlanningController extends Controller
     }
 
     /** Fetch a drawable transit route for each consecutive stop. */
-    private function getTransitLegs(array $stops): array
+    private function getTransitLegs(
+        array $stops,
+        string $travelMode = 'TRANSIT'
+    ): array
     {
         $legs = [];
         $departureTime = CarbonImmutable::now('UTC')->addMinutes(2);
@@ -377,7 +402,7 @@ class RoutePlanningController extends Controller
                 ->post('https://routes.googleapis.com/directions/v2:computeRoutes', [
                     'origin' => $this->routeWaypoint($from),
                     'destination' => $this->routeWaypoint($to),
-                    'travelMode' => 'TRANSIT',
+                    'travelMode' => $travelMode,
                     'departureTime' => $departureTime->toRfc3339String(),
                     'computeAlternativeRoutes' => false,
                     'languageCode' => 'en',
@@ -463,9 +488,14 @@ class RoutePlanningController extends Controller
                 }
 
                 $stepArrival = $cursor->addSeconds($stepDuration);
+                $stepLabel = match ($mode) {
+                    'DRIVE' => 'Drive',
+                    'BICYCLE' => 'Cycle',
+                    default => 'Walk',
+                };
                 $tripSteps[] = $this->makeTimelineStep(
-                    'WALK',
-                    'Walk',
+                    $mode,
+                    $stepLabel,
                     $currentLocation,
                     $nextTransitStop,
                     $cursor,
