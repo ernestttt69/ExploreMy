@@ -1,0 +1,246 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Attraction;
+use App\Models\PreferenceCategory;
+use App\Models\State;
+use App\Models\UserPreference;
+use App\Models\Wishlist;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+
+class AttractionController extends Controller
+{
+    public function index(Request $request)
+    {
+        $states = State::orderBy('state_name')->get();
+
+        $categories = PreferenceCategory::orderBy('category_name')->get();
+
+        $searchSubmitted = $request->input('search_submitted') === '1';
+
+        if ($searchSubmitted) {
+            $validator = Validator::make(
+                $request->all(),
+                [
+                    'search' => [
+                        'required',
+                        'string',
+                        'max:255',
+                    ],
+                    'start_date' => [
+                        'required',
+                        'date',
+                        'after_or_equal:today',
+                    ],
+                    'end_date' => [
+                        'required',
+                        'date',
+                        'after_or_equal:start_date',
+                    ],
+                ],
+                [
+                    'search.required' => 'Please enter a place to search.',
+                    'start_date.required' => 'Please select a start date.',
+                    'start_date.after_or_equal' => 'The start date cannot be before today.',
+                    'end_date.required' => 'Please select an end date.',
+                    'end_date.after_or_equal' => 'The end date cannot be before the start date.',
+                ]
+            );
+
+            if ($validator->fails()) {
+                return redirect()
+                    ->route('attractions.index')
+                    ->withErrors($validator)
+                    ->withInput($request->except('search_submitted'));
+            }
+        }
+
+        $query = Attraction::with([
+            'images',
+            'state',
+            'preferences',
+        ]);
+
+        if ($searchSubmitted) {
+            $search = trim($request->input('search'));
+
+            $query->where(function ($q) use ($search) {
+                $q->where(
+                    'attraction_name',
+                    'like',
+                    '%' . $search . '%'
+                )
+                ->orWhere(
+                    'location',
+                    'like',
+                    '%' . $search . '%'
+                )
+                ->orWhere(
+                    'description',
+                    'like',
+                    '%' . $search . '%'
+                );
+            });
+
+            if ($request->filled('state_id')) {
+                $query->where(
+                    'state_id',
+                    $request->input('state_id')
+                );
+            }
+
+            if ($request->filled('budget_level')) {
+                $query->where(
+                    'budget_level',
+                    $request->input('budget_level')
+                );
+            }
+
+            if ($request->filled('rating')) {
+                $query->where(
+                    'rating',
+                    '>=',
+                    $request->input('rating')
+                );
+            }
+
+            $selectedCategories = array_map(
+                'intval',
+                $request->input('categories', [])
+            );
+
+            if (!empty($selectedCategories)) {
+                $query->whereHas(
+                    'preferences',
+                    function ($q) use ($selectedCategories) {
+                        $q->whereIn(
+                            'preference_categories.preference_id',
+                            $selectedCategories
+                        );
+                    }
+                );
+            }
+
+            $query->orderByDesc('rating');
+        } else {
+            $userPreferenceIds = UserPreference::where(
+                'user_id',
+                Auth::id()
+            )
+                ->pluck('preference_id')
+                ->map(function ($id) {
+                    return (int) $id;
+                })
+                ->toArray();
+
+            if (!empty($userPreferenceIds)) {
+                $query->whereHas(
+                    'preferences',
+                    function ($q) use ($userPreferenceIds) {
+                        $q->whereIn(
+                            'preference_categories.preference_id',
+                            $userPreferenceIds
+                        );
+                    }
+                );
+            }
+
+            $query->orderByDesc('rating');
+        }
+
+        $attractions = $query->paginate(12);
+
+        return view(
+            'attractions.index',
+            compact(
+                'attractions',
+                'states',
+                'categories',
+                'searchSubmitted'
+            )
+        );
+    }
+
+    public function show($id)
+    {
+        $attraction = Attraction::with([
+            'images',
+            'state',
+            'preferences',
+        ])->findOrFail($id);
+
+        $isWishlisted = Wishlist::where(
+            'user_id',
+            Auth::id()
+        )
+            ->where(
+                'attraction_id',
+                $attraction->attraction_id
+            )
+            ->exists();
+
+        return view(
+            'attractions.show',
+            compact(
+                'attraction',
+                'isWishlisted'
+            )
+        );
+    }
+
+    public function addToWishlist($id)
+    {
+        $attraction = Attraction::findOrFail($id);
+
+        $existingWishlist = Wishlist::where(
+            'user_id',
+            Auth::id()
+        )
+            ->where(
+                'attraction_id',
+                $attraction->attraction_id
+            )
+            ->first();
+
+        if (!$existingWishlist) {
+            $wishlist = new Wishlist();
+
+            $wishlist->user_id = Auth::id();
+
+            $wishlist->attraction_id =
+                $attraction->attraction_id;
+
+            $wishlist->save();
+        }
+
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Attraction added to your wishlist.'
+            );
+    }
+
+    public function removeFromWishlist($id)
+    {
+        Wishlist::where(
+            'user_id',
+            Auth::id()
+        )
+            ->where(
+                'attraction_id',
+                $id
+            )
+            ->delete();
+
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Attraction removed from your wishlist.'
+            );
+    }
+}

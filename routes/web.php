@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AttractionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SavedPlaceController;
 use App\Http\Controllers\TravelPreferenceController;
@@ -69,14 +70,20 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/about-malaysia', 'about-malaysia')->name('about-malaysia');
 
+    Route::get('/attractions', [AttractionController::class, 'index'])
+        ->name('attractions.index');
+
+    Route::get('/attractions/{id}', [AttractionController::class, 'show'])
+        ->name('attractions.show');
+
+    Route::post('/attractions/{id}/wishlist', [AttractionController::class, 'addToWishlist'])
+        ->name('attractions.wishlist.add');
+
+    Route::delete('/attractions/{id}/wishlist', [AttractionController::class, 'removeFromWishlist'])
+        ->name('attractions.wishlist.remove');
+
     Route::get('/saved-places', [SavedPlaceController::class, 'index'])
         ->name('saved-places.index');
-
-    Route::post('/saved-places/{attraction}', [SavedPlaceController::class, 'store'])
-        ->name('saved-places.store');
-
-    Route::delete('/saved-places/{attraction}', [SavedPlaceController::class, 'destroy'])
-        ->name('saved-places.destroy');
 
     Route::get('/travel-preferences', [TravelPreferenceController::class, 'edit'])
         ->name('travel-preferences.edit');

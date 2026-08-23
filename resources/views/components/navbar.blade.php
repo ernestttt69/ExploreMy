@@ -55,7 +55,7 @@
 				</li>
 
 				<li>
-					<a href="{{ route('saved-places.index') }}" class="nav-link-custom {{ request()->routeIs('saved-places.*') ? 'active' : '' }}">
+					<a href="{{ route('attractions.index') }}" class="nav-link-custom {{ request()->routeIs('attractions.*') ? 'active' : '' }}">
 						{{ __('ui.nav.explore') }}
 					</a>
 				</li>
