@@ -99,6 +99,16 @@
     text-transform: uppercase;
 }
 
+.route-omitted-warning {
+    background: #fff8e1;
+    border: 1px solid #f0d889;
+    border-radius: 10px;
+    color: #735c13;
+    font-size: 13px;
+    margin-top: 12px;
+    padding: 10px 12px;
+}
+
 .route-result {
     order: 2;
     min-width: 0;

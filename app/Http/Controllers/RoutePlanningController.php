@@ -76,6 +76,7 @@ class RoutePlanningController extends Controller
 
         try {
             $travelMode = 'TRANSIT';
+            $omittedPlaces = [];
             try {
                 $metrics = $this->getGoogleTransitMetrics($places, $travelMode);
             } catch (\RuntimeException $exception) {
@@ -84,7 +85,17 @@ class RoutePlanningController extends Controller
                 }
 
                 $travelMode = 'DRIVE';
-                $metrics = $this->getGoogleTransitMetrics($places, $travelMode);
+                $metrics = $this->getGoogleTransitMetrics($places, $travelMode, true);
+                [$places, $metrics, $omittedPlaces] = $this->connectedRouteSubset(
+                    $places,
+                    $metrics
+                );
+
+                if (count($places) < 2) {
+                    throw new UnexpectedValueException(
+                        'Google Maps cannot connect at least two of your saved places. Try saving places in the same region.'
+                    );
+                }
             }
 
             $routeOptions = $this->findOptimalRoutes(
@@ -96,6 +107,7 @@ class RoutePlanningController extends Controller
             );
             $selectedOptionIndex = (int) ($validated['route_option_index'] ?? 0);
             $routeResult = $routeOptions[$selectedOptionIndex] ?? $routeOptions[0];
+            $routeResult['omitted_places'] = $omittedPlaces;
             $routeResult['transit_legs'] = $this->getTransitLegs(
                 $routeResult['stops'],
                 $travelMode
@@ -292,7 +304,8 @@ class RoutePlanningController extends Controller
     /** Fetch distance, duration, and available fare for every pair of places. */
     private function getGoogleTransitMetrics(
         array $places,
-        string $travelMode = 'TRANSIT'
+        string $travelMode = 'TRANSIT',
+        bool $allowPartial = false
     ): array
     {
         $waypoints = array_map(fn (array $place): array => [
@@ -353,8 +366,8 @@ class RoutePlanningController extends Controller
 
         for ($origin = 0; $origin < $placeCount; $origin++) {
             for ($destination = 0; $destination < $placeCount; $destination++) {
-                if ($distances[$origin][$destination] === null
-                    || $durations[$origin][$destination] === null) {
+                if (!$allowPartial && ($distances[$origin][$destination] === null
+                    || $durations[$origin][$destination] === null)) {
                     throw new \RuntimeException('Google Maps did not return every required route.');
                 }
             }
@@ -366,6 +379,61 @@ class RoutePlanningController extends Controller
             'fares' => $fares,
             'fare_currency' => $fareCurrency,
         ];
+    }
+
+    private function connectedRouteSubset(array $places, array $metrics): array
+    {
+        $activeIndexes = array_keys($places);
+        $omittedPlaces = [];
+
+        while (count($activeIndexes) >= 2) {
+            $missingScores = array_fill_keys($activeIndexes, 0);
+
+            foreach ($activeIndexes as $origin) {
+                foreach ($activeIndexes as $destination) {
+                    if ($origin === $destination) {
+                        continue;
+                    }
+
+                    if ($metrics['distances'][$origin][$destination] === null
+                        || $metrics['durations'][$origin][$destination] === null) {
+                        $missingScores[$origin]++;
+                        $missingScores[$destination]++;
+                    }
+                }
+            }
+
+            $highestMissingScore = max($missingScores);
+            if ($highestMissingScore === 0) {
+                break;
+            }
+
+            $removeIndex = array_search($highestMissingScore, $missingScores, true);
+            $omittedPlaces[] = $places[$removeIndex]['name'];
+            $activeIndexes = array_values(array_filter(
+                $activeIndexes,
+                fn (int $index): bool => $index !== $removeIndex
+            ));
+        }
+
+        $filteredPlaces = array_map(
+            fn (int $index): array => $places[$index],
+            $activeIndexes
+        );
+        $filteredMetrics = [];
+
+        foreach (['distances', 'durations', 'fares'] as $metricName) {
+            $filteredMetrics[$metricName] = array_map(
+                fn (int $origin): array => array_map(
+                    fn (int $destination) => $metrics[$metricName][$origin][$destination],
+                    $activeIndexes
+                ),
+                $activeIndexes
+            );
+        }
+        $filteredMetrics['fare_currency'] = $metrics['fare_currency'];
+
+        return [$filteredPlaces, $filteredMetrics, $omittedPlaces];
     }
 
     /** Fetch a drawable transit route for each consecutive stop. */

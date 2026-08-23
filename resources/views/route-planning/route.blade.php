@@ -54,6 +54,13 @@
                 <span class="route-mode-badge">
                     {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'Driving route' : 'Public transit route' }}
                 </span>
+                @if(!empty($routeResult['omitted_places']))
+                    <div class="route-omitted-warning">
+                        <strong>Not included in this route:</strong>
+                        {{ implode(', ', $routeResult['omitted_places']) }}.
+                        Google Maps could not connect these places by road or public transit.
+                    </div>
+                @endif
             </div>
 
             @if (session('routeOptions'))
