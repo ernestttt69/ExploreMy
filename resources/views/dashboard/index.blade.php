@@ -1,15 +1,55 @@
-<!DOCTYPE html><html lang="{{ app()->getLocale() }}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="ExploreMY"><title>ExploreMY - {{ __('ui.dashboard.title') }}</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link rel="stylesheet" href="{{ asset('css/dashboard.css') }}"></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ExploreMY - Dashboard</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+</head>
+<body>
+
 @include('components.navbar')
-<main class="dashboard-page"><div class="container content-area">
-<section class="welcome-panel" aria-labelledby="welcome-title"><div class="welcome-content"><span class="eyebrow">{{ __('ui.dashboard.eyebrow') }}</span><h1 id="welcome-title">{{ __('ui.messages.welcome') }}</h1><p>{{ __('ui.dashboard.intro') }}</p><div class="welcome-actions"><a href="{{ route('travel-preferences.edit') }}" class="btn-dashboard btn-dashboard-light">{{ __('ui.dashboard.plan') }} <span>&rarr;</span></a><a href="{{ route('saved-places.index') }}" class="btn-dashboard btn-dashboard-ghost">{{ __('ui.dashboard.view_saved') }}</a></div></div><div class="welcome-visual" aria-hidden="true"><div class="route-line"></div><i class="pin pin-one"></i><i class="pin pin-two"></i><div class="destination-card"><span>MY</span><div><small>{{ __('ui.dashboard.next') }}</small><strong>{{ __('ui.dashboard.explore_my') }}</strong></div></div></div></section>
 
-<section class="dashboard-section"><div class="section-heading"><div><span class="section-kicker">{{ __('ui.dashboard.glance') }}</span><h2>{{ __('ui.dashboard.travel_dashboard') }}</h2></div><span class="today-label">{{ now()->translatedFormat('l, d M Y') }}</span></div><div class="stats-grid"><a href="{{ route('saved-places.index') }}" class="stat-card"><span class="stat-icon icon-sage"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-7-11a4 4 0 017-2.65A4 4 0 0119 10c0 6.65-7 11-7 11z"/></svg></span><span><strong>{{ __('ui.dashboard.saved') }}</strong><small>{{ __('ui.dashboard.collection') }}</small></span><b>&rsaquo;</b></a><a href="{{ route('travel-preferences.edit') }}" class="stat-card"><span class="stat-icon icon-blue"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></span><span><strong>{{ __('ui.dashboard.preferences') }}</strong><small>{{ __('ui.dashboard.personalise') }}</small></span><b>&rsaquo;</b></a><a href="{{ route('profile') }}" class="stat-card"><span class="stat-icon icon-amber"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg></span><span><strong>{{ __('ui.dashboard.profile') }}</strong><small>{{ __('ui.dashboard.identity') }}</small></span><b>&rsaquo;</b></a></div></section>
+<div class="dashboard-page">
+	<div class="container content-area">
 
-<section class="dashboard-section personalisation-panel"><div class="section-heading"><div><span class="section-kicker">{{ __('ui.dashboard.made_for') }}</span><h2>{{ __('ui.dashboard.your_interests') }}</h2></div></div>
-@if(!$user->personalisation_consent)<div class="preference-message disabled">{{ __('ui.dashboard.disabled') }} <a href="{{ route('profile') }}#privacy">{{ __('ui.profile.privacy') }} &rarr;</a></div>
-@elseif($preferences->isEmpty())<div class="preference-message">{{ __('ui.dashboard.no_interests') }} <a href="{{ route('travel-preferences.edit') }}">{{ __('ui.dashboard.update') }} &rarr;</a></div>
-@else<p class="preference-intro">{{ __('ui.dashboard.interest_intro') }}</p><div class="interest-chips">@foreach($preferences as $preference)<span>{{ $preference->localized_name }}</span>@endforeach</div>@endif
-<div class="travel-notes-card"><span>{{ __('ui.dashboard.travel_notes') }}</span><p>{{ filled($user->bio) ? $user->bio : __('ui.dashboard.no_notes') }}</p>@if(blank($user->bio))<a href="{{ route('profile') }}#personal">{{ __('ui.profile.travel_notes') }} &rarr;</a>@endif</div></section>
+		<div class="row">
 
-<section class="dashboard-section"><div class="section-heading"><div><span class="section-kicker">{{ __('ui.dashboard.quick') }}</span><h2>{{ __('ui.dashboard.question') }}</h2></div></div><div class="feature-grid"><article class="feature-card feature-primary"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 17l4-4 4 3 7-9M15 7h4v4"/></svg></div><span class="feature-label">{{ __('ui.dashboard.made_for') }}</span><h3>{{ __('ui.dashboard.build') }}</h3><p>{{ __('ui.dashboard.build_text') }}</p><a href="{{ route('travel-preferences.edit') }}">{{ __('ui.dashboard.update') }} <span>&rarr;</span></a></article><article class="feature-card"><div class="feature-icon feature-icon-soft"><svg viewBox="0 0 24 24"><path d="M12 21s7-4.35 7-11a7 7 0 10-14 0c0 6.65 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div><span class="feature-label">{{ __('ui.dashboard.collection') }}</span><h3>{{ __('ui.dashboard.revisit') }}</h3><p>{{ __('ui.dashboard.revisit_text') }}</p><a href="{{ route('saved-places.index') }}">{{ __('ui.dashboard.open') }} <span>&rarr;</span></a></article><aside class="travel-tip"><span class="tip-badge">{{ __('ui.dashboard.tip') }}</span><blockquote>“{{ __('ui.dashboard.quote') }}”</blockquote><small>&mdash; {{ __('ui.dashboard.inspiration') }}</small></aside></div></section>
-</div></main>@include('components.footer')</body></html>
+			<div class="col-md-6">
+				<div class="dashboard-card">
+					<h3>Public Transportation</h3>
+
+					<p>
+						Explore MRT, LRT, bus and other transportation options.
+					</p>
+
+					<button class="btn btn-success">
+						View Transportation
+					</button>
+				</div>
+			</div>
+
+			<div class="col-md-6">
+				<div class="dashboard-card">
+					<h3>Start Your Plan Now</h3>
+
+					<p>
+						Create your travel plan and discover places around Malaysia.
+					</p>
+
+					<button class="btn btn-outline-success">
+						Start Planning
+					</button>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+</div>
+
+@include('components.footer')
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+# Install Python dependencies with: py -m pip install -r requirements.txt
+requests
+pandas
+python-dotenv
