@@ -4,20 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Public Transport Route Search - ExploreMy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('css/transport.css') }}">
 </head>
-<body>
+<body class="transport-page">
+
+@include('components.navbar')
 
 <div class="transport-container">
-
-    <!-- Top Header -->
-    <header class="nav-header">
-        <div class="brand-section">
-            <img src="{{ asset('images/ExploreMy_icon.jpeg') }}" alt="ExploreMY Logo" class="brand-logo">
-            <h1>ExploreMY Transport</h1>
-        </div>
-        <span class="header-subtitle">Route Planner</span>
-    </header>
 
     <!-- System Alerts -->
     @if(session('error') || isset($error))
