@@ -2,80 +2,92 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use App\Models\LoginActivity;
 
 class ProfileController extends Controller
 {
-    public function update(Request $request)
-    {
-        /** @var User $user */
-        $user = Auth::user();
+	public function show()
+	{
+		$user = Auth::user();
+		$fields = ['name', 'email', 'profile_picture', 'phone', 'date_of_birth', 'nationality', 'bio'];
+		$completed = collect($fields)->filter(fn ($field) => filled($user->{$field}))->count();
+		$completion = (int) round(($completed / count($fields)) * 100);
+		$activities = LoginActivity::where('user_id', $user->user_id)->latest('logged_in_at')->limit(5)->get();
 
-        if (!$user) {
-            return redirect()
-                ->back()
-                ->with('error', 'User not found.');
-        }
+		return view('profile', compact('user', 'completion', 'activities'));
+	}
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'profile_picture' => 'nullable|image|max:2048',
-        ]);
+	public function update(Request $request)
+	{
+		$user = Auth::user();
 
-        $user->name = $request->name;
+		$request->validate([
+			'name' => 'required|string|max:255',
+			'profile_picture' => 'nullable|image|max:2048',
+			'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\-\s]+$/'],
+			'date_of_birth' => ['nullable', 'date', 'before:today'],
+			'nationality' => ['nullable', 'string', 'max:100'],
+			'bio' => ['nullable', 'string', 'max:500'],
+			'preferred_language' => ['required', 'in:en,ms,zh'],
+			'personalisation_consent' => ['nullable', 'boolean'],
+		]);
 
-        $oldProfilePicture = $user->profile_picture;
 
-        if ($request->hasFile('profile_picture')) {
-            $image = $request->file('profile_picture');
+		$user->name = $request->name;
+		$user->phone = $request->phone;
+		$user->date_of_birth = $request->date_of_birth;
+		$user->nationality = $request->nationality;
+		$user->bio = $request->bio;
+		$user->preferred_language = $request->preferred_language;
+		$user->personalisation_consent = $request->boolean('personalisation_consent');
+		$oldProfilePicture = null;
 
-            $imageName = Str::uuid() . '.' . $image->extension();
 
-            $profileImageDirectory = public_path('profile_images');
+		if($request->hasFile('profile_picture'))
+		{
+			$image = $request->file('profile_picture');
 
-            if (!File::exists($profileImageDirectory)) {
-                File::makeDirectory(
-                    $profileImageDirectory,
-                    0755,
-                    true
-                );
-            }
+			$imageName = Str::uuid().'.'.$image->extension();
+			$oldProfilePicture = $user->profile_picture;
 
-            $image->move(
-                $profileImageDirectory,
-                $imageName
-            );
+			$image->move(
+				public_path('profile_images'),
+				$imageName
+			);
 
-            $user->profile_picture = '/profile_images/' . $imageName;
-        }
+			$user->profile_picture = '/profile_images/'.$imageName;
+		}
 
-        $user->save();
 
-        if (
-            $oldProfilePicture &&
-            str_starts_with(
-                $oldProfilePicture,
-                '/profile_images/'
-            )
-        ) {
-            $oldFile = public_path(
-                ltrim($oldProfilePicture, '/')
-            );
+		$user->save();
 
-            if (File::exists($oldFile)) {
-                File::delete($oldFile);
-            }
-        }
+		if ($oldProfilePicture && str_starts_with($oldProfilePicture, '/profile_images/')) {
+			File::delete(public_path(ltrim($oldProfilePicture, '/')));
+		}
 
-        return redirect()
-            ->back()
-            ->with(
-                'success',
-                'Profile updated successfully!'
-            );
-    }
+
+		return back()->with(
+			'success',
+			__('ui.messages.profile_updated')
+		);
+	}
+
+	public function destroy(Request $request)
+	{
+		$request->validate(['confirmation' => ['required', 'in:DELETE']]);
+		$user = Auth::user();
+		$picture = $user->profile_picture;
+		Auth::logout();
+		$user->delete();
+		$request->session()->invalidate();
+		$request->session()->regenerateToken();
+		if ($picture && str_starts_with($picture, '/profile_images/')) {
+			File::delete(public_path(ltrim($picture, '/')));
+		}
+		return redirect('/login')->with('success', __('ui.messages.account_deleted'));
+	}
 }
