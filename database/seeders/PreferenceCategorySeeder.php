@@ -2,27 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\PreferenceCategory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class PreferenceCategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $categories = [
-            'Adventure',
-            'Beach',
-            'Culture',
-            'Food',
-            'History',
-            'Nature',
-            'Shopping',
-        ];
-
-        foreach ($categories as $category) {
-            PreferenceCategory::firstOrCreate([
-                'category_name' => $category,
-            ]);
-        }
+        $rows = json_decode(file_get_contents(database_path('seeders/data/preference_categories.json')), true, 512, JSON_THROW_ON_ERROR);
+        DB::table('preference_categories')->upsert($rows, ['preference_id'], ['category_name']);
     }
 }
