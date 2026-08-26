@@ -519,13 +519,34 @@
                                 {{ Str::limit($attraction->description, 100) }}
                             </p>
 
-                            <a
-                                href="{{ route('attractions.show', $attraction->attraction_id) }}"
-                                class="details-button"
-                            >
-                                View Attraction
-                                <span>→</span>
-                            </a>
+                            <div class="attraction-card-actions">
+
+                                <a
+                                    href="{{ route('attractions.show', $attraction->attraction_id) }}"
+                                    class="details-button"
+                                >
+                                    View Attraction
+                                    <span>→</span>
+                                </a>
+
+                                @if(in_array((int) $attraction->attraction_id, $wishlistedAttractionIds, true))
+
+                                    <form method="POST" action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="card-wishlist-button is-saved" aria-label="Remove {{ $attraction->attraction_name }} from wishlist">♥ Saved</button>
+                                    </form>
+
+                                @else
+
+                                    <form method="POST" action="{{ route('attractions.wishlist.add', $attraction->attraction_id) }}">
+                                        @csrf
+                                        <button type="submit" class="card-wishlist-button" aria-label="Add {{ $attraction->attraction_name }} to wishlist">♡ Save</button>
+                                    </form>
+
+                                @endif
+
+                            </div>
 
                         </div>
 

@@ -102,6 +102,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/saved-places', [SavedPlaceController::class, 'index'])
         ->name('saved-places.index');
 
+    Route::post('/saved-places/collections', [SavedPlaceController::class, 'storeCollection'])
+        ->name('saved-places.collections.store');
+
+    Route::post('/saved-places/collections/{collection}/places', [SavedPlaceController::class, 'addToCollection'])
+        ->name('saved-places.collections.places.store');
+
     Route::get('/travel-preferences', [TravelPreferenceController::class, 'edit'])
         ->name('travel-preferences.edit');
 

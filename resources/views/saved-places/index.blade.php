@@ -48,13 +48,105 @@
         </div>
 
         <a
-            href="{{ url('/profile') }}"
+            href="{{ url()->previous() }}"
             class="btn-back"
+            aria-label="Back to previous page"
         >
             ← Back to Profile
         </a>
 
     </div>
+
+    @if($savedPlaces->count() > 0)
+        <section class="collections-panel">
+            <div class="collections-heading">
+                <div>
+                    <p class="page-kicker">Plan your way</p>
+                    <h2>Create a custom collection</h2>
+                    <p>Choose saved places for a trip, then give the collection a name.</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ route('saved-places.collections.store') }}" class="collection-form">
+                @csrf
+                <label for="collection-name">Collection name</label>
+                <input id="collection-name" name="name" value="{{ old('name') }}" maxlength="80" placeholder="e.g. Langkawi weekend" required>
+
+                <fieldset>
+                    <legend>Select saved places</legend>
+                    <div class="collection-place-options">
+                        @foreach($savedPlaces as $place)
+                            <label class="collection-place-option">
+                                <input type="checkbox" name="wishlist_ids[]" value="{{ $place->wishlist_id }}" {{ in_array($place->wishlist_id, old('wishlist_ids', [])) ? 'checked' : '' }}>
+                                <span>{{ $place->attraction->attraction_name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+
+                @error('name')<p class="collection-error">{{ $message }}</p>@enderror
+                @error('wishlist_ids')<p class="collection-error">{{ $message }}</p>@enderror
+
+                <button type="submit">Create collection</button>
+            </form>
+
+            @if($collections->isNotEmpty())
+                <div class="collection-list">
+                    @foreach($collections as $collection)
+                        <article class="collection-card">
+                            <div class="collection-card-main">
+                                <div class="collection-card-heading">
+                                    <div>
+                                        <span>{{ $collection->items_count }} {{ $collection->items_count === 1 ? 'place' : 'places' }}</span>
+                                        <h3>{{ $collection->name }}</h3>
+                                    </div>
+                                    @if($collection->items_count >= 2)
+                                        <a href="{{ route('route.index', ['source' => 'saved', 'collection' => $collection->collection_id]) }}">Generate trip plan &rarr;</a>
+                                    @endif
+                                </div>
+
+                                <div class="collection-attractions">
+                                    @foreach($collection->items as $item)
+                                        @if($item->wishlist && $item->wishlist->attraction)
+                                            <a href="{{ route('attractions.show', $item->wishlist->attraction->attraction_id) }}">
+                                                @if($item->wishlist->attraction->images->isNotEmpty())
+                                                    <img src="{{ asset($item->wishlist->attraction->images->first()->image_path) }}" alt="">
+                                                @else
+                                                    <span class="collection-image-fallback">ExploreMY</span>
+                                                @endif
+                                                <span>{{ $item->wishlist->attraction->attraction_name }}</span>
+                                            </a>
+                                        @endif
+                                    @endforeach
+                                </div>
+
+                                @php $collectionWishlistIds = $collection->items->pluck('wishlist_id')->all(); @endphp
+                                @if($savedPlaces->whereNotIn('wishlist_id', $collectionWishlistIds)->isNotEmpty())
+                                    <details class="add-to-collection">
+                                        <summary>Add saved places</summary>
+                                        <form method="POST" action="{{ route('saved-places.collections.places.store', $collection->collection_id) }}">
+                                            @csrf
+                                            <div class="collection-place-options">
+                                                @foreach($savedPlaces->whereNotIn('wishlist_id', $collectionWishlistIds) as $place)
+                                                    <label class="collection-place-option">
+                                                        <input type="checkbox" name="wishlist_ids[]" value="{{ $place->wishlist_id }}">
+                                                        <span>{{ $place->attraction->attraction_name }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                            <button type="submit">Add to collection</button>
+                                        </form>
+                                    </details>
+                                @endif
+                            </div>
+
+                            @if($collection->items_count < 2)<p class="collection-trip-note">Add one more place to generate a trip.</p>@endif
+                        </article>
+                    @endforeach
+                </div>
+            @endif
+        </section>
+    @endif
 
     @if($savedPlaces->count() > 0)
         <section class="trip-cta">
@@ -68,7 +160,13 @@
                     Generate Itinerary &rarr;
                 </a>
             @else
-                <span class="trip-cta-disabled">Save one more place to continue</span>
+                <p class="trip-cta-instruction">
+                    <span aria-hidden="true">!</span>
+                    <span>
+                        <strong>Save one more place to start your trip</strong>
+                        You need at least two saved places to generate an itinerary.
+                    </span>
+                </p>
             @endif
         </section>
     @endif
