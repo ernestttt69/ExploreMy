@@ -153,13 +153,23 @@ class AttractionController extends Controller
 
         $attractions = $query->paginate(12);
 
+        $wishlistedAttractionIds = Wishlist::where('user_id', Auth::id())
+            ->whereIn(
+                'attraction_id',
+                $attractions->getCollection()->pluck('attraction_id')
+            )
+            ->pluck('attraction_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
         return view(
             'attractions.index',
             compact(
                 'attractions',
                 'states',
                 'categories',
-                'searchSubmitted'
+                'searchSubmitted',
+                'wishlistedAttractionIds'
             )
         );
     }

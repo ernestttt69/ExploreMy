@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Wishlist;
+use App\Models\SavedPlaceCollection;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,14 +25,21 @@ class RoutePlanningController extends Controller
     public function index(Request $request)
     {
         $usingSavedPlaces = $request->query('source') === 'saved';
-        $savedPlaces = $usingSavedPlaces
-            ? $this->savedPlacesForCurrentUser()
-            : collect();
+        $collection = null;
+        $savedPlaces = collect();
+
+        if ($usingSavedPlaces) {
+            $collection = $this->collectionForCurrentUser($request->query('collection'));
+            $savedPlaces = $collection
+                ? $this->savedPlacesForCollection($collection)
+                : $this->savedPlacesForCurrentUser();
+        }
 
         return view('route-planning.route', [
             'googleMapsBrowserKey' => config('services.google_maps.browser_api_key'),
             'usingSavedPlaces' => $usingSavedPlaces,
             'savedPlaces' => $savedPlaces,
+            'collection' => $collection,
         ]);
     }
 
@@ -48,11 +56,15 @@ class RoutePlanningController extends Controller
                 'between:0,2',
             ],
             'source' => ['nullable', 'in:saved'],
+            'collection_id' => ['nullable', 'integer'],
         ]);
 
         $places = self::PLACES;
         if (($validated['source'] ?? null) === 'saved') {
-            $savedPlaces = $this->savedPlacesForCurrentUser();
+            $collection = $this->collectionForCurrentUser($validated['collection_id'] ?? null);
+            $savedPlaces = $collection
+                ? $this->savedPlacesForCollection($collection)
+                : $this->savedPlacesForCurrentUser();
 
             if ($savedPlaces->count() < 2) {
                 return back()->withInput()->withErrors([
@@ -683,6 +695,26 @@ class RoutePlanningController extends Controller
                 ? number_format($distanceMeters / 1000, 1) . ' km'
                 : $distanceMeters . ' m',
         ];
+    }
+
+    private function collectionForCurrentUser($collectionId): ?SavedPlaceCollection
+    {
+        if (!$collectionId) {
+            return null;
+        }
+
+        return SavedPlaceCollection::where('collection_id', $collectionId)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+    }
+
+    private function savedPlacesForCollection(SavedPlaceCollection $collection)
+    {
+        return Wishlist::with('attraction')
+            ->where('user_id', Auth::id())
+            ->whereHas('attraction', fn ($query) => $query->whereNotNull('place_id'))
+            ->whereIn('wishlist_id', $collection->items()->pluck('wishlist_id'))
+            ->get();
     }
 
     private function transitLabel(array $line): string

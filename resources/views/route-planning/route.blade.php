@@ -17,7 +17,7 @@
 
     @if($usingSavedPlaces)
         <section class="saved-route-summary">
-            <span>Your saved places</span>
+            <span>{{ $collection ? $collection->name : 'Your saved places' }}</span>
             <h2>{{ $savedPlaces->count() }} destinations ready</h2>
             <div>
                 @foreach($savedPlaces->take(8) as $savedPlace)
@@ -126,7 +126,8 @@
                             @else
                                 <form action="{{ route('route.preference') }}" method="POST">
                                     @csrf
-                                    @if($usingSavedPlaces)<input type="hidden" name="source" value="saved">@endif
+            @if($usingSavedPlaces)<input type="hidden" name="source" value="saved">@endif
+            @if($collection)<input type="hidden" name="collection_id" value="{{ $collection->collection_id }}">@endif
                                     <input type="hidden" name="optimization_preference" value="{{ $routeResult['preference'] }}">
                                     <input type="hidden" name="route_option_index" value="{{ $optionIndex }}">
                                     <button type="submit" class="select-route-button">
@@ -239,6 +240,7 @@
 
         @if($usingSavedPlaces)
             <input type="hidden" name="source" value="saved">
+            @if($collection)<input type="hidden" name="collection_id" value="{{ $collection->collection_id }}">@endif
         @endif
 
         <section class="preference-card">
