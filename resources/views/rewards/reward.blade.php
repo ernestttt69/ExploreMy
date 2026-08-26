@@ -43,10 +43,10 @@
         <section class="rewards-overview" aria-label="Your rewards summary">
             <div class="points-panel">
                 <div class="panel-heading"><span class="panel-label">Your balance</span></div>
-                <strong>{{ number_format($wallet->points) }}</strong>
+                    <strong class="wallet-points">{{ number_format($wallet->points) }}</strong>
                 <span class="points-caption">Green points</span>
                 <div class="progress-track" role="progressbar" aria-label="Progress to next tree level" aria-valuenow="{{ $treeProgress }}" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill" data-progress="{{ $treeProgress }}"></span></div>
-                <p><b>{{ max(0, $nextThreshold - ($tree->experience % $nextThreshold)) }} EXP</b> to tree level {{ $tree->level + 1 }}</p>
+                <p><b>{{ max(0, $nextThreshold - ($tree->experience % max(1, $nextThreshold))) }} EXP</b> to tree level {{ $tree->level + 1 }}</p>
             </div>
             <div class="level-panel">
                 <span class="panel-label">Current level</span>
@@ -99,7 +99,7 @@
         </section>
         </section>
 
-        <section class="rewards-section rewards-shop" aria-labelledby="shop-title"><div class="section-heading"><div><span class="section-kicker">Spend your points</span><h2 id="shop-title">Green Shop</h2></div><span class="section-note">{{ number_format($wallet->points) }} points available</span></div><div class="shop-grid">@foreach($items as $item)<article class="shop-item"><span class="shop-exp">+{{ $item->exp_value }} EXP</span><h3>{{ $item->name }}</h3><p>{{ $item->description }}</p><form method="POST" action="{{ route('rewards.purchase', $item) }}" data-async-reward>@csrf<button type="submit" class="shop-button" {{ $wallet->points < $item->price ? 'disabled' : '' }}>{{ $item->price }} pts · Buy</button></form></article>@endforeach</div></section>
+        <section class="rewards-section rewards-shop" aria-labelledby="shop-title"><div class="section-heading"><div><span class="section-kicker">Spend your points</span><h2 id="shop-title">Green Shop</h2></div><span class="section-note"><span class="wallet-points">{{ number_format($wallet->points) }}</span> points available</span></div><div class="shop-grid">@foreach($items as $item)<article class="shop-item"><span class="shop-exp">+{{ $item->exp_value }} EXP</span><h3>{{ $item->name }}</h3><p>{{ $item->description }}</p><form method="POST" action="{{ route('rewards.purchase', $item) }}" data-async-reward>@csrf<button type="submit" class="shop-button" data-price="{{ $item->price }}" {{ $wallet->points < $item->price ? 'disabled' : '' }}>{{ $item->price }} pts · Buy</button></form></article>@endforeach</div></section>
 
         <section class="rewards-section rewards-history" aria-labelledby="history-title"><div class="section-heading"><div><span class="section-kicker">Your activity</span><h2 id="history-title">Points history</h2></div></div><div class="history-list">@forelse($transactions as $transaction)<div class="history-row"><span class="history-type {{ $transaction->transaction_type }}">{{ $transaction->transaction_type === 'earning' ? '+' : '-' }}{{ $transaction->amount }}</span><span>{{ str_replace('_', ' ', $transaction->activity) }}</span><small>{{ $transaction->created_at->timezone(config('app.timezone'))->format('d M Y, H:i') }}</small></div>@empty<p class="empty-copy">Your Green Points activity will appear here.</p>@endforelse</div></section>
     </div>
@@ -111,6 +111,17 @@
         document.querySelectorAll('.progress-fill').forEach(function (fill) {
             fill.style.width = fill.dataset.progress + '%';
         });
+
+        function showRewardToast(message, isError) {
+            var toast = document.querySelector('.rewards-toast') || document.createElement('div');
+            toast.className = 'rewards-toast' + (isError ? ' rewards-toast-error' : '');
+            toast.setAttribute('role', isError ? 'alert' : 'status');
+            toast.textContent = message;
+            if (!toast.parentNode) document.querySelector('.rewards-page').prepend(toast);
+            toast.style.animation = 'none';
+            void toast.offsetWidth;
+            toast.style.animation = '';
+        }
 
         document.querySelectorAll('[data-async-reward]').forEach(function (form) {
             form.addEventListener('submit', async function (event) {
@@ -133,23 +144,32 @@
                     var data = await response.json();
                     if (!response.ok) throw new Error(data.message || 'This action could not be completed.');
 
-                    var toast = document.querySelector('.rewards-toast') || document.createElement('div');
-                    toast.className = 'rewards-toast';
-                    toast.setAttribute('role', 'status');
-                    toast.textContent = data.message;
-                    if (!toast.parentNode) document.querySelector('.rewards-page').prepend(toast);
+                    showRewardToast(data.message, false);
+
+                    if (data.points !== undefined) {
+                        document.querySelectorAll('.wallet-points').forEach(function (points) {
+                            points.textContent = Number(data.points).toLocaleString();
+                        });
+                        document.querySelectorAll('.shop-button[data-price]').forEach(function (shopButton) {
+                            shopButton.disabled = Number(data.points) < Number(shopButton.dataset.price);
+                        });
+                    }
 
                     if (button && form.action.includes('/achievements/')) {
                         button.textContent = 'Collected';
                     } else if (button) {
                         button.disabled = false;
                     }
+
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 800);
                 } catch (error) {
                     if (button) {
                         button.disabled = false;
                         button.textContent = originalLabel;
                     }
-                    window.alert(error.message);
+                    showRewardToast(error.message, true);
                 }
             });
         });

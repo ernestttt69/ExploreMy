@@ -26,10 +26,10 @@ class GreenRewardController extends Controller
         $items = GreenShopItem::where('is_available', true)->get();
         $inventory = GreenInventory::with('item')->where('user_id', $user->user_id)->where('quantity', '>', 0)->get();
         $transactions = GreenRewardTransaction::where('user_id', $user->user_id)->latest()->limit(10)->get();
-        $nextThreshold = $tree->level * 100;
+        $nextThreshold = max(1, $tree->level) * 100;
         $treeStage = $tree->level >= 10 ? 'ancient' : ($tree->level >= 5 ? 'mature' : ($tree->level >= 3 ? 'growing' : ($tree->level >= 2 ? 'small' : 'seed')));
         $treeLabel = ['seed' => 'Seed', 'small' => 'Small tree', 'growing' => 'Growing tree', 'mature' => 'Mature tree', 'ancient' => 'Tall trunk'][$treeStage];
-        $treeHeight = number_format(0.1 + (($tree->level - 1) * 0.35), 2);
+        $treeHeight = number_format(max(0.1, 0.1 + (($tree->level - 1) * 0.35)), 2);
         $treeProgress = $nextThreshold > 0
             ? min(100, (($tree->experience % $nextThreshold) / $nextThreshold) * 100)
             : 0;
@@ -47,7 +47,10 @@ class GreenRewardController extends Controller
         abort_unless($item->is_available, 404);
         $this->rewards->purchase(auth()->user(), $item);
         if (request()->expectsJson()) {
-            return response()->json(['message' => $item->name . ' added to your inventory.']);
+            return response()->json([
+                'message' => $item->name . ' added to your inventory.',
+                'points' => $this->rewards->wallet(auth()->user())->points,
+            ]);
         }
         return back()->with('success', $item->name . ' added to your inventory.');
     }
