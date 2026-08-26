@@ -11,6 +11,7 @@ use App\Http\Controllers\TravelPreferenceController;
 use App\Http\Controllers\TransportController;
 use App\Http\Controllers\Admin\AttractionController as AdminAttractionController;
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\GreenRewardController;
 
 
 Route::get('/', function () {
@@ -34,6 +35,9 @@ Route::get('/trips', function () {
     return view('trips.index');
 })->middleware('auth')->name('trips.index');
 
+Route::get('/rewards', [GreenRewardController::class, 'index'])
+    ->middleware('auth')->name('rewards');
+
 Route::post('/logout', function (Request $request) {
 	auth()->logout();
 	$request->session()->invalidate();
@@ -53,6 +57,12 @@ Route::delete('/profile', [ProfileController::class, 'destroy'])
 	->middleware('auth')->name('profile.destroy');
 
 Route::middleware('auth')->group(function () {
+    Route::post('/rewards/daily-login', [GreenRewardController::class, 'dailyLogin'])->name('rewards.daily-login');
+    Route::post('/rewards/shop/{item}/purchase', [GreenRewardController::class, 'purchase'])->name('rewards.purchase');
+    Route::post('/rewards/inventory/{inventory}/fertilize', [GreenRewardController::class, 'fertilize'])->name('rewards.fertilize');
+    Route::post('/rewards/activity', [GreenRewardController::class, 'activity'])->name('rewards.activity');
+    Route::post('/rewards/activity/collect', [GreenRewardController::class, 'collectActivity'])->name('rewards.activity.collect');
+    Route::post('/rewards/achievements/{achievement}/collect', [GreenRewardController::class, 'collectAchievement'])->name('rewards.achievements.collect');
     Route::get('/route-planning', [RoutePlanningController::class, 'index'])
         ->name('route.index');
 

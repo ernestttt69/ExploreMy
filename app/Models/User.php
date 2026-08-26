@@ -60,4 +60,9 @@ class User extends Authenticatable
 			'attraction_id'
 		)->withTimestamps();
 	}
+
+	public function greenAchievements()
+	{
+		return $this->belongsToMany(GreenAchievement::class, 'user_green_achievements', 'user_id', 'achievement_id', 'user_id');
+	}
 }
