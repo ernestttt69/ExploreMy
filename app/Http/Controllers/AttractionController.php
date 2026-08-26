@@ -7,6 +7,7 @@ use App\Models\PreferenceCategory;
 use App\Models\State;
 use App\Models\UserPreference;
 use App\Models\Wishlist;
+use App\Services\GreenRewardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -224,13 +225,14 @@ class AttractionController extends Controller
                 $attraction->attraction_id;
 
             $wishlist->save();
+            app(GreenRewardService::class)->awardActivity(Auth::user(), 'save_attraction');
         }
 
         return redirect()
             ->back()
             ->with(
                 'success',
-                'Attraction added to your wishlist.'
+                __('messages.wishlist_added')
             );
     }
 
@@ -250,7 +252,7 @@ class AttractionController extends Controller
             ->back()
             ->with(
                 'success',
-                'Attraction removed from your wishlist.'
+                __('messages.wishlist_removed')
             );
     }
 }

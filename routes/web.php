@@ -32,7 +32,7 @@ Route::get('/dashboard', function () {
 })->middleware('auth')->name('dashboard');
 
 Route::get('/trips', function () {
-    return view('trips.index');
+    return view('trips.index', ['trips' => collect()]);
 })->middleware('auth')->name('trips.index');
 
 Route::get('/rewards', [GreenRewardController::class, 'index'])

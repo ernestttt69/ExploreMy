@@ -264,7 +264,7 @@
 /* Keep decorative tree layers from intercepting the fertilizer control. */
 .rewards-hero .hero-tree-scene{pointer-events:none}
 .rewards-hero .hero-fertilizer-form,
-.rewards-hero a.hero-fertilizer{z-index:10;pointer-events:auto}
+.rewards-hero a.hero-fertilizer{z-index:20;pointer-events:auto}
 .rewards-hero button.hero-fertilizer{position:relative;z-index:10;cursor:pointer;pointer-events:auto}
 .rewards-hero button.hero-fertilizer:disabled{cursor:wait;opacity:.72}
 

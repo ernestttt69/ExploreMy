@@ -28,7 +28,7 @@ class GreenRewardController extends Controller
         $transactions = GreenRewardTransaction::where('user_id', $user->user_id)->latest()->limit(10)->get();
         $nextThreshold = max(1, $tree->level) * 100;
         $treeStage = $tree->level >= 10 ? 'ancient' : ($tree->level >= 5 ? 'mature' : ($tree->level >= 3 ? 'growing' : ($tree->level >= 2 ? 'small' : 'seed')));
-        $treeLabel = ['seed' => 'Seed', 'small' => 'Small tree', 'growing' => 'Growing tree', 'mature' => 'Mature tree', 'ancient' => 'Tall trunk'][$treeStage];
+        $treeLabel = __('rewards.tree_stages.' . $treeStage);
         $treeHeight = number_format(max(0.1, 0.1 + (($tree->level - 1) * 0.35)), 2);
         $treeProgress = $nextThreshold > 0
             ? min(100, (($tree->experience % $nextThreshold) / $nextThreshold) * 100)
@@ -39,7 +39,7 @@ class GreenRewardController extends Controller
     public function dailyLogin()
     {
         $claimed = $this->rewards->claimDailyLogin(auth()->user());
-        return back()->with($claimed ? 'success' : 'info', $claimed ? 'Daily login reward claimed: 10 Green Points.' : 'Your daily login reward has already been claimed.');
+        return back()->with($claimed ? 'success' : 'info', $claimed ? __('messages.daily_claimed') : __('messages.daily_already_claimed'));
     }
 
     public function purchase(GreenShopItem $item)
@@ -48,20 +48,20 @@ class GreenRewardController extends Controller
         $this->rewards->purchase(auth()->user(), $item);
         if (request()->expectsJson()) {
             return response()->json([
-                'message' => $item->name . ' added to your inventory.',
+                'message' => __('messages.inventory_added', ['item' => $item->name]),
                 'points' => $this->rewards->wallet(auth()->user())->points,
             ]);
         }
-        return back()->with('success', $item->name . ' added to your inventory.');
+        return back()->with('success', __('messages.inventory_added', ['item' => $item->name]));
     }
 
     public function fertilize(Request $request, GreenInventory $inventory)
     {
         $this->rewards->fertilize(auth()->user(), $inventory);
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'Your tree grew by using ' . $inventory->item->name . '.']);
+            return response()->json(['message' => __('messages.tree_grew', ['item' => $inventory->item->name])]);
         }
-        return back()->with('success', 'Your tree grew by using ' . $inventory->item->name . '.');
+        return back()->with('success', __('messages.tree_grew', ['item' => $inventory->item->name]));
     }
 
     public function activity(Request $request)
@@ -82,23 +82,23 @@ class GreenRewardController extends Controller
         $pendingRewards = session('pending_reward_activities', []);
         $pendingCount = $pendingRewards[$validated['activity']] ?? 0;
 
-        abort_unless($pendingCount > 0, 422, 'This activity has no reward ready to collect.');
+        abort_unless($pendingCount > 0, 422, __('messages.activity_unavailable'));
 
         $pendingRewards[$validated['activity']] = $pendingCount - 1;
         session()->put('pending_reward_activities', $pendingRewards);
         $awarded = $this->rewards->awardActivity(auth()->user(), $validated['activity']);
 
         return back()->with($awarded ? 'success' : 'info', $awarded
-            ? 'Itinerary generation reward claimed: 50 Green Points.'
-            : 'This reward could not be claimed.');
+            ? __('messages.itinerary_reward_claimed')
+            : __('messages.reward_failed'));
     }
 
     public function collectAchievement(GreenAchievement $achievement)
     {
-        abort_unless($this->rewards->collectAchievement(auth()->user(), $achievement), 422, 'This achievement is not ready to collect.');
+        abort_unless($this->rewards->collectAchievement(auth()->user(), $achievement), 422, __('messages.achievement_unavailable'));
         if (request()->expectsJson()) {
-            return response()->json(['message' => $achievement->reward_points . ' Green Points collected for ' . $achievement->name . '.']);
+            return response()->json(['message' => __('messages.achievement_collected', ['points' => $achievement->reward_points, 'achievement' => $achievement->name])]);
         }
-        return back()->with('success', $achievement->reward_points . ' Green Points collected for ' . $achievement->name . '.');
+        return back()->with('success', __('messages.achievement_collected', ['points' => $achievement->reward_points, 'achievement' => $achievement->name]));
     }
 }

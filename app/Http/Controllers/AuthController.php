@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Google\Client;
 use App\Models\LoginActivity;
 use Illuminate\Support\Carbon;
+use App\Services\GreenRewardService;
 
 class AuthController extends Controller
 {
@@ -55,6 +56,7 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
                 'logged_in_at' => Carbon::now(),
             ]);
+			app(GreenRewardService::class)->claimDailyLogin($user);
 
             return response()->json([
                 'success' => true,

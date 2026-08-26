@@ -65,6 +65,11 @@ class ProfileController extends Controller
 
 		$user->save();
 
+		// The middleware selected the locale before this request changed the
+		// preference. Switch immediately so the redirected flash message is
+		// translated using the language the user just selected.
+		app()->setLocale($user->preferred_language);
+
 		if ($oldProfilePicture && str_starts_with($oldProfilePicture, '/profile_images/')) {
 			File::delete(public_path(ltrim($oldProfilePicture, '/')));
 		}

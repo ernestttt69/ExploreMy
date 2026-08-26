@@ -1,0 +1,30 @@
+<?php
+return [
+    'common'=>['trips'=>'My Trips','rewards'=>'Rewards'],
+    'shortcuts'=>['transport'=>'Find routes and nearby stations','trips'=>'Review your saved itineraries','rewards'=>'Grow your tree and use points'],
+    'transport'=>[
+        'title'=>'Transportation','eyebrow'=>'Getting around Malaysia','heading'=>'Travel further, with confidence.','intro'=>'From city rail networks to scenic intercity journeys, find the right way to move around Malaysia.',
+        'rail'=>'Rail','rail_title'=>'MRT, LRT & Monorail','rail_text'=>"Fast and convenient connections across Kuala Lumpur and the Klang Valley. Use a Touch 'n Go card for easier transfers.",
+        'bus'=>'Bus','bus_title'=>'City & intercity buses','bus_text'=>'Affordable services connect urban neighbourhoods, towns and major destinations throughout Peninsular Malaysia.',
+        'road'=>'Road','road_title'=>'Taxi & e-hailing','road_text'=>'Metered taxis and e-hailing services offer flexible door-to-door travel in most cities and tourism areas.',
+        'beyond'=>'Beyond','beyond_title'=>'Flights & ferries','beyond_text'=>'Domestic flights connect the peninsula with Sabah and Sarawak, while ferries serve popular islands.',
+        'note'=>'Traveller note','plan'=>'Plan before you depart','note_text'=>'Schedules, fares and operating hours can change. Check with the relevant transport operator before starting your journey, especially on public holidays.',
+    ],
+    'trips'=>['title'=>'My Planned Trips','create'=>'Create New Itinerary','days'=>'Days','estimated'=>'Estimated','view'=>'View Itinerary','empty'=>"You haven't planned any trips yet."],
+    'about'=>[
+        'title'=>'About Malaysia','eyebrow'=>'Truly Asia','heading'=>'Meet Malaysia','intro'=>"A country where ancient rainforests, vibrant cities, tropical islands and many cultures come together in one remarkable destination.",
+        'states'=>'states','territories'=>'federal territories','language'=>'national language','contrast'=>'A country of contrasts','experiences'=>'One nation, countless experiences',
+        'story1'=>"Malaysia is located in Southeast Asia and is made up of two distinct regions: Peninsular Malaysia and East Malaysia on the island of Borneo. Between them, travellers encounter modern skylines, historic trading towns, cool highlands, pristine beaches and some of the world's oldest tropical rainforests.",
+        'story2'=>'Its identity is shaped by Malay, Chinese, Indian, Indigenous and many other communities. This diversity is reflected in everyday life—from languages and celebrations to architecture and an extraordinary food culture.',
+        'living'=>'Living culture','traditions'=>'Many traditions, shared proudly','culture_intro'=>"Malaysia's multicultural character is experienced through its people, celebrations, food, art and everyday rituals.",
+        'people'=>'People & celebrations','community'=>'Community','calendar'=>'A calendar filled with celebration','calendar_text'=>'Hari Raya Aidilfitri, Chinese New Year, Deepavali, Gawai and Kaamatan bring communities together through open houses, music, dance and shared meals.',
+        'flavours'=>'Flavours','food'=>'Food','meeting'=>'A meeting place of flavours','meeting_text'=>'Malay, Chinese, Indian, Peranakan and Indigenous cooking traditions make every region—and often every street—taste distinct.',
+        'craft'=>'Craft & heritage','architecture'=>'Architecture','stories'=>'Stories built into every detail','stories_text'=>'Carved timber homes, mosques, temples, clan houses and colonial shophouses reveal centuries of skill, belief and exchange.',
+        'languages'=>'languages spoken','unesco'=>'UNESCO World Heritage Sites','population'=>'people and countless stories','strength'=>"Malaysia's strength lies in the way difference becomes part of a shared national identity.",
+        'performing'=>'Performing arts','performing_text'=>'Discover mak yong theatre, wayang kulit shadow puppetry, kompang ensembles and the rhythms of sape music from Borneo.',
+        'crafts'=>'Traditional crafts','crafts_text'=>'Batik, songket weaving, beadwork, wood carving and silverwork preserve knowledge passed through generations.',
+        'nature'=>'Nature & identity','nature_text'=>'Rainforests, rivers and the sea shape Indigenous traditions, local livelihoods and a deep respect for the land.',
+        'know'=>'Good to know','glance'=>'Malaysia at a glance','welcome'=>'Warm hospitality and excellent connections make Malaysia an approachable destination for every kind of traveller.',
+        'capital'=>'Capital','admin'=>'Administrative capital','currency'=>'Currency','climate'=>'Climate','tropical'=>'Tropical year-round','ready'=>'Ready to explore?','speak'=>'Find the Malaysia that speaks to you.','personalise'=>'Personalise your journey',
+    ],
+];

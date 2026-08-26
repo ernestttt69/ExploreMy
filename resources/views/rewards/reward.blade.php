@@ -15,9 +15,9 @@
         <section class="tree-growth-container" aria-label="Your growing tree">
         <section class="rewards-hero" aria-labelledby="rewards-title">
             <div class="rewards-hero-copy">
-                <span class="rewards-eyebrow">Green points</span>
+                <span class="rewards-eyebrow">{{ __('rewards.green_points') }}</span>
                 <strong class="hero-points">{{ number_format($wallet->points) }}</strong>
-                <span class="hero-points-label">points</span>
+                <span class="hero-points-label">{{ __('rewards.points') }}</span>
             </div>
             <div class="hero-tree-scene" aria-label="Your {{ strtolower($treeLabel) }} virtual tree, {{ $treeHeight }} metres tall" role="img">
                 <div class="hero-land"></div>
@@ -27,55 +27,55 @@
                     <span class="tree-leaf tree-leaf-one"></span><span class="tree-leaf tree-leaf-two"></span><span class="tree-leaf tree-leaf-three"></span>
                 </div>
                 <span class="hero-tree-height">{{ $treeHeight }} m</span>
-                <div class="hero-level"><span>Level {{ $tree->level }}</span><strong>{{ $treeLabel }}</strong></div>
-                @if($inventory->isNotEmpty())
-                    @php($heroFertilizer = $inventory->first())
-                    <form method="POST" action="{{ route('rewards.fertilize', $heroFertilizer) }}" class="hero-fertilizer-form" data-async-reward>
-                        @csrf
-                        <button type="submit" class="hero-fertilizer">Apply fertilizer</button>
-                    </form>
-                @else
-                    <a href="#shop-title" class="hero-fertilizer">Get fertilizer</a>
-                @endif
+                <div class="hero-level"><span>{{ __('rewards.level', ['level' => $tree->level]) }}</span><strong>{{ $treeLabel }}</strong></div>
             </div>
+            @if($inventory->isNotEmpty())
+                @php($heroFertilizer = $inventory->first())
+                <form method="POST" action="{{ route('rewards.fertilize', $heroFertilizer) }}" class="hero-fertilizer-form" data-async-reward>
+                    @csrf
+                    <button type="submit" class="hero-fertilizer">{{ __('rewards.apply_fertilizer') }}</button>
+                </form>
+            @else
+                <a href="{{ route('rewards') }}#shop-title" class="hero-fertilizer">{{ __('rewards.get_fertilizer') }}</a>
+            @endif
         </section>
 
         <section class="rewards-overview" aria-label="Your rewards summary">
             <div class="points-panel">
-                <div class="panel-heading"><span class="panel-label">Your balance</span></div>
+                <div class="panel-heading"><span class="panel-label">{{ __('rewards.balance') }}</span></div>
                     <strong class="wallet-points">{{ number_format($wallet->points) }}</strong>
-                <span class="points-caption">Green points</span>
+                <span class="points-caption">{{ __('rewards.green_points') }}</span>
                 <div class="progress-track" role="progressbar" aria-label="Progress to next tree level" aria-valuenow="{{ $treeProgress }}" aria-valuemin="0" aria-valuemax="100"><span class="progress-fill" data-progress="{{ $treeProgress }}"></span></div>
-                <p><b>{{ max(0, $nextThreshold - ($tree->experience % max(1, $nextThreshold))) }} EXP</b> to tree level {{ $tree->level + 1 }}</p>
+                <p>{{ __('rewards.to_level', ['exp' => max(0, $nextThreshold - ($tree->experience % max(1, $nextThreshold))), 'level' => $tree->level + 1]) }}</p>
             </div>
             <div class="level-panel">
-                <span class="panel-label">Current level</span>
-                <div class="level-row"><span class="level-badge">{{ str_pad($tree->level, 2, '0', STR_PAD_LEFT) }}</span><div><h2>{{ $tree->growth_stage }}</h2><p>{{ number_format($tree->experience) }} EXP nurtured</p></div></div>
+                <span class="panel-label">{{ __('rewards.current_level') }}</span>
+                <div class="level-row"><span class="level-badge">{{ str_pad($tree->level, 2, '0', STR_PAD_LEFT) }}</span><div><h2>{{ $treeLabel }}</h2><p>{{ __('rewards.nurtured', ['exp' => number_format($tree->experience)]) }}</p></div></div>
                 <div class="level-steps"><span class="complete"></span><span class="complete"></span><span class="complete"></span><span></span><span></span></div>
                 <small>Level {{ $tree->level + 1 }} unlocks at {{ number_format($nextThreshold) }} EXP</small>
             </div>
         </section>
 
         <section class="rewards-section fertilizer-section" aria-labelledby="fertilizer-title">
-            <div class="section-heading"><div><span class="section-kicker">Grow your tree</span><h2 id="fertilizer-title">Choose a fertilizer</h2></div><span class="section-note">Use what you have</span></div>
+            <div class="section-heading"><div><span class="section-kicker">{{ __('rewards.grow_tree') }}</span><h2 id="fertilizer-title">{{ __('rewards.choose_fertilizer') }}</h2></div><span class="section-note">{{ __('rewards.use_owned') }}</span></div>
             <div class="fertilizer-grid">
                 @forelse($inventory as $owned)
                     <article class="fertilizer-card">
                         <div><span class="fertilizer-exp">+{{ $owned->item->exp_value }} EXP</span><h3>{{ $owned->item->name }}</h3><p>{{ $owned->item->description }}</p></div>
-                        <div class="fertilizer-card-footer"><span class="fertilizer-stock">In stock: <b>{{ $owned->quantity }}</b></span><form method="POST" action="{{ route('rewards.fertilize', $owned) }}" data-async-reward>@csrf<button type="submit" class="fertilizer-button">Use fertilizer</button></form></div>
+                        <div class="fertilizer-card-footer"><span class="fertilizer-stock">{{ __('rewards.stock', ['count' => $owned->quantity]) }}</span><form method="POST" action="{{ route('rewards.fertilize', $owned) }}" data-async-reward>@csrf<button type="submit" class="fertilizer-button">{{ __('rewards.use_fertilizer') }}</button></form></div>
                     </article>
                 @empty
-                    <div class="fertilizer-empty"><p class="empty-copy">You do not have any fertilizer yet.</p><a href="#shop-title" class="text-action">Visit the Green Shop &rarr;</a></div>
+                    <div class="fertilizer-empty"><p class="empty-copy">{{ __('rewards.no_fertilizer') }}</p><a href="#shop-title" class="text-action">{{ __('rewards.visit_shop') }}</a></div>
                 @endforelse
             </div>
         </section>
 
         <section class="rewards-section" id="ways-to-earn" aria-labelledby="ways-title">
-            <div class="section-heading"><div><span class="section-kicker">Make an impact</span><h2 id="ways-title">Ways to earn</h2></div><span class="section-note">Updated today</span></div>
+            <div class="section-heading"><div><span class="section-kicker">{{ __('rewards.impact') }}</span><h2 id="ways-title">{{ __('rewards.ways') }}</h2></div><span class="section-note">{{ __('rewards.updated') }}</span></div>
             <div class="earn-grid">
-                <article class="earn-card earn-card-featured"><span class="earn-icon">♧</span><span class="earn-points">+50 pts</span><h3>Generate an itinerary</h3><p>Build a thoughtful route across your chosen Malaysian destinations.</p><a href="{{ route('route.index') }}">Plan a route <span aria-hidden="true">&rarr;</span></a></article>
-                <article class="earn-card"><span class="earn-icon earn-icon-blue">♡</span><span class="earn-points">+20 pts</span><h3>Save a destination</h3><p>Build a thoughtful list of places you want to visit.</p><a href="{{ route('attractions.index') }}">Explore places <span aria-hidden="true">&rarr;</span></a></article>
-                <article class="earn-card"><span class="earn-icon earn-icon-amber">◎</span><span class="earn-points">+75 pts</span><h3>Complete your profile</h3><p>Share your travel interests for more meaningful recommendations.</p><a href="{{ route('profile') }}">View profile <span aria-hidden="true">&rarr;</span></a></article>
+                <article class="earn-card earn-card-featured"><span class="earn-icon">♧</span><span class="earn-points">+50 pts</span><h3>{{ __('rewards.itinerary') }}</h3><p>{{ __('rewards.itinerary_desc') }}</p><a href="{{ route('route.index') }}">{{ __('rewards.plan_route') }} <span aria-hidden="true">&rarr;</span></a></article>
+                <article class="earn-card"><span class="earn-icon earn-icon-blue">♡</span><span class="earn-points">+20 pts</span><h3>{{ __('rewards.save_destination') }}</h3><p>{{ __('rewards.save_desc') }}</p><a href="{{ route('attractions.index') }}">{{ __('rewards.explore') }} <span aria-hidden="true">&rarr;</span></a></article>
+                <article class="earn-card"><span class="earn-icon earn-icon-amber">◎</span><span class="earn-points">+75 pts</span><h3>{{ __('rewards.complete_profile') }}</h3><p>{{ __('rewards.profile_desc') }}</p><a href="{{ route('profile') }}">{{ __('rewards.view_profile') }} <span aria-hidden="true">&rarr;</span></a></article>
             </div>
         </section>
 

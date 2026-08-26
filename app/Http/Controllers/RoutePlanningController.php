@@ -34,12 +34,27 @@ class RoutePlanningController extends Controller
                 ? $this->savedPlacesForCollection($collection)
                 : $this->savedPlacesForCurrentUser();
         }
+        $availablePlaces = $usingSavedPlaces
+            ? $savedPlaces->take(8)->values()->map(fn ($wishlist): array => [
+                'name' => $wishlist->attraction->attraction_name,
+                'place_id' => $wishlist->attraction->place_id,
+                'route_key' => 'wishlist:' . $wishlist->wishlist_id,
+            ])->all()
+            : array_map(
+                fn (array $place, int $index): array => [
+                    ...$place,
+                    'route_key' => 'catalog:' . $index,
+                ],
+                self::PLACES,
+                array_keys(self::PLACES)
+            );
 
         return view('route-planning.route', [
             'googleMapsBrowserKey' => config('services.google_maps.browser_api_key'),
             'usingSavedPlaces' => $usingSavedPlaces,
             'savedPlaces' => $savedPlaces,
             'collection' => $collection,
+            'availablePlaces' => $availablePlaces,
         ]);
     }
 
@@ -55,48 +70,39 @@ class RoutePlanningController extends Controller
                 'integer',
                 'between:0,2',
             ],
+            'destination_keys' => ['required', 'array', 'min:2', 'max:8'],
+            'destination_keys.*' => ['required', 'string'],
             'source' => ['nullable', 'in:saved'],
             'collection_id' => ['nullable', 'integer'],
         ]);
 
-        $places = self::PLACES;
-        if (($validated['source'] ?? null) === 'saved') {
-            $collection = $this->collectionForCurrentUser($validated['collection_id'] ?? null);
-            $savedPlaces = $collection
-                ? $this->savedPlacesForCollection($collection)
-                : $this->savedPlacesForCurrentUser();
-
-            if ($savedPlaces->count() < 2) {
-                return back()->withInput()->withErrors([
-                    'route' => 'Save at least two places before generating an itinerary.',
-                ]);
-            }
-
-            $places = $savedPlaces->take(8)->map(fn ($wishlist): array => [
-                'name' => $wishlist->attraction->attraction_name,
-                'place_id' => $wishlist->attraction->place_id,
-            ])->values()->all();
+        try {
+            $places = $this->placesFromDestinationKeys(
+                $validated['destination_keys'],
+                ($validated['source'] ?? null) === 'saved',
+                $validated['collection_id'] ?? null
+            );
+        } catch (UnexpectedValueException $exception) {
+            return back()->withInput()->withErrors(['route' => $exception->getMessage()]);
         }
 
         if (empty(config('services.google_maps.routes_api_key'))) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'route' => 'Google Maps Routes API key is not configured.',
+                    'route' => __('messages.route_api_missing'),
                 ]);
         }
 
         try {
             $travelMode = 'TRANSIT';
             $omittedPlaces = [];
+            $fallbackNotice = null;
             try {
                 $metrics = $this->getGoogleTransitMetrics($places, $travelMode);
             } catch (\RuntimeException $exception) {
-                if (($validated['source'] ?? null) !== 'saved') {
-                    throw $exception;
-                }
-
                 $travelMode = 'DRIVE';
+                $fallbackNotice = 'No public-transport route was available for all selected destinations. This itinerary uses driving instead.';
                 $metrics = $this->getGoogleTransitMetrics($places, $travelMode, true);
                 [$places, $metrics, $omittedPlaces] = $this->connectedRouteSubset(
                     $places,
@@ -105,7 +111,7 @@ class RoutePlanningController extends Controller
 
                 if (count($places) < 2) {
                     throw new UnexpectedValueException(
-                        'Google Maps cannot connect at least two of your saved places. Try saving places in the same region.'
+                        'Google Maps could not connect at least two selected destinations by public transport or road.'
                     );
                 }
             }
@@ -120,6 +126,7 @@ class RoutePlanningController extends Controller
             $selectedOptionIndex = (int) ($validated['route_option_index'] ?? 0);
             $routeResult = $routeOptions[$selectedOptionIndex] ?? $routeOptions[0];
             $routeResult['omitted_places'] = $omittedPlaces;
+            $routeResult['fallback_notice'] = $fallbackNotice;
             $routeResult['transit_legs'] = $this->getTransitLegs(
                 $routeResult['stops'],
                 $travelMode
@@ -143,13 +150,17 @@ class RoutePlanningController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'route' => 'Google Maps could not calculate the route. Please try again.',
+                    'route' => __('messages.route_calculation_failed'),
                 ]);
         }
 
+        $pendingRewards = session('pending_reward_activities', []);
+        $pendingRewards['generate_itinerary'] = ($pendingRewards['generate_itinerary'] ?? 0) + 1;
+        session()->put('pending_reward_activities', $pendingRewards);
+
         return back()
             ->withInput()
-            ->with('success', $routeResult['title'] . ' calculated successfully.')
+            ->with('success', __('messages.route_calculated', ['title' => $routeResult['title']]))
             ->with('routeResult', $routeResult)
             ->with('routeOptions', $routeOptions);
     }
@@ -255,6 +266,7 @@ class RoutePlanningController extends Controller
         foreach ($path as $position => $placeIndex) {
             $stops[] = [
                 'name' => $places[$placeIndex]['name'],
+                'route_key' => $places[$placeIndex]['route_key'],
                 'place_id' => $places[$placeIndex]['place_id'] ?? null,
                 'latitude' => $places[$placeIndex]['latitude'] ?? null,
                 'longitude' => $places[$placeIndex]['longitude'] ?? null,
@@ -461,6 +473,18 @@ class RoutePlanningController extends Controller
             $from = $stops[$index];
             $to = $stops[$index + 1];
 
+            $routeRequest = [
+                'origin' => $this->routeWaypoint($from),
+                'destination' => $this->routeWaypoint($to),
+                'travelMode' => $travelMode,
+                'computeAlternativeRoutes' => false,
+                'languageCode' => 'en',
+                'units' => 'METRIC',
+            ];
+            if ($travelMode === 'TRANSIT') {
+                $routeRequest['departureTime'] = $departureTime->toRfc3339String();
+            }
+
             $response = Http::acceptJson()
                 ->withHeaders([
                     'X-Goog-Api-Key' => config('services.google_maps.routes_api_key'),
@@ -479,15 +503,7 @@ class RoutePlanningController extends Controller
                     ]),
                 ])
                 ->timeout(20)
-                ->post('https://routes.googleapis.com/directions/v2:computeRoutes', [
-                    'origin' => $this->routeWaypoint($from),
-                    'destination' => $this->routeWaypoint($to),
-                    'travelMode' => $travelMode,
-                    'departureTime' => $departureTime->toRfc3339String(),
-                    'computeAlternativeRoutes' => false,
-                    'languageCode' => 'en',
-                    'units' => 'METRIC',
-                ])
+                ->post('https://routes.googleapis.com/directions/v2:computeRoutes', $routeRequest)
                 ->throw()
                 ->json('routes.0');
 
@@ -653,6 +669,61 @@ class RoutePlanningController extends Controller
                 ],
             ],
         ];
+    }
+
+    private function placesFromDestinationKeys(
+        array $destinationKeys,
+        bool $savedSource,
+        $collectionId = null
+    ): array
+    {
+        if (count($destinationKeys) !== count(array_unique($destinationKeys))) {
+            throw new UnexpectedValueException('Each destination can only be added once.');
+        }
+
+        if (!$savedSource) {
+            $places = [];
+            foreach ($destinationKeys as $destinationKey) {
+                if (!preg_match('/^catalog:(\d+)$/', $destinationKey, $matches)) {
+                    throw new UnexpectedValueException('One or more selected destinations are invalid.');
+                }
+
+                $placeIndex = (int) $matches[1];
+                if (!isset(self::PLACES[$placeIndex])) {
+                    throw new UnexpectedValueException('One or more selected destinations are invalid.');
+                }
+
+                $places[] = [
+                    ...self::PLACES[$placeIndex],
+                    'route_key' => $destinationKey,
+                ];
+            }
+
+            return $places;
+        }
+
+        $collection = $this->collectionForCurrentUser($collectionId);
+        $savedPlaces = ($collection
+            ? $this->savedPlacesForCollection($collection)
+            : $this->savedPlacesForCurrentUser())
+            ->keyBy(fn ($wishlist): string => 'wishlist:' . $wishlist->wishlist_id);
+        $places = [];
+
+        foreach ($destinationKeys as $destinationKey) {
+            if (!preg_match('/^wishlist:\d+$/', $destinationKey)
+                || !$savedPlaces->has($destinationKey)) {
+                throw new UnexpectedValueException('One or more selected saved places are invalid.');
+            }
+
+            $wishlist = $savedPlaces->get($destinationKey);
+            $places[] = [
+                'name' => $wishlist->attraction->attraction_name,
+                'place_id' => $wishlist->attraction->place_id,
+                'route_key' => $destinationKey,
+            ];
+        }
+
+        return $places;
     }
 
     private function savedPlacesForCurrentUser()

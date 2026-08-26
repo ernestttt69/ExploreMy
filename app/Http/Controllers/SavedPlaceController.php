@@ -42,8 +42,8 @@ class SavedPlaceController extends Controller
             'wishlist_ids' => ['required', 'array', 'min:1'],
             'wishlist_ids.*' => ['integer'],
         ], [
-            'name.required' => 'Give your collection a name.',
-            'wishlist_ids.required' => 'Choose at least one saved place for this collection.',
+            'name.required' => __('messages.collection_name_required'),
+            'wishlist_ids.required' => __('messages.collection_place_required'),
         ]);
 
         $wishlistIds = Wishlist::where('user_id', Auth::id())
@@ -51,7 +51,7 @@ class SavedPlaceController extends Controller
             ->pluck('wishlist_id');
 
         if ($wishlistIds->count() !== count(array_unique($validated['wishlist_ids']))) {
-            return back()->withErrors(['wishlist_ids' => 'Choose places from your saved places only.'])->withInput();
+            return back()->withErrors(['wishlist_ids' => __('messages.saved_places_only')])->withInput();
         }
 
         DB::transaction(function () use ($validated, $wishlistIds): void {
@@ -68,7 +68,7 @@ class SavedPlaceController extends Controller
             }
         });
 
-        return redirect()->route('saved-places.index')->with('success', 'Collection created.');
+        return redirect()->route('saved-places.index')->with('success', __('messages.collection_created'));
     }
 
     public function addToCollection(Request $request, $collectionId)
@@ -77,7 +77,7 @@ class SavedPlaceController extends Controller
             'wishlist_ids' => ['required', 'array', 'min:1'],
             'wishlist_ids.*' => ['integer'],
         ], [
-            'wishlist_ids.required' => 'Choose at least one saved place to add.',
+            'wishlist_ids.required' => __('messages.collection_add_required'),
         ]);
 
         $collection = SavedPlaceCollection::where('collection_id', $collectionId)
@@ -89,14 +89,14 @@ class SavedPlaceController extends Controller
             ->pluck('wishlist_id');
 
         if ($wishlistIds->count() !== count(array_unique($validated['wishlist_ids']))) {
-            return back()->withErrors(['wishlist_ids' => 'Choose places from your saved places only.'])->withInput();
+            return back()->withErrors(['wishlist_ids' => __('messages.saved_places_only')])->withInput();
         }
 
         $existingIds = $collection->items()->pluck('wishlist_id')->all();
         $newIds = $wishlistIds->diff($existingIds);
 
         if ($newIds->isEmpty()) {
-            return back()->with('error', 'Those places are already in this collection.');
+            return back()->with('error', __('messages.collection_duplicate'));
         }
 
         foreach ($newIds as $wishlistId) {
@@ -106,6 +106,6 @@ class SavedPlaceController extends Controller
             ]);
         }
 
-        return redirect()->route('saved-places.index')->with('success', 'Places added to your collection.');
+        return redirect()->route('saved-places.index')->with('success', __('messages.collection_added'));
     }
 }

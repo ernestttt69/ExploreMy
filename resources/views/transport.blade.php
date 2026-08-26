@@ -596,5 +596,7 @@ function exportRoute(index) {
 
 <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&libraries=places&callback=initAutocomplete" async defer></script>
 
+@include('components.footer')
+
 </body>
 </html>
