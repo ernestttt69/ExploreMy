@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Attraction;
 use App\Models\PreferenceCategory;
-use App\Models\SavedPlaceCollection;
-use App\Models\SavedPlaceCollectionItem;
 use App\Models\State;
 use App\Models\UserPreference;
 use App\Models\Wishlist;
@@ -224,16 +222,6 @@ class AttractionController extends Controller
 
     public function removeFromWishlist($id)
     {
-        $wishlistIds = Wishlist::where(
-            'user_id',
-            Auth::id()
-        )
-            ->where(
-                'attraction_id',
-                $id
-            )
-            ->pluck('wishlist_id');
-
         Wishlist::where(
             'user_id',
             Auth::id()
@@ -243,18 +231,6 @@ class AttractionController extends Controller
                 $id
             )
             ->delete();
-
-        // Keep collections consistent: remove this place from all of the
-        // user's collections too, so a collection never keeps pointing at a
-        // saved place that has since been removed.
-        if ($wishlistIds->isNotEmpty()) {
-            $collectionIds = SavedPlaceCollection::where('user_id', Auth::id())
-                ->pluck('collection_id');
-
-            SavedPlaceCollectionItem::whereIn('collection_id', $collectionIds)
-                ->whereIn('wishlist_id', $wishlistIds)
-                ->delete();
-        }
 
         return redirect()
             ->back()

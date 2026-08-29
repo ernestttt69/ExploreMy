@@ -118,7 +118,7 @@
                             <li
                                 class="ms-option"
                                 role="option"
-                                data-value="{{ $place->wishlist_id }}"
+                                data-value="{{ $place->attraction_id }}"
                                 data-label="{{ $place->attraction->attraction_name }}"
                                 aria-selected="false"
                                 tabindex="-1"
@@ -128,16 +128,16 @@
                         @endforeach
                     </ul>
 
-                    <select id="collection-places" name="wishlist_ids[]" multiple size="6" class="ms-native" hidden>
+                    <select id="collection-places" name="attraction_ids[]" multiple size="6" class="ms-native" hidden>
                         @foreach($savedPlaces as $place)
-                            <option value="{{ $place->wishlist_id }}" {{ in_array($place->wishlist_id, old('wishlist_ids', [])) ? 'selected' : '' }}>
+                            <option value="{{ $place->attraction_id }}" {{ in_array($place->attraction_id, old('attraction_ids', [])) ? 'selected' : '' }}>
                                 {{ $place->attraction->attraction_name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                @error('wishlist_ids')<p class="collection-error" data-error-for="wishlist_ids">{{ $message }}</p>@enderror
+                @error('attraction_ids')<p class="collection-error" data-error-for="attraction_ids">{{ $message }}</p>@enderror
 
                 <button type="submit">Create collection</button>
             </form>
@@ -171,28 +171,28 @@
 
                                 <div class="collection-attractions">
                                     @foreach($collection->items as $item)
-                                        @if($item->wishlist && $item->wishlist->attraction)
+                                        @if($item->attraction)
                                             <div class="collection-attraction-item">
-                                                <a href="{{ route('attractions.show', $item->wishlist->attraction->attraction_id) }}">
-                                                    @if($item->wishlist->attraction->images->isNotEmpty())
-                                                        <img src="{{ asset($item->wishlist->attraction->images->first()->image_path) }}" alt="">
+                                                <a href="{{ route('attractions.show', $item->attraction->attraction_id) }}">
+                                                    @if($item->attraction->images->isNotEmpty())
+                                                        <img src="{{ asset($item->attraction->images->first()->image_path) }}" alt="">
                                                     @else
                                                         <span class="collection-image-fallback">ExploreMY</span>
                                                     @endif
-                                                    <span>{{ $item->wishlist->attraction->attraction_name }}</span>
+                                                    <span>{{ $item->attraction->attraction_name }}</span>
                                                 </a>
-                                                <form method="POST" action="{{ route('saved-places.collections.places.destroy', [$collection->collection_id, $item->wishlist_id]) }}" class="collection-remove-form" onsubmit="return confirm('Remove this place from the collection?');">
+                                                <form method="POST" action="{{ route('saved-places.collections.places.destroy', [$collection->collection_id, $item->collection_item_id]) }}" class="collection-remove-form" onsubmit="return confirm('Remove this place from the collection?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="collection-remove-btn" aria-label="Remove {{ $item->wishlist->attraction->attraction_name }}">&times;</button>
+                                                    <button type="submit" class="collection-remove-btn" aria-label="Remove {{ $item->attraction->attraction_name }}">&times;</button>
                                                 </form>
                                             </div>
                                         @endif
                                     @endforeach
                                 </div>
 
-                                @php $collectionWishlistIds = $collection->items->pluck('wishlist_id')->all(); @endphp
-                                @if($savedPlaces->whereNotIn('wishlist_id', $collectionWishlistIds)->isNotEmpty())
+                                @php $collectionAttractionIds = $collection->items->pluck('attraction_id')->all(); @endphp
+                                @if($savedPlaces->whereNotIn('attraction_id', $collectionAttractionIds)->isNotEmpty())
                                     <details class="add-to-collection">
                                         <summary>Add saved places</summary>
                                         <form method="POST" action="{{ route('saved-places.collections.places.store', $collection->collection_id) }}">
@@ -206,16 +206,16 @@
                                                 </div>
 
                                                 <ul class="ms-listbox hidden" id="add-places-opt-{{ $collection->collection_id }}" role="listbox" aria-labelledby="add-places-label-{{ $collection->collection_id }}">
-                                                    @foreach($savedPlaces->whereNotIn('wishlist_id', $collectionWishlistIds) as $place)
-                                                        <li class="ms-option" role="option" data-value="{{ $place->wishlist_id }}" data-label="{{ $place->attraction->attraction_name }}" aria-selected="false" tabindex="-1">
+                                                    @foreach($savedPlaces->whereNotIn('attraction_id', $collectionAttractionIds) as $place)
+                                                        <li class="ms-option" role="option" data-value="{{ $place->attraction_id }}" data-label="{{ $place->attraction->attraction_name }}" aria-selected="false" tabindex="-1">
                                                             {{ $place->attraction->attraction_name }}
                                                         </li>
                                                     @endforeach
                                                 </ul>
 
-                                                <select id="add-places-{{ $collection->collection_id }}" name="wishlist_ids[]" multiple size="4" class="ms-native" hidden>
-                                                    @foreach($savedPlaces->whereNotIn('wishlist_id', $collectionWishlistIds) as $place)
-                                                        <option value="{{ $place->wishlist_id }}">{{ $place->attraction->attraction_name }}</option>
+                                                <select id="add-places-{{ $collection->collection_id }}" name="attraction_ids[]" multiple size="4" class="ms-native" hidden>
+                                                    @foreach($savedPlaces->whereNotIn('attraction_id', $collectionAttractionIds) as $place)
+                                                        <option value="{{ $place->attraction_id }}">{{ $place->attraction->attraction_name }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -556,7 +556,7 @@
                 if (selectedValues().length === 0) return;
                 const form = root.closest('form');
                 if (!form) return;
-                form.querySelectorAll('.collection-error[data-error-for="wishlist_ids"]').forEach(el => el.remove());
+                form.querySelectorAll('.collection-error[data-error-for="attraction_ids"]').forEach(el => el.remove());
             }
 
             function setValue(value, checked) {

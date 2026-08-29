@@ -23,11 +23,11 @@ class SavedPlaceController extends Controller
             ->get();
 
         $collections = SavedPlaceCollection::with([
-            'items' => fn ($q) => $q->whereHas('wishlist'),
-            'items.wishlist.attraction.images',
+            'items' => fn ($q) => $q->whereHas('attraction'),
+            'items.attraction.images',
         ])
             ->withCount([
-                'items' => fn ($q) => $q->whereHas('wishlist'),
+                'items' => fn ($q) => $q->whereHas('attraction'),
             ])
             ->where('user_id', Auth::id())
             ->latest()
@@ -50,8 +50,8 @@ class SavedPlaceController extends Controller
             ],
             'start_date' => ['required', 'date', 'after_or_equal:today'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'wishlist_ids' => ['required', 'array', 'min:1'],
-            'wishlist_ids.*' => ['integer'],
+            'attraction_ids' => ['required', 'array', 'min:1'],
+            'attraction_ids.*' => ['integer'],
         ], [
             'name.required' => 'Give your collection a name.',
             'name.unique' => 'You already have a collection with this name. Please choose a different one.',
@@ -59,18 +59,18 @@ class SavedPlaceController extends Controller
             'start_date.after_or_equal' => 'The start date cannot be before today.',
             'end_date.required' => 'Please select an end date.',
             'end_date.after_or_equal' => 'The end date cannot be before the start date.',
-            'wishlist_ids.required' => 'Choose at least one saved place for this collection.',
+            'attraction_ids.required' => 'Choose at least one saved place for this collection.',
         ]);
 
-        $wishlistIds = Wishlist::where('user_id', Auth::id())
-            ->whereIn('wishlist_id', $validated['wishlist_ids'])
-            ->pluck('wishlist_id');
+        $attractionIds = Wishlist::where('user_id', Auth::id())
+            ->whereIn('attraction_id', $validated['attraction_ids'])
+            ->pluck('attraction_id');
 
-        if ($wishlistIds->count() !== count(array_unique($validated['wishlist_ids']))) {
-            return back()->withErrors(['wishlist_ids' => 'Choose places from your saved places only.'])->withInput();
+        if ($attractionIds->count() !== count(array_unique($validated['attraction_ids']))) {
+            return back()->withErrors(['attraction_ids' => 'Choose places from your saved places only.'])->withInput();
         }
 
-        DB::transaction(function () use ($validated, $wishlistIds): void {
+        DB::transaction(function () use ($validated, $attractionIds): void {
             $collection = SavedPlaceCollection::create([
                 'user_id' => Auth::id(),
                 'name' => trim($validated['name']),
@@ -78,10 +78,10 @@ class SavedPlaceController extends Controller
                 'end_date' => $validated['end_date'],
             ]);
 
-            foreach ($wishlistIds as $wishlistId) {
+            foreach ($attractionIds as $attractionId) {
                 SavedPlaceCollectionItem::create([
                     'collection_id' => $collection->collection_id,
-                    'wishlist_id' => $wishlistId,
+                    'attraction_id' => $attractionId,
                 ]);
             }
         });
@@ -92,35 +92,35 @@ class SavedPlaceController extends Controller
     public function addToCollection(Request $request, $collectionId)
     {
         $validated = $request->validate([
-            'wishlist_ids' => ['required', 'array', 'min:1'],
-            'wishlist_ids.*' => ['integer'],
+            'attraction_ids' => ['required', 'array', 'min:1'],
+            'attraction_ids.*' => ['integer'],
         ], [
-            'wishlist_ids.required' => 'Choose at least one saved place to add.',
+            'attraction_ids.required' => 'Choose at least one saved place to add.',
         ]);
 
         $collection = SavedPlaceCollection::where('collection_id', $collectionId)
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        $wishlistIds = Wishlist::where('user_id', Auth::id())
-            ->whereIn('wishlist_id', $validated['wishlist_ids'])
-            ->pluck('wishlist_id');
+        $attractionIds = Wishlist::where('user_id', Auth::id())
+            ->whereIn('attraction_id', $validated['attraction_ids'])
+            ->pluck('attraction_id');
 
-        if ($wishlistIds->count() !== count(array_unique($validated['wishlist_ids']))) {
-            return back()->withErrors(['wishlist_ids' => 'Choose places from your saved places only.'])->withInput();
+        if ($attractionIds->count() !== count(array_unique($validated['attraction_ids']))) {
+            return back()->withErrors(['attraction_ids' => 'Choose places from your saved places only.'])->withInput();
         }
 
-        $existingIds = $collection->items()->pluck('wishlist_id')->all();
-        $newIds = $wishlistIds->diff($existingIds);
+        $existingIds = $collection->items()->pluck('attraction_id')->all();
+        $newIds = $attractionIds->diff($existingIds);
 
         if ($newIds->isEmpty()) {
             return back()->with('error', 'Those places are already in this collection.');
         }
 
-        foreach ($newIds as $wishlistId) {
+        foreach ($newIds as $attractionId) {
             SavedPlaceCollectionItem::create([
                 'collection_id' => $collection->collection_id,
-                'wishlist_id' => $wishlistId,
+                'attraction_id' => $attractionId,
             ]);
         }
 
@@ -139,14 +139,14 @@ class SavedPlaceController extends Controller
         return redirect()->route('saved-places.index')->with('success', 'Collection deleted.');
     }
 
-    public function removePlaceFromCollection(Request $request, $collectionId, $wishlistId)
+    public function removePlaceFromCollection(Request $request, $collectionId, $collectionItemId)
     {
         $collection = SavedPlaceCollection::where('collection_id', $collectionId)
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
         SavedPlaceCollectionItem::where('collection_id', $collectionId)
-            ->where('wishlist_id', $wishlistId)
+            ->where('collection_item_id', $collectionItemId)
             ->delete();
 
         return redirect()->route('saved-places.index')->with('success', 'Place removed from collection.');
