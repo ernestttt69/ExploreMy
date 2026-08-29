@@ -60,7 +60,7 @@
     align-items: flex-end;
     display: grid;
     gap: 16px;
-    grid-template-columns: minmax(260px, 1.6fr) minmax(160px, .8fr) minmax(160px, .8fr) auto;
+    grid-template-columns: minmax(260px, 1fr) auto;
 }
 
 .search-field,

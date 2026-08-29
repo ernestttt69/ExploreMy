@@ -22,6 +22,7 @@ Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
 Route::get('/dashboard', function () {
+	/** @var \App\Models\User $user */
 	$user = auth()->user();
 	$preferences = collect();
 	if ($user->personalisation_consent) {
@@ -95,8 +96,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/saved-places/collections', [SavedPlaceController::class, 'storeCollection'])
         ->name('saved-places.collections.store');
 
+    Route::delete('/saved-places/collections/{collection}', [SavedPlaceController::class, 'destroyCollection'])
+        ->name('saved-places.collections.destroy');
+
     Route::post('/saved-places/collections/{collection}/places', [SavedPlaceController::class, 'addToCollection'])
         ->name('saved-places.collections.places.store');
+
+    Route::delete('/saved-places/collections/{collection}/places/{place}', [SavedPlaceController::class, 'removePlaceFromCollection'])
+        ->name('saved-places.collections.places.destroy');
 
     Route::get('/travel-preferences', [TravelPreferenceController::class, 'edit'])
         ->name('travel-preferences.edit');

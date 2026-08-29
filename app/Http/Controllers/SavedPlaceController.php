@@ -8,6 +8,7 @@ use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class SavedPlaceController extends Controller
 {
@@ -22,9 +23,12 @@ class SavedPlaceController extends Controller
             ->get();
 
         $collections = SavedPlaceCollection::with([
+            'items' => fn ($q) => $q->whereHas('wishlist'),
             'items.wishlist.attraction.images',
         ])
-            ->withCount('items')
+            ->withCount([
+                'items' => fn ($q) => $q->whereHas('wishlist'),
+            ])
             ->where('user_id', Auth::id())
             ->latest()
             ->get();
@@ -38,11 +42,23 @@ class SavedPlaceController extends Controller
     public function storeCollection(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:80'],
+            'name' => [
+                'required',
+                'string',
+                'max:80',
+                Rule::unique('saved_place_collections', 'name')->where('user_id', Auth::id()),
+            ],
+            'start_date' => ['required', 'date', 'after_or_equal:today'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'wishlist_ids' => ['required', 'array', 'min:1'],
             'wishlist_ids.*' => ['integer'],
         ], [
             'name.required' => 'Give your collection a name.',
+            'name.unique' => 'You already have a collection with this name. Please choose a different one.',
+            'start_date.required' => 'Please select a start date.',
+            'start_date.after_or_equal' => 'The start date cannot be before today.',
+            'end_date.required' => 'Please select an end date.',
+            'end_date.after_or_equal' => 'The end date cannot be before the start date.',
             'wishlist_ids.required' => 'Choose at least one saved place for this collection.',
         ]);
 
@@ -58,6 +74,8 @@ class SavedPlaceController extends Controller
             $collection = SavedPlaceCollection::create([
                 'user_id' => Auth::id(),
                 'name' => trim($validated['name']),
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
             ]);
 
             foreach ($wishlistIds as $wishlistId) {
@@ -107,5 +125,30 @@ class SavedPlaceController extends Controller
         }
 
         return redirect()->route('saved-places.index')->with('success', 'Places added to your collection.');
+    }
+
+    public function destroyCollection(Request $request, $collectionId)
+    {
+        $collection = SavedPlaceCollection::where('collection_id', $collectionId)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        // Deleting the collection cascades to its items via the DB foreign key.
+        $collection->delete();
+
+        return redirect()->route('saved-places.index')->with('success', 'Collection deleted.');
+    }
+
+    public function removePlaceFromCollection(Request $request, $collectionId, $wishlistId)
+    {
+        $collection = SavedPlaceCollection::where('collection_id', $collectionId)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        SavedPlaceCollectionItem::where('collection_id', $collectionId)
+            ->where('wishlist_id', $wishlistId)
+            ->delete();
+
+        return redirect()->route('saved-places.index')->with('success', 'Place removed from collection.');
     }
 }
