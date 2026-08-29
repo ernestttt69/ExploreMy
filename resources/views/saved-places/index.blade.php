@@ -583,7 +583,7 @@
                 listbox.insertBefore(empty, listbox.firstChild);
             }
 
-function applyFilter() {
+            function applyFilter() {
                 const q = (search.value || '').toLowerCase().replace(/\s+/g, ' ').trim();
                 const matches = [];
 
@@ -593,21 +593,25 @@ function applyFilter() {
                     if (!q || label.includes(q)) matches.push(o);
                 });
 
-                // Sort the matching places so the closest/best match appears at the top.
+                // Sort the matching places so the closest/best match appears
+                // at the top — places whose name STARTS WITH the typed letters
+                // come first, then the remaining matches follow alphabetically.
                 if (q) {
                     matches.sort((a, b) => {
-                        const al = a.dataset.label.toLowerCase();
-                        const bl = b.dataset.label.toLowerCase();
-                        const aStart = al.startsWith(q) ? 0 : 1;
-                        const bStart = bl.startsWith(q) ? 0 : 1;
-                        if (aStart !== bStart) return aStart - bStart;
+                        const al = a.dataset.label.toLowerCase().replace(/\s+/g, ' ').trim();
+                        const bl = b.dataset.label.toLowerCase().replace(/\s+/g, ' ').trim();
+
+                        const aStarts = al.startsWith(q) ? 0 : 1;
+                        const bStarts = bl.startsWith(q) ? 0 : 1;
+
+                        if (aStarts !== bStarts) return aStarts - bStarts;
                         return al.localeCompare(bl);
                     });
                 }
 
-                // Move the sorted matching places to the TOP of the dropdown, and
-                // remove any lingering "no matches" placeholder so it can't float
-                // above the real results.
+                // Move the sorted matching places to the TOP of the dropdown,
+                // and remove any lingering "no matches" placeholder so it
+                // can't float above the real results.
                 for (let i = matches.length - 1; i >= 0; i--) {
                     listbox.insertBefore(matches[i], listbox.firstChild);
                     matches[i].classList.remove('hidden');
