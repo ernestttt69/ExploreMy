@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use App\Models\LoginActivity;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -23,6 +24,7 @@ class ProfileController extends Controller
 
 	public function update(Request $request)
 	{
+		/** @var User $user */
 		$user = Auth::user();
 
 		$request->validate([
@@ -79,6 +81,7 @@ class ProfileController extends Controller
 	public function destroy(Request $request)
 	{
 		$request->validate(['confirmation' => ['required', 'in:DELETE']]);
+		/** @var User $user */
 		$user = Auth::user();
 		$picture = $user->profile_picture;
 		Auth::logout();
