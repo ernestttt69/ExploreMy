@@ -175,7 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.initRouteMap = () => {
     const mapElement = document.getElementById('route-map');
-    const route = window.routeMapData;
+    const dataElement = document.getElementById('route-map-data');
+    const route = dataElement ? JSON.parse(dataElement.textContent) : null;
 
     if (!mapElement || !route || !window.google) {
         return;
