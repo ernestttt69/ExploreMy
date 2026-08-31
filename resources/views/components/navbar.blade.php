@@ -11,9 +11,14 @@
 					</h2>
 				</div>
 
+				@auth
 				<div class="d-flex align-items-center gap-3">
 					<a href="/profile" class="nav-user-pill text-decoration-none">
-						<img src="{{ Auth::user()->profile_picture }}" class="nav-avatar">
+						@if(Auth::user()->profile_picture)
+							<img src="{{ Auth::user()->profile_picture }}" class="nav-avatar" alt="{{ Auth::user()->name }}">
+						@else
+							<span class="nav-avatar nav-avatar-fallback">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+						@endif
 						<span>
 							{{ Auth::user()->name }}
 						</span>
@@ -26,13 +31,14 @@
 						</button>
 					</form>
 				</div>
+				@endauth
 			</div>
 		</div>
 
 		<div class="sub-navbar">
 			<ul class="nav-menu">
 				<li>
-					<a href="/dashboard" class="nav-link-custom active">
+					<a href="/dashboard" class="nav-link-custom {{ request()->is('dashboard') ? 'active' : '' }}">
 						Dashboard
 					</a>
 				</li>
@@ -42,7 +48,7 @@
 					</a>
 				</li>
 				<li>
-					<a href="#" class="nav-link-custom">
+					<a href="{{ route('itineraries.index') }}" class="nav-link-custom {{ request()->is('trips*') ? 'active' : '' }}">
 						My Trips
 					</a>
 				</li>
