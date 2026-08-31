@@ -22,6 +22,7 @@
 
 				</a>
 
+				@auth
 				<div class="d-flex align-items-center gap-3">
 
 					<a
@@ -36,7 +37,6 @@
 					<a href="{{ route('profile') }}" class="nav-user-pill text-decoration-none text-dark">
 
 						<img src="{{ Auth::user()->profile_picture }}" class="nav-avatar">
-
 						<span>
 							{{ Auth::user()->name }}
 						</span>
@@ -53,7 +53,7 @@
 					</form>
 
 				</div>
-
+				@endauth
 			</div>
 
 		</div>
@@ -81,7 +81,7 @@
 				</li>
 
 				<li>
-					<a href="{{ route('trips.index') }}" class="nav-link-custom {{ request()->routeIs('trips.*') ? 'active' : '' }}">
+					<a href="{{ route('itineraries.index') }}" class="nav-link-custom {{ request()->routeIs('itineraries.*') ? 'active' : '' }}">
 						{{ __('pages.common.trips') }}
 					</a>
 				</li>
