@@ -784,7 +784,7 @@ class RoutePlanningController extends Controller
         return Wishlist::with('attraction')
             ->where('user_id', Auth::id())
             ->whereHas('attraction', fn ($query) => $query->whereNotNull('place_id'))
-            ->whereIn('wishlist_id', $collection->items()->pluck('wishlist_id'))
+            ->whereIn('attraction_id', $collection->items()->pluck('attraction_id'))
             ->get();
     }
 

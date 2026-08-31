@@ -434,8 +434,8 @@
 @push('scripts')
 <script src="{{ asset('js/route-planning.js') }}?v={{ filemtime(public_path('js/route-planning.js')) }}"></script>
 @if (session('routeResult') && $googleMapsBrowserKey)
-    <script>
-        window.routeMapData = @json(session('routeResult'));
+    <script type="application/json" id="route-map-data">
+        {!! Js::from(session('routeResult')) !!}
     </script>
     <script
         async

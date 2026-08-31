@@ -31,23 +31,9 @@ class AttractionController extends Controller
                         'string',
                         'max:255',
                     ],
-                    'start_date' => [
-                        'required',
-                        'date',
-                        'after_or_equal:today',
-                    ],
-                    'end_date' => [
-                        'required',
-                        'date',
-                        'after_or_equal:start_date',
-                    ],
                 ],
                 [
                     'search.required' => 'Please enter a place to search.',
-                    'start_date.required' => 'Please select a start date.',
-                    'start_date.after_or_equal' => 'The start date cannot be before today.',
-                    'end_date.required' => 'Please select an end date.',
-                    'end_date.after_or_equal' => 'The end date cannot be before the start date.',
                 ]
             );
 
@@ -157,7 +143,7 @@ class AttractionController extends Controller
         $wishlistedAttractionIds = Wishlist::where('user_id', Auth::id())
             ->whereIn(
                 'attraction_id',
-                $attractions->getCollection()->pluck('attraction_id')
+                collect($attractions->items())->pluck('attraction_id')
             )
             ->pluck('attraction_id')
             ->map(fn ($id) => (int) $id)
