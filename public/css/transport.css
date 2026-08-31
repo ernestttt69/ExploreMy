@@ -8,14 +8,14 @@
 
 body {
     min-height: 100vh;
-    background: #f5f8f6;
+    background: linear-gradient(135deg, #eef6f3 0%, #e0f2fe 100%);
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #2d3748;
     padding: 20px;
 }
 
 body.transport-page {
-    padding: 150px 0 0;
+    padding: 150px 20px 20px;
 }
 
 /* Page Container */
@@ -280,7 +280,7 @@ body.transport-page {
 /* Search Button */
 .gmaps-btn {
     width: 100%;
-    background-color: #099401;
+    background-color: #187839;
     color: #ffffff;
     border: none;
     padding: 12px;
@@ -479,30 +479,54 @@ body.transport-page {
 
 .mode-toggle-group {
     display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 16px;
+    gap: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
 }
 
 .mode-btn-option {
     flex: 1;
-    padding: 10px;
-    border: 2px solid #2d6a4f;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #2d6a4f;
-    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: transparent;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 14px;
     cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    border: none;
 }
         
 .mode-btn-option input[type="radio"] {
     display: none;
 }
+
+.mode-btn-option:hover:not(.active) {
+    color: #1b4332;
+    background: rgba(255, 255, 255, 0.5);
+}
         
 .mode-btn-option.active {
-    background: #2d6a4f;
-    color: #ffffff;
+    background: #ffffff;
+    color: #1b4332;
+    box-shadow: 0 4px 12px rgba(27, 67, 50, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.mode-icon {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.mode-btn-option.active .mode-icon {
+    transform: scale(1.15);
 }
 
 .gmaps-connector {

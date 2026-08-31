@@ -52,11 +52,13 @@
                 <div class="mode-toggle-group">
                     <label class="mode-btn-option {{ ($mode ?? 'transit') === 'transit' ? 'active' : '' }}" onclick="selectMode(this)">
                         <input type="radio" name="mode" value="transit" {{ ($mode ?? 'transit') === 'transit' ? 'checked' : '' }}>
-                        🚌 Step-by-Step Transit
+                        <span class="mode-icon" aria-hidden="true">🚉</span>
+                        Step-by-Step Transit
                     </label>
                     <label class="mode-btn-option {{ ($mode ?? '') === 'walking' ? 'active' : '' }}" onclick="selectMode(this)">
                         <input type="radio" name="mode" value="walking" {{ ($mode ?? '') === 'walking' ? 'checked' : '' }}>
-                        🚶 Walking Directions
+                        <span class="mode-icon" aria-hidden="true">🚶‍♀️</span>
+                        Walking Directions
                     </label>
                 </div>
 <div class="gmaps-input-group">
