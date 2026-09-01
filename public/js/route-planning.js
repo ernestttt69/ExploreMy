@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const translations = window.routeTranslations || {};
     const options = document.querySelectorAll(
         '.preference-option'
     );
@@ -43,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             option.disabled = selectedKeys.has(option.value);
         });
 
-        countLabel.textContent = `${items.length} stop${items.length === 1 ? '' : 's'}`;
+        countLabel.textContent = (translations.stops || ':count stops').replace(':count', items.length);
         const isValid = items.length >= minimumDestinations;
         hint.hidden = isValid;
         form.querySelector('.continue-button').disabled = !isValid;
@@ -58,9 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="itinerary-position"></span>
             <strong></strong>
             <div class="itinerary-actions">
-                <button type="button" data-move="up" aria-label="Move destination up">&uarr;</button>
-                <button type="button" data-move="down" aria-label="Move destination down">&darr;</button>
-                <button type="button" data-remove aria-label="Remove destination">&times;</button>
+                <button type="button" data-move="up" aria-label="${translations.moveUp || 'Move destination up'}">&uarr;</button>
+                <button type="button" data-move="down" aria-label="${translations.moveDown || 'Move destination down'}">&darr;</button>
+                <button type="button" data-remove aria-label="${translations.remove || 'Remove destination'}">&times;</button>
             </div>`;
         item.querySelector('strong').textContent = name;
         return item;
@@ -111,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    document.querySelectorAll('[data-reward-activity="export_itinerary_pdf"]').forEach(button => {
+    document.querySelectorAll('[data-reward-activity="export_itinerary"]').forEach(button => {
         button.addEventListener('click', () => {
             rewardEvent(button);
             window.print();
@@ -129,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', async () => {
             try {
                 if (navigator.share) {
-                    await navigator.share({title: document.title, text: 'Explore my Malaysia itinerary.'});
+                    await navigator.share({title: document.title, text: translations.shareText || 'Explore my Malaysia itinerary.'});
                 } else {
                     await navigator.clipboard.writeText(window.location.href);
                 }

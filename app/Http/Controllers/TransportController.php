@@ -42,6 +42,7 @@ public function search(Request $request)
         'mode' => $mode,
         'region' => 'my',
         'alternatives' => 'true',
+        'language' => app()->getLocale() === 'zh' ? 'zh-CN' : app()->getLocale(),
         'key' => $apiKey,
     ]);
 
@@ -201,7 +202,7 @@ public function search(Request $request)
         $apiKey = config('services.google.maps_api_key');
 
         if (empty($origin) || empty($destination)) {
-            return response()->json(['status' => 'ERROR', 'message' => 'Origin and destination are required.'], 400);
+            return response()->json(['status' => 'ERROR', 'message' => __('messages.transport_origin_destination_required')], 400);
         }
 
         $response = Http::get('https://maps.googleapis.com/maps/api/directions/json', [
@@ -209,6 +210,7 @@ public function search(Request $request)
             'destination' => $destination,
             'mode' => 'walking',
             'region' => 'my',
+            'language' => app()->getLocale() === 'zh' ? 'zh-CN' : app()->getLocale(),
             'key' => $apiKey,
         ]);
 
@@ -232,6 +234,7 @@ public function search(Request $request)
                 'inputtype' => 'textquery',
                 'fields' => 'geometry',
                 'locationbias' => 'circle:50000@3.1390,101.6869',
+                'language' => app()->getLocale() === 'zh' ? 'zh-CN' : app()->getLocale(),
                 'key' => $apiKey,
             ]);
 
@@ -243,6 +246,7 @@ public function search(Request $request)
                 $geocodeResponse = Http::get('https://maps.googleapis.com/maps/api/geocode/json', [
                     'address' => $origin . ', Malaysia',
                     'region' => 'my',
+                    'language' => app()->getLocale() === 'zh' ? 'zh-CN' : app()->getLocale(),
                     'key' => $apiKey,
                 ]);
 
@@ -263,6 +267,7 @@ public function search(Request $request)
             'location' => "{$lat},{$lng}",
             'radius' => 3500, // Reduced from 6km to 3.5km to cut out far distant areas like Batu Caves
             'type' => 'transit_station',
+            'language' => app()->getLocale() === 'zh' ? 'zh-CN' : app()->getLocale(),
             'key' => $apiKey,
         ]);
 
@@ -343,28 +348,22 @@ public function stationDetails($placeId)
     $response = Http::get('https://maps.googleapis.com/maps/api/place/details/json', [
         'place_id' => $placeId,
         'fields' => 'name,formatted_address,geometry,wheelchair_accessible_entrance,opening_hours,rating,user_ratings_total,url,international_phone_number,formatted_phone_number,reviews',
+        'language' => app()->getLocale() === 'zh' ? 'zh-CN' : app()->getLocale(),
         'key' => $apiKey,
     ]);
 
     if ($response->failed() || ($response->json()['status'] ?? '') !== 'OK') {
         return response()->json([
             'success' => false,
-            'message' => 'Unable to retrieve station details.'
+            'message' => __('misc.transport.station_failed')
         ], 404);
     }
 
     $result = $response->json()['result'] ?? [];
 
     // Fallback for Transit Operating Hours if not explicitly set by Google Places
-    $weekdayText = $result['opening_hours']['weekday_text'] ?? [
-        'Monday: 06:00 AM – 11:30 PM',
-        'Tuesday: 06:00 AM – 11:30 PM',
-        'Wednesday: 06:00 AM – 11:30 PM',
-        'Thursday: 06:00 AM – 11:30 PM',
-        'Friday: 06:00 AM – 11:30 PM',
-        'Saturday: 06:00 AM – 11:30 PM',
-        'Sunday: 06:00 AM – 11:30 PM',
-    ];
+    $weekdayText = $result['opening_hours']['weekday_text'] ?? collect(__('messages.transport_days'))
+        ->map(fn ($day) => $day . ': 06:00 AM – 11:30 PM')->all();
 
     $phone = $result['international_phone_number'] 
         ?? $result['formatted_phone_number'] 
@@ -373,11 +372,11 @@ public function stationDetails($placeId)
     return response()->json([
         'success' => true,
         'data' => [
-            'name' => $result['name'] ?? 'Transit Station',
+            'name' => $result['name'] ?? __('messages.transport_station'),
             'address' => $result['formatted_address'] ?? 'Kuala Lumpur, Malaysia',
             'wheelchair' => isset($result['wheelchair_accessible_entrance']) 
-                ? ($result['wheelchair_accessible_entrance'] ? 'Accessible ♿' : 'Not Accessible 🚫') 
-                : 'Accessible ♿',
+                ? ($result['wheelchair_accessible_entrance'] ? __('messages.transport_accessible') : __('messages.transport_not_accessible'))
+                : __('messages.transport_accessible'),
             'is_open_now' => $result['opening_hours']['open_now'] ?? true,
             'opening_hours' => $weekdayText,
             'rating' => $result['rating'] ?? '4.2',
@@ -420,8 +419,8 @@ public function lineInfo(Request $request)
     $agency = $selectedLine['agency'];
     $apiUrl = "https://api.data.gov.my/gtfs-realtime/alerts/{$agency}";
 
-    $disruptionText = 'All systems operating smoothly. No active delays or disruptions reported on this line.';
-    $statusText = 'Normal Service';
+    $disruptionText = __('messages.transport_no_disruption');
+    $statusText = __('messages.transport_status_normal');
 
     try {
         $response = Http::withHeaders([
@@ -441,7 +440,7 @@ public function lineInfo(Request $request)
                     $header = $alert['header_text']['translation'][0]['text'] ?? '';
                     if (!empty($header)) {
                         $disruptionText = $header;
-                        $statusText = 'Service Advisory / Special Schedule';
+                        $statusText = __('messages.transport_status_advisory');
                         break;
                     }
                 }

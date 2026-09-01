@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Saved Places</title>
+    <title>{{ __('saved.title') }}</title>
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -34,15 +34,15 @@
         <div>
 
             <p class="page-kicker">
-                Your travel collection
+                {{ __('saved.kicker') }}
             </p>
 
             <h1>
-                Saved Places
+                {{ __('saved.title') }}
             </h1>
 
             <p class="page-description">
-                Places you saved for your next Malaysian adventure.
+                {{ __('saved.intro') }}
             </p>
 
         </div>
@@ -50,9 +50,9 @@
         <a
             href="{{ url()->previous() }}"
             class="btn-back"
-            aria-label="Back to previous page"
+            aria-label="{{ __('saved.back_aria') }}"
         >
-            ← Back to Profile
+            ← {{ __('saved.back') }}
         </a>
 
     </div>
@@ -61,16 +61,16 @@
         <section class="collections-panel">
             <div class="collections-heading">
                 <div>
-                    <p class="page-kicker">Plan your way</p>
-                    <h2>Create a custom collection</h2>
-                    <p>Choose saved places for a trip, set your dates, then give the collection a name.</p>
+                    <p class="page-kicker">{{ __('saved.plan_way') }}</p>
+                    <h2>{{ __('saved.create_heading') }}</h2>
+                    <p>{{ __('saved.create_intro') }}</p>
                 </div>
             </div>
 
             <form method="POST" action="{{ route('saved-places.collections.store') }}" class="collection-form">
                 @csrf
-                <label for="collection-name">Collection name</label>
-                <input id="collection-name" name="name" value="{{ old('name') }}" maxlength="80" placeholder="e.g. Langkawi weekend" required>
+                <label for="collection-name">{{ __('saved.collection_name') }}</label>
+                <input id="collection-name" name="name" value="{{ old('name') }}" maxlength="80" placeholder="{{ __('saved.collection_placeholder') }}" required>
                 @error('name')<p class="collection-error">{{ $message }}</p>@enderror
 
                 <div class="collection-dates-row">
@@ -139,7 +139,7 @@
 
                 @error('attraction_ids')<p class="collection-error" data-error-for="attraction_ids">{{ $message }}</p>@enderror
 
-                <button type="submit">Create collection</button>
+                <button type="submit">{{ __('saved.create') }}</button>
             </form>
 
             @if($collections->isNotEmpty())
@@ -149,7 +149,7 @@
                             <div class="collection-card-main">
                                 <div class="collection-card-heading">
                                     <div>
-                                        <span>{{ $collection->items_count }} {{ $collection->items_count === 1 ? 'place' : 'places' }}</span>
+                                        <span>{{ $collection->items_count }} {{ $collection->items_count === 1 ? __('saved.place') : __('saved.places') }}</span>
                                         <h3>{{ $collection->name }}</h3>
                                         @if($collection->start_date && $collection->end_date)
                                             <p class="collection-dates">
@@ -194,7 +194,7 @@
                                 @php $collectionAttractionIds = $collection->items->pluck('attraction_id')->all(); @endphp
                                 @if($savedPlaces->whereNotIn('attraction_id', $collectionAttractionIds)->isNotEmpty())
                                     <details class="add-to-collection">
-                                        <summary>Add saved places</summary>
+                                        <summary>{{ __('saved.add_places') }}</summary>
                                         <form method="POST" action="{{ route('saved-places.collections.places.store', $collection->collection_id) }}">
                                             @csrf
                                             <label for="add-places-{{ $collection->collection_id }}" id="add-places-label-{{ $collection->collection_id }}">Select places to add</label>
@@ -219,7 +219,7 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <button type="submit">Add to collection</button>
+                                            <button type="submit">{{ __('saved.add_collection') }}</button>
                                         </form>
                                     </details>
                                 @endif
@@ -227,7 +227,7 @@
 
                             @if($collection->items_count < 2)
                                 <p class="collection-trip-note">
-                                    Add {{ 2 - $collection->items_count }} {{ 2 - $collection->items_count === 1 ? 'more place' : 'places' }} to generate a trip.
+                                    {{ __('saved.add_one') }}
                                 </p>
                             @endif
                         </article>
@@ -240,20 +240,20 @@
     @if($savedPlaces->count() > 0)
         <section class="trip-cta">
             <div>
-                <span>Ready to turn favourites into a journey?</span>
-                <h2>Start Your Trip Now</h2>
-                <p>Use your saved places to generate an optimised itinerary.</p>
+                <span>{{ __('saved.ready') }}</span>
+                <h2>{{ __('saved.start') }}</h2>
+                <p>{{ __('saved.trip_intro') }}</p>
             </div>
             @if($savedPlaces->count() >= 2)
                 <a href="{{ route('route.index', ['source' => 'saved']) }}">
-                    Generate Itinerary &rarr;
+                    {{ __('saved.generate') }} &rarr;
                 </a>
             @else
                 <p class="trip-cta-instruction">
                     <span aria-hidden="true">!</span>
                     <span>
-                        <strong>Save one more place to start your trip</strong>
-                        You need at least two saved places to generate an itinerary.
+                        <strong>{{ __('saved.save_one') }}</strong>
+                        {{ __('saved.need_two') }}
                     </span>
                 </p>
             @endif
@@ -339,13 +339,13 @@
                                     @forelse($attraction->preferences as $preference)
 
                                         <span class="place-category">
-                                            {{ $preference->category_name }}
+                                            {{ $preference->localized_name }}
                                         </span>
 
                                     @empty
 
                                         <span class="place-category">
-                                            Uncategorized
+                                            {{ __('saved.uncategorized') }}
                                         </span>
 
                                     @endforelse
@@ -354,7 +354,7 @@
 
                                 <span
                                     class="saved-heart"
-                                    aria-label="Saved place"
+                                    aria-label="{{ __('saved.saved_aria') }}"
                                 >
                                     ♥
                                 </span>
@@ -387,7 +387,7 @@
 
                                 @else
 
-                                    No description is available for this attraction.
+                                    {{ __('saved.no_description') }}
 
                                 @endif
 
@@ -402,14 +402,14 @@
                                     href="{{ route('attractions.show', $attraction->attraction_id) }}"
                                     class="view-place-button"
                                 >
-                                    View Attraction
+                                    {{ __('saved.view') }}
                                 </a>
 
 
                                 <form
                                     method="POST"
                                     action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}"
-                                    onsubmit="return confirm('Remove this attraction from your wishlist?');"
+                                    onsubmit='return confirm(@js(__('saved.remove_confirm')));'
                                 >
 
                                     @csrf
@@ -420,7 +420,7 @@
                                         type="submit"
                                         class="remove-place-button"
                                     >
-                                        Remove
+                                        {{ __('saved.remove') }}
                                     </button>
 
                                 </form>
@@ -446,18 +446,18 @@
             </div>
 
             <h2>
-                No saved places yet
+                {{ __('saved.empty') }}
             </h2>
 
             <p>
-                Your saved destinations will appear here.
+                {{ __('saved.empty_intro') }}
             </p>
 
             <a
                 href="{{ route('attractions.index') }}"
                 class="explore-button"
             >
-                Explore Attractions
+                {{ __('saved.explore') }}
             </a>
 
         </div>

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'page_title' => 'Green Rewards | ExploreMY', 'growing_tree_aria' => 'Your growing tree',
+    'tree_aria' => 'Your :tree virtual tree, :height metres tall', 'summary_aria' => 'Your rewards summary', 'progress_aria' => 'Progress to next tree level',
+    'level_unlock' => 'Level :level unlocks at :exp EXP', 'level_exp' => 'Level :level · :exp EXP',
     'tree_stages' => ['seed' => 'Seed', 'small' => 'Small tree', 'growing' => 'Growing tree', 'mature' => 'Mature tree', 'ancient' => 'Tall trunk'],
     'green_points' => 'Green points', 'points' => 'points', 'level' => 'Level :level',
     'apply_fertilizer' => 'Apply fertilizer', 'get_fertilizer' => 'Get fertilizer', 'balance' => 'Your balance',
@@ -16,4 +19,10 @@ return [
     'inventory' => 'Inventory', 'inventory_empty' => 'Your inventory is empty. Pick up fertilizer in the shop.',
     'spend' => 'Spend your points', 'shop' => 'Green Shop', 'available' => ':points points available', 'buy' => ':points pts · Buy',
     'activity' => 'Your activity', 'history' => 'Points history', 'history_empty' => 'Your Green Points activity will appear here.',
+    'activity_names' => ['daily_login' => 'Daily Login', 'save_attraction' => 'Save Attraction', 'generate_itinerary' => 'Generate Itinerary', 'export_itinerary' => 'Export Itinerary to PDF', 'export_guidance' => 'Export Step-by-Step Guidance', 'share_itinerary' => 'Share Itinerary', 'tree_milestone' => 'Achievement / Tree Milestone'],
+    'activity_frequency' => ['daily_login' => 'Once per day', 'save_attraction' => 'Every successful save', 'generate_itinerary' => 'Every successful generation', 'export_itinerary' => 'Every successful export', 'export_guidance' => 'Every successful export', 'share_itinerary' => 'Every successful share', 'tree_milestone' => 'Once per milestone'],
+    'activity_points' => ['tree_milestone' => '+50 to +150'],
+    'transaction_activities' => ['daily_login' => 'Daily login', 'save_attraction' => 'Save attraction', 'generate_itinerary' => 'Generate itinerary', 'export_itinerary' => 'Export itinerary', 'export_guidance' => 'Export guidance', 'share_itinerary' => 'Share itinerary', 'purchase' => 'Purchase', 'fertilize' => 'Fertilize tree', 'fertilizer_purchase' => 'Fertilizer purchase'],
+    'shop_items' => ['leaf_starter' => ['name' => 'Leaf Starter', 'description' => 'A gentle boost for a growing tree.'], 'rainforest_mix' => ['name' => 'Rainforest Mix', 'description' => 'Rich nutrients inspired by Malaysia\'s forests.'], 'canopy_crate' => ['name' => 'Canopy Crate', 'description' => 'A powerful blend for ambitious explorers.']],
+    'action_failed' => 'This action could not be completed.', 'collected' => 'Collected',
 ];

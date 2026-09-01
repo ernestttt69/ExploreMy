@@ -1,0 +1,2 @@
+<?php
+return ['dashboard'=>['meta'=>'ExploreMY 旅行主页','skip'=>'跳到主页内容','interests'=>'您的旅行兴趣','unknown_device'=>'未知设备','unknown_ip'=>'未知 IP'],'transport'=>['swap'=>'交换起点与目的地','gps_failed'=>'无法获取当前位置，请在输入框中填写起点。','gps_unsupported'=>'您的浏览器不支持定位，请在输入框中填写起点。','option'=>'选项 :number：','station_failed'=>'无法获取车站详情。'],'rewards'=>['no_inventory'=>'您的库存中没有此肥料。'],'about'=>['malay'=>'马来语','ringgit'=>'马来西亚令吉（MYR）']];

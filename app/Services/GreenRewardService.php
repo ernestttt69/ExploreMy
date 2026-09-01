@@ -19,7 +19,7 @@ class GreenRewardService
         'daily_login' => 10,
         'save_attraction' => 20,
         'generate_itinerary' => 50,
-        'export_itinerary_pdf' => 30,
+        'export_itinerary' => 30,
         'export_guidance' => 30,
         'share_itinerary' => 30,
     ];
@@ -47,17 +47,41 @@ class GreenRewardService
         });
     }
 
-    public function claimDailyLogin(User $user): bool
+    public function queueActivity(User $user, string $activity): bool
     {
-        $alreadyClaimed = GreenRewardTransaction::where('user_id', $user->user_id)
-            ->where('activity', 'daily_login')->whereDate('created_at', Carbon::today())->exists();
-        return !$alreadyClaimed && $this->award($user, 'daily_login', self::ACTIVITY_POINTS['daily_login']);
+        if (!isset(self::ACTIVITY_POINTS[$activity])) return false;
+
+        $pendingRewards = session('pending_reward_activities', []);
+
+        if ($activity === 'daily_login') {
+            $alreadyClaimed = GreenRewardTransaction::where('user_id', $user->user_id)
+                ->where('activity', 'daily_login')
+                ->whereDate('created_at', Carbon::today())
+                ->exists();
+
+            if ($alreadyClaimed || ($pendingRewards[$activity] ?? 0) > 0) return false;
+        }
+
+        $pendingRewards[$activity] = ($pendingRewards[$activity] ?? 0) + 1;
+        session()->put('pending_reward_activities', $pendingRewards);
+
+        return true;
     }
 
-    public function awardActivity(User $user, string $activity): bool
+    public function collectQueuedActivity(User $user, string $activity): bool
     {
-        return isset(self::ACTIVITY_POINTS[$activity])
-            && $this->award($user, $activity, self::ACTIVITY_POINTS[$activity]);
+        if (!isset(self::ACTIVITY_POINTS[$activity])) return false;
+
+        $pendingRewards = session('pending_reward_activities', []);
+        $pendingCount = $pendingRewards[$activity] ?? 0;
+
+        if ($pendingCount < 1) return false;
+
+        $pendingRewards[$activity] = $pendingCount - 1;
+        if ($pendingRewards[$activity] === 0) unset($pendingRewards[$activity]);
+        session()->put('pending_reward_activities', $pendingRewards);
+
+        return $this->award($user, $activity, self::ACTIVITY_POINTS[$activity]);
     }
 
     public function collectAchievement(User $user, GreenAchievement $achievement): bool
@@ -80,15 +104,16 @@ class GreenRewardService
         });
     }
 
-    public function purchase(User $user, GreenShopItem $item): void
+    public function purchase(User $user, GreenShopItem $item): GreenInventory
     {
-        DB::transaction(function () use ($user, $item) {
+        return DB::transaction(function () use ($user, $item) {
             $wallet = GreenWallet::where('user_id', $user->user_id)->lockForUpdate()->firstOrCreate(['user_id' => $user->user_id]);
-            if ($wallet->points < $item->price) abort(422, 'You do not have enough Green Points.');
+            if ($wallet->points < $item->price) abort(422, __('messages.reward_points_insufficient'));
             $wallet->decrement('points', $item->price);
             GreenRewardTransaction::create(['user_id' => $user->user_id, 'activity' => 'fertilizer_purchase', 'amount' => $item->price, 'transaction_type' => 'spending', 'metadata' => ['item_id' => $item->id]]);
             $inventory = GreenInventory::firstOrCreate(['user_id' => $user->user_id, 'shop_item_id' => $item->id]);
             $inventory->increment('quantity');
+            return $inventory->fresh('item');
         });
     }
 
@@ -96,12 +121,15 @@ class GreenRewardService
     {
         DB::transaction(function () use ($user, $inventory) {
             $inventory = GreenInventory::whereKey($inventory->id)->where('user_id', $user->user_id)->lockForUpdate()->firstOrFail();
-            if ($inventory->quantity < 1) abort(422, 'This fertilizer is not in your inventory.');
+            if ($inventory->quantity < 1) abort(422, __('misc.rewards.no_inventory'));
             $item = $inventory->item;
-            $tree = GreenTree::firstOrCreate(['user_id' => $user->user_id]);
+            $tree = GreenTree::firstOrCreate(
+                ['user_id' => $user->user_id],
+                ['level' => 0, 'experience' => 0, 'growth_stage' => 'Seed']
+            );
             $inventory->decrement('quantity');
             $tree->experience += $item->exp_value;
-            while ($tree->experience >= $tree->level * 100) $tree->level++;
+            while ($tree->experience >= ($tree->level + 1) * 100) $tree->level++;
             $tree->growth_stage = $tree->level >= 10 ? 'Tall trunk' : ($tree->level >= 5 ? 'Mature tree' : ($tree->level >= 3 ? 'Growing tree' : ($tree->level >= 2 ? 'Small tree' : 'Seed')));
             $tree->save();
             $this->checkAchievements($user, $tree);

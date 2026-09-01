@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Explore Attractions | ExploreMY</title>
+    <title>{{ __('explore.title') }}</title>
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -31,15 +31,15 @@
     <section class="explore-heading">
 
         <p class="page-kicker">
-            Discover Malaysia
+            {{ __('explore.discover') }}
         </p>
 
         <h1>
-            Explore Attractions
+            {{ __('explore.heading') }}
         </h1>
 
         <p class="page-description">
-            Find places that match what you want to experience on your next trip.
+            {{ __('explore.intro') }}
         </p>
 
     </section>
@@ -49,7 +49,7 @@
         @if($errors->any())
 
             <div class="validation-errors">
-                <strong>Please check the following:</strong>
+                <strong>{{ __('explore.check') }}</strong>
 
                 <ul>
                     @foreach($errors->all() as $error)
@@ -76,7 +76,7 @@
                 <div class="search-field search-field-large">
 
                     <label for="search">
-                        What place are you looking for?
+                        {{ __('explore.looking') }}
                     </label>
 
                     <div class="input-wrapper">
@@ -90,7 +90,7 @@
                             id="search"
                             name="search"
                             value="{{ old('search', request('search')) }}"
-                            placeholder="e.g. LEGOLAND, KL Tower, beach..."
+                            placeholder="{{ __('explore.placeholder') }}"
                             class="{{ $errors->has('search') ? 'input-error' : '' }}"
                         >
 
@@ -104,11 +104,57 @@
 
                 </div>
 
-                <button
+                 <div class="date-field">
+
+                    <label for="start_date">
+                        {{ __('explore.starts') }}
+                    </label>
+
+                    <input
+                        type="date"
+                        id="start_date"
+                        name="start_date"
+                        value="{{ old('start_date', request('start_date')) }}"
+                        min="{{ today()->format('Y-m-d') }}"
+                        class="{{ $errors->has('start_date') ? 'input-error' : '' }}"
+                    >
+
+                    @if($errors->has('start_date'))
+                        <p class="field-error">
+                            {{ $errors->first('start_date') }}
+                        </p>
+                    @endif
+
+                </div>
+
+                <div class="date-field">
+
+                    <label for="end_date">
+                        {{ __('explore.ends') }}
+                    </label>
+
+                    <input
+                        type="date"
+                        id="end_date"
+                        name="end_date"
+                        value="{{ old('end_date', request('end_date')) }}"
+                        min="{{ old('start_date', request('start_date')) ?: today()->format('Y-m-d') }}"
+                        class="{{ $errors->has('end_date') ? 'input-error' : '' }}"
+                    >
+
+                    @if($errors->has('end_date'))
+                        <p class="field-error">
+                            {{ $errors->first('end_date') }}
+                        </p>
+                    @endif
+
+                 </div>
+
+                 <button
                     type="submit"
                     class="search-button"
                 >
-                    Search
+                    {{ __('explore.search') }}
                 </button>
 
             </div>
@@ -128,11 +174,11 @@
                 <div>
 
                     <h3>
-                        Filter your results
+                        {{ __('explore.filter') }}
                     </h3>
 
                     <p>
-                        All filters are optional.
+                        {{ __('explore.optional') }}
                     </p>
 
                 </div>
@@ -146,7 +192,7 @@
                         ]) }}"
                         class="clear-filter"
                     >
-                        Clear filters
+                        {{ __('explore.clear') }}
                     </a>
 
                 @endif
@@ -158,7 +204,7 @@
                 <div class="filter-group">
 
                     <label for="state_id">
-                        State
+                        {{ __('explore.state') }}
                     </label>
 
                     <select
@@ -167,7 +213,7 @@
                     >
 
                         <option value="">
-                            All states
+                            {{ __('explore.all_states') }}
                         </option>
 
                         @foreach($states as $state)
@@ -188,7 +234,7 @@
                 <div class="filter-group category-filter">
 
                     <label>
-                        Category
+                        {{ __('explore.category') }}
                     </label>
 
                     <div class="category-options">
@@ -211,7 +257,7 @@
                                 >
 
                                 <span>
-                                    {{ $category->category_name }}
+                                    {{ $category->localized_name }}
                                 </span>
 
                             </label>
@@ -225,7 +271,7 @@
                 <div class="filter-group">
 
                     <label for="budget_level">
-                        Budget
+                        {{ __('explore.budget') }}
                     </label>
 
                     <select
@@ -234,28 +280,28 @@
                     >
 
                         <option value="">
-                            Any budget
+                            {{ __('explore.any_budget') }}
                         </option>
 
                         <option
                             value="Low"
                             {{ request('budget_level') === 'Low' ? 'selected' : '' }}
                         >
-                            Low
+                            {{ __('explore.low') }}
                         </option>
 
                         <option
                             value="Medium"
                             {{ request('budget_level') === 'Medium' ? 'selected' : '' }}
                         >
-                            Medium
+                            {{ __('explore.medium') }}
                         </option>
 
                         <option
                             value="High"
                             {{ request('budget_level') === 'High' ? 'selected' : '' }}
                         >
-                            High
+                            {{ __('explore.high') }}
                         </option>
 
                     </select>
@@ -265,7 +311,7 @@
                 <div class="filter-group">
 
                     <label for="rating">
-                        Minimum rating
+                        {{ __('explore.minimum_rating') }}
                     </label>
 
                     <select
@@ -274,35 +320,35 @@
                     >
 
                         <option value="">
-                            Any rating
+                            {{ __('explore.any_rating') }}
                         </option>
 
                         <option
                             value="4.5"
                             {{ request('rating') == '4.5' ? 'selected' : '' }}
                         >
-                            4.5 ★ and above
+                            {{ __('explore.and_above', ['rating' => '4.5']) }}
                         </option>
 
                         <option
                             value="4.0"
                             {{ request('rating') == '4.0' ? 'selected' : '' }}
                         >
-                            4.0 ★ and above
+                            {{ __('explore.and_above', ['rating' => '4.0']) }}
                         </option>
 
                         <option
                             value="3.5"
                             {{ request('rating') == '3.5' ? 'selected' : '' }}
                         >
-                            3.5 ★ and above
+                            {{ __('explore.and_above', ['rating' => '3.5']) }}
                         </option>
 
                         <option
                             value="3.0"
                             {{ request('rating') == '3.0' ? 'selected' : '' }}
                         >
-                            3.0 ★ and above
+                            {{ __('explore.and_above', ['rating' => '3.0']) }}
                         </option>
 
                     </select>
@@ -324,11 +370,11 @@
                 @if($searchSubmitted && request('search'))
 
                     <p class="results-kicker">
-                        Search results
+                        {{ __('explore.search_results') }}
                     </p>
 
                     <h2>
-                        Results for "{{ request('search') }}"
+                        {{ __('explore.results_for', ['query' => request('search')]) }}
                     </h2>
 
                 @elseif(!$searchSubmitted)
@@ -341,21 +387,21 @@
                     )
 
                         <p class="results-kicker">
-                            Recommended for you
+                            {{ __('explore.recommended') }}
                         </p>
 
                         <h2>
-                            Based on your travel preferences
+                            {{ __('explore.preferences') }}
                         </h2>
 
                     @else
 
                         <p class="results-kicker">
-                            Popular attractions
+                            {{ __('explore.popular') }}
                         </p>
 
                         <h2>
-                            Explore Malaysia
+                            {{ __('explore.explore_malaysia') }}
                         </h2>
 
                     @endif
@@ -363,11 +409,11 @@
                 @else
 
                     <p class="results-kicker">
-                        Search results
+                        {{ __('explore.search_results') }}
                     </p>
 
                     <h2>
-                        Explore Malaysia
+                        {{ __('explore.explore_malaysia') }}
                     </h2>
 
                 @endif
@@ -376,7 +422,7 @@
 
             <span class="result-count">
                 {{ $attractions->total() }}
-                {{ $attractions->total() == 1 ? 'place' : 'places' }}
+                {{ $attractions->total() == 1 ? __('explore.place') : __('explore.places') }}
             </span>
 
         </div>
@@ -440,13 +486,13 @@
                                     @forelse($attraction->preferences as $preference)
 
                                         <span class="attraction-category">
-                                            {{ $preference->category_name }}
+                                            {{ $preference->localized_name }}
                                         </span>
 
                                     @empty
 
                                         <span class="attraction-category">
-                                            Uncategorized
+                                            {{ __('explore.uncategorized') }}
                                         </span>
 
                                     @endforelse
@@ -454,7 +500,7 @@
                                 </div>
 
                                 <span class="budget-badge">
-                                    {{ $attraction->budget_level ?: 'Price unavailable' }}
+                                    {{ $attraction->budget_level ? __('explore.' . strtolower($attraction->budget_level)) : __('explore.price_unavailable') }}
                                 </span>
 
                             </div>
@@ -477,7 +523,7 @@
                                     href="{{ route('attractions.show', $attraction->attraction_id) }}"
                                     class="details-button"
                                 >
-                                    View Attraction
+                                    {{ __('explore.view') }}
                                     <span>→</span>
                                 </a>
 
@@ -486,14 +532,14 @@
                                     <form method="POST" action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="card-wishlist-button is-saved" aria-label="Remove {{ $attraction->attraction_name }} from wishlist">♥ Saved</button>
+                                        <button type="submit" class="card-wishlist-button is-saved" aria-label="{{ __('explore.remove_wishlist', ['name' => $attraction->attraction_name]) }}">♥ {{ __('explore.saved') }}</button>
                                     </form>
 
                                 @else
 
                                     <form method="POST" action="{{ route('attractions.wishlist.add', $attraction->attraction_id) }}">
                                         @csrf
-                                        <button type="submit" class="card-wishlist-button" aria-label="Add {{ $attraction->attraction_name }} to wishlist">♡ Save</button>
+                                        <button type="submit" class="card-wishlist-button" aria-label="{{ __('explore.add_wishlist', ['name' => $attraction->attraction_name]) }}">♡ {{ __('explore.save') }}</button>
                                     </form>
 
                                 @endif
@@ -512,7 +558,7 @@
 
                 <nav
                     class="custom-pagination"
-                    aria-label="Attraction pages"
+                    aria-label="{{ __('explore.pages') }}"
                 >
 
                     @if($attractions->onFirstPage())
@@ -621,7 +667,7 @@
                 </div>
 
                 <h2>
-                    No attractions found
+                        {{ __('explore.no_results') }}
                 </h2>
 
                 <p>

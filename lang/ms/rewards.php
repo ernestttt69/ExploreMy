@@ -1,3 +1,28 @@
 <?php
 
-return ['tree_stages'=>['seed'=>'Benih','small'=>'Pokok kecil','growing'=>'Pokok membesar','mature'=>'Pokok matang','ancient'=>'Pokok tinggi'],'green_points'=>'Mata Hijau','points'=>'mata','level'=>'Tahap :level','apply_fertilizer'=>'Gunakan baja','get_fertilizer'=>'Dapatkan baja','balance'=>'Baki anda','to_level'=>':exp EXP lagi ke tahap pokok :level','current_level'=>'Tahap semasa','nurtured'=>':exp EXP dipupuk','grow_tree'=>'Besarkan pokok anda','choose_fertilizer'=>'Pilih baja','use_owned'=>'Gunakan yang dimiliki','stock'=>'Stok: :count','use_fertilizer'=>'Gunakan baja','no_fertilizer'=>'Anda belum mempunyai baja.','visit_shop'=>'Lawati Kedai Hijau →','impact'=>'Beri impak','ways'=>'Cara memperoleh mata','updated'=>'Dikemas kini hari ini','itinerary'=>'Jana jadual perjalanan','itinerary_desc'=>'Bina laluan terancang merentasi destinasi pilihan anda.','plan_route'=>'Rancang laluan','save_destination'=>'Simpan destinasi','save_desc'=>'Bina senarai tempat yang ingin anda lawati.','explore'=>'Terokai tempat','complete_profile'=>'Lengkapkan profil','profile_desc'=>'Kongsi minat perjalanan untuk cadangan yang lebih sesuai.','view_profile'=>'Lihat profil','collection'=>'Koleksi anda','badges'=>'Lencana diperoleh','activities'=>'Aktiviti ganjaran','collect'=>'Kutip','living_reward'=>'Ganjaran hidup anda','grow_virtual'=>'Besarkan pokok maya anda','grow_virtual_desc'=>'Gunakan baja daripada inventori untuk menambah EXP dan membuka tahap baharu.','height'=>'Ketinggian pokok','inventory'=>'Inventori','inventory_empty'=>'Inventori anda kosong. Dapatkan baja di kedai.','spend'=>'Gunakan mata anda','shop'=>'Kedai Hijau','available'=>':points mata tersedia','buy'=>':points mata · Beli','activity'=>'Aktiviti anda','history'=>'Sejarah mata','history_empty'=>'Aktiviti Mata Hijau anda akan dipaparkan di sini.'];
+return [
+    'page_title' => 'Ganjaran Hijau | ExploreMY', 'growing_tree_aria' => 'Pokok anda yang sedang membesar',
+    'tree_aria' => 'Pokok maya :tree anda, setinggi :height meter', 'summary_aria' => 'Ringkasan ganjaran anda', 'progress_aria' => 'Kemajuan ke tahap pokok seterusnya',
+    'level_unlock' => 'Tahap :level dibuka pada :exp EXP', 'level_exp' => 'Tahap :level · :exp EXP',
+    'tree_stages' => ['seed' => 'Benih', 'small' => 'Pokok kecil', 'growing' => 'Pokok membesar', 'mature' => 'Pokok matang', 'ancient' => 'Pokok tinggi'],
+    'green_points' => 'Mata Hijau', 'points' => 'mata', 'level' => 'Tahap :level',
+    'apply_fertilizer' => 'Gunakan baja', 'get_fertilizer' => 'Dapatkan baja', 'balance' => 'Baki anda',
+    'to_level' => ':exp EXP lagi ke tahap pokok :level', 'current_level' => 'Tahap semasa', 'nurtured' => ':exp EXP dipupuk',
+    'grow_tree' => 'Besarkan pokok anda', 'choose_fertilizer' => 'Pilih baja', 'use_owned' => 'Gunakan yang dimiliki',
+    'stock' => 'Stok: :count', 'use_fertilizer' => 'Gunakan baja', 'no_fertilizer' => 'Anda belum mempunyai baja.', 'visit_shop' => 'Lawati Kedai Hijau →',
+    'impact' => 'Beri impak', 'ways' => 'Cara memperoleh mata', 'updated' => 'Dikemas kini hari ini',
+    'itinerary' => 'Jana jadual perjalanan', 'itinerary_desc' => 'Bina laluan terancang merentasi destinasi pilihan anda.', 'plan_route' => 'Rancang laluan',
+    'save_destination' => 'Simpan destinasi', 'save_desc' => 'Bina senarai tempat yang ingin anda lawati.', 'explore' => 'Terokai tempat',
+    'complete_profile' => 'Lengkapkan profil', 'profile_desc' => 'Kongsi minat perjalanan untuk cadangan yang lebih sesuai.', 'view_profile' => 'Lihat profil',
+    'collection' => 'Koleksi anda', 'badges' => 'Lencana diperoleh', 'activities' => 'Aktiviti ganjaran', 'collect' => 'Kutip',
+    'living_reward' => 'Ganjaran hidup anda', 'grow_virtual' => 'Besarkan pokok maya anda', 'grow_virtual_desc' => 'Gunakan baja daripada inventori untuk menambah EXP dan membuka tahap baharu.', 'height' => 'Ketinggian pokok',
+    'inventory' => 'Inventori', 'inventory_empty' => 'Inventori anda kosong. Dapatkan baja di kedai.',
+    'spend' => 'Gunakan mata anda', 'shop' => 'Kedai Hijau', 'available' => ':points mata tersedia', 'buy' => ':points mata · Beli',
+    'activity' => 'Aktiviti anda', 'history' => 'Sejarah mata', 'history_empty' => 'Aktiviti Mata Hijau anda akan dipaparkan di sini.',
+    'activity_names' => ['daily_login' => 'Log Masuk Harian', 'save_attraction' => 'Simpan Tarikan', 'generate_itinerary' => 'Jana Jadual Perjalanan', 'export_itinerary' => 'Eksport Jadual Perjalanan ke PDF', 'export_guidance' => 'Eksport Panduan Langkah demi Langkah', 'share_itinerary' => 'Kongsi Jadual Perjalanan', 'tree_milestone' => 'Pencapaian / Tahap Pokok'],
+    'activity_frequency' => ['daily_login' => 'Sekali sehari', 'save_attraction' => 'Setiap simpanan berjaya', 'generate_itinerary' => 'Setiap penjanaan berjaya', 'export_itinerary' => 'Setiap eksport berjaya', 'export_guidance' => 'Setiap eksport berjaya', 'share_itinerary' => 'Setiap perkongsian berjaya', 'tree_milestone' => 'Sekali bagi setiap tahap'],
+    'activity_points' => ['tree_milestone' => '+50 hingga +150'],
+    'transaction_activities' => ['daily_login' => 'Log masuk harian', 'save_attraction' => 'Simpan tarikan', 'generate_itinerary' => 'Jana jadual perjalanan', 'export_itinerary' => 'Eksport jadual perjalanan', 'export_guidance' => 'Eksport panduan', 'share_itinerary' => 'Kongsi jadual perjalanan', 'purchase' => 'Pembelian', 'fertilize' => 'Bajakan pokok', 'fertilizer_purchase' => 'Pembelian baja'],
+    'shop_items' => ['leaf_starter' => ['name' => 'Permulaan Daun', 'description' => 'Rangsangan lembut untuk pokok yang sedang membesar.'], 'rainforest_mix' => ['name' => 'Campuran Hutan Hujan', 'description' => 'Nutrien kaya yang diinspirasikan oleh hutan Malaysia.'], 'canopy_crate' => ['name' => 'Peti Kanopi', 'description' => 'Campuran berkuasa untuk pengembara yang bercita-cita tinggi.']],
+    'action_failed' => 'Tindakan ini tidak dapat diselesaikan.', 'collected' => 'Telah dikutip',
+];

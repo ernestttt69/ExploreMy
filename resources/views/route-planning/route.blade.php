@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Route Planning')
+@section('title', __('route.title'))
 
 @push('styles')
 <link
@@ -12,25 +12,25 @@
 @section('content')
 <div class="route-page">
     <p class="route-description">
-        Choose your preferred route optimisation option.
+        {{ __('route.description') }}
     </p>
 
     @if($usingSavedPlaces)
         <section class="saved-route-summary">
             <span class="saved-places-label">
                 <span class="saved-places-icon" aria-hidden="true">&#9825;</span>
-                {{ $collection ? $collection->name : 'Your saved places' }}
+                {{ $collection ? $collection->name : __('route.saved') }}
             </span>
-            <h2>{{ $savedPlaces->count() }} destinations ready</h2>
+            <h2>{{ __('route.destinations_ready', ['count' => $savedPlaces->count()]) }}</h2>
             <div>
                 @foreach($savedPlaces->take(8) as $savedPlace)
                     <span>{{ $savedPlace->attraction->attraction_name }}</span>
                 @endforeach
             </div>
             @if($savedPlaces->count() > 8)
-                <small>The first 8 saved places will be used for this itinerary.</small>
+                <small>{{ __('route.first_eight') }}</small>
             @elseif($savedPlaces->count() < 2)
-                <small>Save at least two places to generate an itinerary.</small>
+                <small>{{ __('route.need_two') }}</small>
             @endif
         </section>
     @endif
@@ -55,13 +55,13 @@
                 <h2>{{ $routeResult['title'] }}</h2>
                 <p>{{ $routeResult['description'] }}</p>
                 <span class="route-mode-badge">
-                    {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'Driving route' : 'Public transit route' }}
+                    {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? __('route.driving_route') : __('route.transit_route') }}
                 </span>
                 @if(!empty($routeResult['omitted_places']))
                     <div class="route-omitted-warning">
-                        <strong>Not included in this route:</strong>
+                        <strong>{{ __('route.omitted') }}</strong>
                         {{ implode(', ', $routeResult['omitted_places']) }}.
-                        Google Maps could not connect these places by road or public transit.
+                        {{ __('route.cannot_connect') }}
                     </div>
                 @endif
                 @if(!empty($routeResult['fallback_notice']))
@@ -74,8 +74,8 @@
             @if (session('routeOptions'))
                 <div class="route-options-heading">
                     <div>
-                        <strong>{{ count(session('routeOptions')) }} Route Options Found</strong>
-                        <span>Compare the available {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'driving' : 'public-transport' }} routes</span>
+                        <strong>{{ __('route.options_found', ['count' => count(session('routeOptions'))]) }}</strong>
+                        <span>{{ __('route.compare', ['mode' => ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? __('route.driving') : __('route.public_transport')]) }}</span>
                     </div>
                 </div>
 
@@ -84,9 +84,9 @@
                         <article class="route-option-card {{ $routeResult['option_index'] === $optionIndex ? 'is-selected' : '' }}">
                             <div class="route-option-header">
                                 <div>
-                                    <span class="route-number">Route {{ $loop->iteration }}</span>
+                                    <span class="route-number">{{ __('route.route_number', ['number' => $loop->iteration]) }}</span>
                                     @if ($routeResult['option_index'] === $optionIndex)
-                                        <span class="route-badge">Selected</span>
+                                        <span class="route-badge">{{ __('route.selected') }}</span>
                                     @endif
                                 </div>
                                 <strong>{{ $option['option_label'] }}</strong>
@@ -94,21 +94,21 @@
 
                             <div class="route-metrics">
                                 <div>
-                                    <span>Total time</span>
+                                    <span>{{ __('route.total_time') }}</span>
                                     <strong>{{ $option['total_duration_display'] }}</strong>
                                 </div>
                                 @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE')
                                     <div>
-                                        <span>Total fare</span>
+                                        <span>{{ __('route.total_fare') }}</span>
                                         <strong>
                                             {{ $option['total_fare'] !== null
                                                 ? $option['fare_currency'] . ' ' . number_format($option['total_fare'], 2)
-                                                : 'Unavailable' }}
+                                                : __('route.unavailable') }}
                                         </strong>
                                     </div>
                                 @endif
                                 <div>
-                                    <span>Distance</span>
+                                    <span>{{ __('route.distance') }}</span>
                                     <strong>{{ number_format($option['total_distance'], 2) }} km</strong>
                                 </div>
                             </div>
@@ -121,8 +121,8 @@
                                             <strong>{{ $stop['name'] }}</strong>
                                             <small>
                                                 {{ $loop->first
-                                                    ? 'Starting point'
-                                                    : number_format($stop['distance_from_previous'], 2) . ' km from previous stop' }}
+                                                    ? __('route.starting_point')
+                                                    : __('route.from_previous', ['distance' => number_format($stop['distance_from_previous'], 2)]) }}
                                             </small>
                                         </div>
                                     </li>
@@ -131,7 +131,7 @@
 
                             @if ($routeResult['option_index'] === $optionIndex)
                                 <button type="button" class="select-route-button selected-route" disabled>
-                                    Selected Route
+                                    {{ __('route.selected_route') }}
                                 </button>
                             @else
                                 <form action="{{ route('route.preference') }}" method="POST">
@@ -144,7 +144,7 @@
                                         <input type="hidden" name="destination_keys[]" value="{{ $stop['route_key'] }}">
                                     @endforeach
                                     <button type="submit" class="select-route-button">
-                                        Select This Route &rarr;
+                                        {{ __('route.select_route') }} &rarr;
                                     </button>
                                 </form>
                             @endif
@@ -158,35 +158,35 @@
                     id="route-map"
                     class="route-map"
                     role="img"
-                    aria-label="Interactive map of the {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'driving' : 'public-transport' }} route"
+                    aria-label="{{ __('route.map_aria', ['mode' => ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? __('route.driving') : __('route.public_transport')]) }}"
                 ></div>
             @else
                 <div class="route-map-warning">
-                    Add GOOGLE_MAPS_BROWSER_API_KEY to .env to display the interactive map.
+                    {{ __('route.map_key') }}
                 </div>
             @endif
 
             <div class="trip-overview">
                 <div>
-                    <span>Start</span>
+                    <span>{{ __('route.start') }}</span>
                     <strong>{{ $routeResult['stops'][0]['name'] }}</strong>
                     <small>{{ $routeResult['departure_time'] }}</small>
                 </div>
                 <div class="trip-overview-arrow">&rarr;</div>
                 <div>
-                    <span>Final stop</span>
+                    <span>{{ __('route.final_stop') }}</span>
                     <strong>{{ $routeResult['stops'][count($routeResult['stops']) - 1]['name'] }}</strong>
                     <small>{{ $routeResult['arrival_time'] }}</small>
                 </div>
                 <div>
-                    <span>Total time</span>
+                    <span>{{ __('route.total_time') }}</span>
                     <strong>{{ $routeResult['total_duration_display'] }}</strong>
                 </div>
             </div>
 
             <div class="transit-legs">
                 <h3>
-                    {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'Driving trip plan' : 'Public transport trip plan' }}
+                    {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? __('route.driving_plan') : __('route.transit_plan') }}
                 </h3>
                 @foreach ($routeResult['transit_legs'] as $leg)
                     <section class="transit-leg">
@@ -215,7 +215,7 @@
                                         @if ($leg['fare'] !== null)
                                             {{ $leg['fare_currency'] }} {{ number_format($leg['fare'], 2) }}
                                         @else
-                                            Fare unavailable
+                                            {{ __('route.fare_unavailable') }}
                                         @endif
                                     @endif
                                 </small>
@@ -224,7 +224,7 @@
                             <div class="simple-trip-stop">
                                 <time>{{ $leg['arrival_time'] }}</time>
                                 <span class="simple-trip-dot"></span>
-                                <strong>Arrive at {{ $leg['to'] }}</strong>
+                                <strong>{{ __('route.arrive', ['place' => $leg['to']]) }}</strong>
                             </div>
                         </div>
                         <button
@@ -232,7 +232,7 @@
                             class="guidance-button"
                             data-guidance-open="guidance-{{ $loop->index }}"
                         >
-                            View step-by-step guidance
+                            {{ __('route.view_guidance') }}
                         </button>
                     </section>
                 @endforeach
@@ -251,12 +251,12 @@
                     <div class="guidance-dialog">
                         <div class="guidance-dialog-heading">
                             <div>
-                                <span>Step-by-step guidance</span>
+                                <span>{{ __('route.guidance') }}</span>
                                 <h3 id="guidance-title-{{ $loop->index }}">{{ $leg['from'] }} &rarr; {{ $leg['to'] }}</h3>
                             </div>
-                            <button type="button" class="guidance-close" data-guidance-close aria-label="Close guidance"></button>
+                            <button type="button" class="guidance-close" data-guidance-close aria-label="{{ __('route.close_guidance') }}"></button>
                         </div>
-                        <button type="button" class="guidance-button" data-reward-activity="export_guidance" data-reward-url="{{ route('rewards.activity') }}">Export step-by-step guidance</button>
+                        <button type="button" class="guidance-button" data-reward-activity="export_guidance" data-reward-url="{{ route('rewards.activity') }}">{{ __('route.export_guidance') }}</button>
                         <ol class="guidance-list">
                             @foreach ($leg['steps'] as $step)
                                 <li>
@@ -270,7 +270,7 @@
                                             &middot; {{ $step['distance'] }}
                                         </small>
                                         @if (!empty($step['headsign']))
-                                            <small>Headsign: {{ $step['headsign'] }}</small>
+                                            <small>{{ __('route.headsign', ['headsign' => $step['headsign']]) }}</small>
                                         @endif
                                     </div>
                                 </li>
@@ -281,17 +281,17 @@
             @endforeach
 
             <div class="route-total">
-                <span>Total distance</span>
+                <span>{{ __('route.total_distance') }}</span>
                 <strong>{{ number_format($routeResult['total_distance'], 2) }} km</strong>
-                <span>Estimated travel time</span>
+                <span>{{ __('route.estimated_time') }}</span>
                 <strong>{{ $routeResult['total_duration_display'] }}</strong>
                 @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE')
-                    <span>Estimated fare</span>
+                    <span>{{ __('route.estimated_fare') }}</span>
                     <strong>
                         @if ($routeResult['total_fare'] !== null)
                             {{ $routeResult['fare_currency'] }} {{ number_format($routeResult['total_fare'], 2) }}
                         @else
-                            Not available from Google
+                            {{ __('route.not_available_google') }}
                         @endif
                     </strong>
                 @endif
@@ -312,8 +312,8 @@
 
         <section class="preference-card">
             <div class="card-heading">
-                <h2>Travel Preference</h2>
-                <p>Choose how to optimise your route</p>
+                <h2>{{ __('route.preference') }}</h2>
+                <p>{{ __('route.optimise') }}</p>
             </div>
             <p class="google-attribution">Powered by Google, &copy; {{ date('Y') }} Google</p>
 
@@ -327,10 +327,10 @@
             <div class="itinerary-editor" data-itinerary-editor>
                 <div class="itinerary-editor-heading">
                     <div>
-                        <strong>Destinations</strong>
-                        <small>Arrange your stops in the order you want to visit them.</small>
+                        <strong>{{ __('route.destinations') }}</strong>
+                        <small>{{ __('route.arrange') }}</small>
                     </div>
-                    <span data-destination-count>{{ count($selectedDestinationKeys) }} stops</span>
+                    <span data-destination-count>{{ __('route.stops', ['count' => count($selectedDestinationKeys)]) }}</span>
                 </div>
 
                 <ol class="itinerary-list" data-itinerary-list>
@@ -342,9 +342,9 @@
                                 <span class="itinerary-position">{{ $loop->iteration }}</span>
                                 <strong>{{ $destination['name'] }}</strong>
                                 <div class="itinerary-actions">
-                                    <button type="button" data-move="up" aria-label="Move {{ $destination['name'] }} up">&uarr;</button>
-                                    <button type="button" data-move="down" aria-label="Move {{ $destination['name'] }} down">&darr;</button>
-                                    <button type="button" data-remove aria-label="Remove {{ $destination['name'] }}">&times;</button>
+                                    <button type="button" data-move="up" aria-label="{{ __('route.move_up', ['name' => $destination['name']]) }}">&uarr;</button>
+                                    <button type="button" data-move="down" aria-label="{{ __('route.move_down', ['name' => $destination['name']]) }}">&darr;</button>
+                                    <button type="button" data-remove aria-label="{{ __('route.remove', ['name' => $destination['name']]) }}">&times;</button>
                                 </div>
                             </li>
                         @endif
@@ -352,18 +352,18 @@
                 </ol>
 
                 <div class="itinerary-add">
-                    <label for="add-destination">Add destination</label>
+                    <label for="add-destination">{{ __('route.add_destination') }}</label>
                     <select id="add-destination" data-add-destination>
-                        <option value="">Choose a place</option>
+                        <option value="">{{ __('route.choose_place') }}</option>
                         @foreach ($availablePlaces as $destination)
                             <option value="{{ $destination['route_key'] }}" data-name="{{ $destination['name'] }}">
                                 {{ $destination['name'] }}
                             </option>
                         @endforeach
                     </select>
-                    <button type="button" data-add-stop>Add stop</button>
+                    <button type="button" data-add-stop>{{ __('route.add_stop') }}</button>
                 </div>
-                <p class="itinerary-hint" data-itinerary-hint>Choose at least two destinations.</p>
+                <p class="itinerary-hint" data-itinerary-hint>{{ __('route.choose_two') }}</p>
             </div>
 
             <div class="preference-list">
@@ -380,8 +380,8 @@
                     <span class="preference-icon">⚡</span>
 
                     <span class="preference-text">
-                        <strong>Fastest Route</strong>
-                        <small>Minimise total travel time</small>
+                        <strong>{{ __('route.fastest') }}</strong>
+                        <small>{{ __('route.fastest_desc') }}</small>
                     </span>
                 </label>
 
@@ -398,8 +398,8 @@
                     <span class="preference-icon">📏</span>
 
                     <span class="preference-text">
-                        <strong>Shortest Distance</strong>
-                        <small>Minimise total distance covered</small>
+                        <strong>{{ __('route.shortest') }}</strong>
+                        <small>{{ __('route.shortest_desc') }}</small>
                     </span>
                 </label>
 
@@ -416,15 +416,15 @@
                     <span class="preference-icon">💰</span>
 
                     <span class="preference-text">
-                        <strong>Lowest Cost</strong>
-                        <small>Minimise transportation fare</small>
+                        <strong>{{ __('route.lowest') }}</strong>
+                        <small>{{ __('route.lowest_desc') }}</small>
                     </span>
                 </label>
             </div>
         </section>
 
         <button type="submit" class="continue-button" @disabled($usingSavedPlaces && $savedPlaces->count() < 2)>
-            Continue
+            {{ __('route.continue') }}
         </button>
     </form>
     </div>
@@ -432,6 +432,16 @@
 @endsection
 
 @push('scripts')
+<script>
+@php($routeTranslations = [
+    'stops' => __('route.stops', ['count' => ':count']),
+    'moveUp' => __('route.move_destination_up'),
+    'moveDown' => __('route.move_destination_down'),
+    'remove' => __('route.remove_destination'),
+    'shareText' => __('route.share_text'),
+])
+window.routeTranslations = {{ Illuminate\Support\Js::from($routeTranslations) }};
+</script>
 <script src="{{ asset('js/route-planning.js') }}?v={{ filemtime(public_path('js/route-planning.js')) }}"></script>
 @if (session('routeResult') && $googleMapsBrowserKey)
     <script type="application/json" id="route-map-data">

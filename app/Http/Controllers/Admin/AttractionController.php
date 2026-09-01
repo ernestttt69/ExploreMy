@@ -34,7 +34,7 @@ class AttractionController extends Controller
         $data['image_path'] = $this->storeImage($request);
         Attraction::create($data);
 
-        return redirect()->route('admin.attractions.index')->with('success', 'Attraction added successfully.');
+        return redirect()->route('admin.attractions.index')->with('success', __('messages.admin_attraction_added'));
     }
 
     public function edit(Attraction $attraction)
@@ -54,7 +54,7 @@ class AttractionController extends Controller
         }
         $attraction->update($data);
 
-        return redirect()->route('admin.attractions.index')->with('success', 'Attraction updated successfully.');
+        return redirect()->route('admin.attractions.index')->with('success', __('messages.admin_attraction_updated'));
     }
 
     public function destroy(Attraction $attraction)
@@ -65,7 +65,7 @@ class AttractionController extends Controller
             File::delete(public_path(ltrim($image, '/')));
         }
 
-        return back()->with('success', 'Attraction deleted successfully.');
+        return back()->with('success', __('messages.admin_attraction_deleted'));
     }
 
     private function validated(Request $request, ?Attraction $attraction = null): array

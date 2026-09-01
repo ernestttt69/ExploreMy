@@ -1,3 +1,28 @@
 <?php
 
-return ['tree_stages'=>['seed'=>'种子','small'=>'小树','growing'=>'成长中的树','mature'=>'成熟的树','ancient'=>'高大的树'],'green_points'=>'绿色积分','points'=>'积分','level'=>'等级 :level','apply_fertilizer'=>'使用肥料','get_fertilizer'=>'获取肥料','balance'=>'您的余额','to_level'=>'还需 :exp EXP 达到树木等级 :level','current_level'=>'当前等级','nurtured'=>'已培育 :exp EXP','grow_tree'=>'培育您的树','choose_fertilizer'=>'选择肥料','use_owned'=>'使用已有物品','stock'=>'库存：:count','use_fertilizer'=>'使用肥料','no_fertilizer'=>'您还没有肥料。','visit_shop'=>'前往绿色商店 →','impact'=>'创造影响','ways'=>'积分获取方式','updated'=>'今天更新','itinerary'=>'生成行程','itinerary_desc'=>'为您选择的马来西亚目的地规划合适路线。','plan_route'=>'规划路线','save_destination'=>'收藏目的地','save_desc'=>'建立想要游览的地点清单。','explore'=>'探索地点','complete_profile'=>'完善个人资料','profile_desc'=>'分享旅行兴趣以获得更合适的推荐。','view_profile'=>'查看资料','collection'=>'您的收藏','badges'=>'已获得徽章','activities'=>'奖励活动','collect'=>'领取','living_reward'=>'您的成长奖励','grow_virtual'=>'培育您的虚拟树','grow_virtual_desc'=>'使用库存中的肥料增加 EXP 并解锁新阶段。','height'=>'树木高度','inventory'=>'库存','inventory_empty'=>'库存为空，请前往商店获取肥料。','spend'=>'使用您的积分','shop'=>'绿色商店','available'=>'可用积分：:points','buy'=>':points 积分 · 购买','activity'=>'您的活动','history'=>'积分记录','history_empty'=>'您的绿色积分活动将显示在这里。'];
+return [
+    'page_title' => '绿色奖励 | ExploreMY', 'growing_tree_aria' => '您正在成长的树',
+    'tree_aria' => '您的虚拟树“:tree”，高 :height 米', 'summary_aria' => '您的奖励摘要', 'progress_aria' => '距离下一个树木等级的进度',
+    'level_unlock' => '等级 :level 将在 :exp EXP 时解锁', 'level_exp' => '等级 :level · :exp EXP',
+    'tree_stages' => ['seed' => '种子', 'small' => '小树', 'growing' => '成长中的树', 'mature' => '成熟的树', 'ancient' => '高大的树'],
+    'green_points' => '绿色积分', 'points' => '积分', 'level' => '等级 :level',
+    'apply_fertilizer' => '使用肥料', 'get_fertilizer' => '获取肥料', 'balance' => '您的余额',
+    'to_level' => '还需 :exp EXP 达到树木等级 :level', 'current_level' => '当前等级', 'nurtured' => '已培育 :exp EXP',
+    'grow_tree' => '培育您的树', 'choose_fertilizer' => '选择肥料', 'use_owned' => '使用已有物品',
+    'stock' => '库存：:count', 'use_fertilizer' => '使用肥料', 'no_fertilizer' => '您还没有肥料。', 'visit_shop' => '前往绿色商店 →',
+    'impact' => '创造影响', 'ways' => '积分获取方式', 'updated' => '今天更新',
+    'itinerary' => '生成行程', 'itinerary_desc' => '为您选择的马来西亚目的地规划合适路线。', 'plan_route' => '规划路线',
+    'save_destination' => '收藏目的地', 'save_desc' => '建立想要游览的地点清单。', 'explore' => '探索地点',
+    'complete_profile' => '完善个人资料', 'profile_desc' => '分享旅行兴趣以获得更合适的推荐。', 'view_profile' => '查看资料',
+    'collection' => '您的收藏', 'badges' => '已获得徽章', 'activities' => '奖励活动', 'collect' => '领取',
+    'living_reward' => '您的成长奖励', 'grow_virtual' => '培育您的虚拟树', 'grow_virtual_desc' => '使用库存中的肥料增加 EXP 并解锁新阶段。', 'height' => '树木高度',
+    'inventory' => '库存', 'inventory_empty' => '库存为空，请前往商店获取肥料。',
+    'spend' => '使用您的积分', 'shop' => '绿色商店', 'available' => '可用积分：:points', 'buy' => ':points 积分 · 购买',
+    'activity' => '您的活动', 'history' => '积分记录', 'history_empty' => '您的绿色积分活动将显示在这里。',
+    'activity_names' => ['daily_login' => '每日登录', 'save_attraction' => '收藏景点', 'generate_itinerary' => '生成行程', 'export_itinerary' => '导出行程 PDF', 'export_guidance' => '导出分步指南', 'share_itinerary' => '分享行程', 'tree_milestone' => '成就／树木里程碑'],
+    'activity_frequency' => ['daily_login' => '每天一次', 'save_attraction' => '每次成功收藏', 'generate_itinerary' => '每次成功生成', 'export_itinerary' => '每次成功导出', 'export_guidance' => '每次成功导出', 'share_itinerary' => '每次成功分享', 'tree_milestone' => '每个里程碑一次'],
+    'activity_points' => ['tree_milestone' => '+50 至 +150'],
+    'transaction_activities' => ['daily_login' => '每日登录', 'save_attraction' => '收藏景点', 'generate_itinerary' => '生成行程', 'export_itinerary' => '导出行程', 'export_guidance' => '导出指南', 'share_itinerary' => '分享行程', 'purchase' => '购买', 'fertilize' => '为树施肥', 'fertilizer_purchase' => '购买肥料'],
+    'shop_items' => ['leaf_starter' => ['name' => '新叶肥料', 'description' => '温和促进成长中树木的肥料。'], 'rainforest_mix' => ['name' => '雨林混合肥', 'description' => '灵感源自马来西亚森林的丰富养分。'], 'canopy_crate' => ['name' => '树冠肥料箱', 'description' => '为积极探索者准备的强效配方。']],
+    'action_failed' => '无法完成此操作。', 'collected' => '已领取',
+];

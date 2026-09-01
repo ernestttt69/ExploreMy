@@ -31,9 +31,15 @@ class AttractionController extends Controller
                         'string',
                         'max:255',
                     ],
+                    'start_date' => ['required', 'date', 'after_or_equal:today'],
+                    'end_date' => ['required', 'date', 'after_or_equal:start_date'],
                 ],
                 [
-                    'search.required' => 'Please enter a place to search.',
+                    'search.required' => __('messages.attraction_search_required'),
+                    'start_date.required' => __('messages.attraction_start_required'),
+                    'start_date.after_or_equal' => __('messages.attraction_start_today'),
+                    'end_date.required' => __('messages.attraction_end_required'),
+                    'end_date.after_or_equal' => __('messages.attraction_end_after_start'),
                 ]
             );
 
@@ -211,7 +217,7 @@ class AttractionController extends Controller
                 $attraction->attraction_id;
 
             $wishlist->save();
-            app(GreenRewardService::class)->awardActivity(Auth::user(), 'save_attraction');
+            app(GreenRewardService::class)->queueActivity(Auth::user(), 'save_attraction');
         }
 
         return redirect()

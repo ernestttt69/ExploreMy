@@ -10,6 +10,7 @@ use App\Models\GreenRewardTransaction;
 use App\Services\GreenRewardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class GreenRewardController extends Controller
 {
@@ -19,37 +20,53 @@ class GreenRewardController extends Controller
     {
         $user = auth()->user();
         $wallet = $this->rewards->wallet($user);
-        $tree = GreenTree::firstOrCreate(['user_id' => $user->user_id]);
+        $tree = GreenTree::firstOrCreate(
+            ['user_id' => $user->user_id],
+            ['level' => 0, 'experience' => 0, 'growth_stage' => 'Seed']
+        );
         $achievements = GreenAchievement::orderBy('id')->get();
         $unlocked = DB::table('user_green_achievements')->where('user_id', $user->user_id)->pluck('achievement_id')->all();
         $claimable = DB::table('user_green_achievements')->where('user_id', $user->user_id)->whereNull('claimed_at')->pluck('achievement_id')->all();
         $items = GreenShopItem::where('is_available', true)->get();
         $inventory = GreenInventory::with('item')->where('user_id', $user->user_id)->where('quantity', '>', 0)->get();
         $transactions = GreenRewardTransaction::where('user_id', $user->user_id)->latest()->limit(10)->get();
-        $nextThreshold = max(1, $tree->level) * 100;
+        $experiencePerLevel = 100;
+        $nextThreshold = ($tree->level + 1) * $experiencePerLevel;
+        $currentLevelExperience = $tree->experience % $experiencePerLevel;
         $treeStage = $tree->level >= 10 ? 'ancient' : ($tree->level >= 5 ? 'mature' : ($tree->level >= 3 ? 'growing' : ($tree->level >= 2 ? 'small' : 'seed')));
         $treeLabel = __('rewards.tree_stages.' . $treeStage);
-        $treeHeight = number_format(max(0.1, 0.1 + (($tree->level - 1) * 0.35)), 2);
-        $treeProgress = $nextThreshold > 0
-            ? min(100, (($tree->experience % $nextThreshold) / $nextThreshold) * 100)
-            : 0;
-        return view('rewards.reward', compact('wallet', 'tree', 'achievements', 'unlocked', 'claimable', 'items', 'inventory', 'transactions', 'nextThreshold', 'treeProgress', 'treeStage', 'treeLabel', 'treeHeight'));
+        $visualLevel = min(10, $tree->level);
+        $treeHeight = number_format(max(0.1, 0.1 + (($visualLevel - 1) * 0.35)), 2);
+        $treeProgress = ($currentLevelExperience / $experiencePerLevel) * 100;
+        $progressSteps = (int) floor($currentLevelExperience / 20);
+        return view('rewards.reward', compact('wallet', 'tree', 'achievements', 'unlocked', 'claimable', 'items', 'inventory', 'transactions', 'nextThreshold', 'treeProgress', 'progressSteps', 'treeStage', 'treeLabel', 'treeHeight'));
     }
 
     public function dailyLogin()
     {
-        $claimed = $this->rewards->claimDailyLogin(auth()->user());
-        return back()->with($claimed ? 'success' : 'info', $claimed ? __('messages.daily_claimed') : __('messages.daily_already_claimed'));
+        $queued = $this->rewards->queueActivity(auth()->user(), 'daily_login');
+        return back()->with($queued ? 'success' : 'info', $queued ? __('messages.daily_claimed') : __('messages.daily_already_claimed'));
     }
 
     public function purchase(GreenShopItem $item)
     {
         abort_unless($item->is_available, 404);
-        $this->rewards->purchase(auth()->user(), $item);
+        $inventory = $this->rewards->purchase(auth()->user(), $item);
         if (request()->expectsJson()) {
+            $itemKey = Str::snake($item->name);
             return response()->json([
                 'message' => __('messages.inventory_added', ['item' => $item->name]),
                 'points' => $this->rewards->wallet(auth()->user())->points,
+                'inventory' => [
+                    'id' => $inventory->id,
+                    'name' => __("rewards.shop_items.$itemKey.name"),
+                    'description' => __("rewards.shop_items.$itemKey.description"),
+                    'experience' => $item->exp_value,
+                    'quantity' => $inventory->quantity,
+                    'fertilizeUrl' => route('rewards.fertilize', $inventory),
+                    'stockLabel' => __('rewards.stock', ['count' => $inventory->quantity]),
+                    'applyLabel' => __('rewards.apply_fertilizer'),
+                ],
             ]);
         }
         return back()->with('success', __('messages.inventory_added', ['item' => $item->name]));
@@ -67,30 +84,24 @@ class GreenRewardController extends Controller
     public function activity(Request $request)
     {
         $validated = $request->validate([
-            'activity' => ['required', 'in:export_itinerary_pdf,export_guidance,share_itinerary'],
+            'activity' => ['required', 'in:export_itinerary,export_guidance,share_itinerary'],
         ]);
 
-        $awarded = $this->rewards->awardActivity(auth()->user(), $validated['activity']);
-        return response()->json(['awarded' => $awarded]);
+        $queued = $this->rewards->queueActivity(auth()->user(), $validated['activity']);
+        return response()->json(['queued' => $queued]);
     }
 
     public function collectActivity(Request $request)
     {
         $validated = $request->validate([
-            'activity' => ['required', 'in:generate_itinerary'],
+            'activity' => ['required', 'in:daily_login,save_attraction,generate_itinerary,export_itinerary,export_guidance,share_itinerary'],
         ]);
-        $pendingRewards = session('pending_reward_activities', []);
-        $pendingCount = $pendingRewards[$validated['activity']] ?? 0;
 
-        abort_unless($pendingCount > 0, 422, __('messages.activity_unavailable'));
+        $awarded = $this->rewards->collectQueuedActivity(auth()->user(), $validated['activity']);
 
-        $pendingRewards[$validated['activity']] = $pendingCount - 1;
-        session()->put('pending_reward_activities', $pendingRewards);
-        $awarded = $this->rewards->awardActivity(auth()->user(), $validated['activity']);
+        abort_unless($awarded, 422, __('messages.activity_unavailable'));
 
-        return back()->with($awarded ? 'success' : 'info', $awarded
-            ? __('messages.itinerary_reward_claimed')
-            : __('messages.reward_failed'));
+        return back()->with('success', __('messages.itinerary_reward_claimed'));
     }
 
     public function collectAchievement(GreenAchievement $achievement)

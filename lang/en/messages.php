@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'reward_points_insufficient' => 'You do not have enough Green Points.',
+    'attraction_search_required' => 'Please enter a place to search.',
+    'attraction_start_required' => 'Please select a start date.',
+    'attraction_start_today' => 'The start date cannot be before today.',
+    'attraction_end_required' => 'Please select an end date.',
+    'attraction_end_after_start' => 'The end date cannot be before the start date.',
+    'admin_attraction_added' => 'Attraction added successfully.',
+    'admin_attraction_updated' => 'Attraction updated successfully.',
+    'admin_attraction_deleted' => 'Attraction deleted successfully.',
+    'transport_origin_destination_required' => 'Origin and destination are required.',
+    'transport_station' => 'Transit Station', 'transport_accessible' => 'Accessible ♿', 'transport_not_accessible' => 'Not Accessible 🚫',
+    'transport_status_normal' => 'Normal Service', 'transport_status_advisory' => 'Service Advisory / Special Schedule',
+    'transport_no_disruption' => 'All systems operating smoothly. No active delays or disruptions reported on this line.',
+    'transport_days' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     'wishlist_added' => 'Attraction added to your wishlist.',
     'wishlist_removed' => 'Attraction removed from your wishlist.',
     'collection_name_required' => 'Give your collection a name.',

@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'reward_points_insufficient' => '您的绿色积分不足。',
+    'attraction_search_required' => '请输入要搜索的地点。',
+    'attraction_start_required' => '请选择开始日期。',
+    'attraction_start_today' => '开始日期不能早于今天。',
+    'attraction_end_required' => '请选择结束日期。',
+    'attraction_end_after_start' => '结束日期不能早于开始日期。',
+    'admin_attraction_added' => '景点添加成功。',
+    'admin_attraction_updated' => '景点更新成功。',
+    'admin_attraction_deleted' => '景点删除成功。',
+    'transport_origin_destination_required' => '必须填写起点和目的地。',
+    'transport_station' => '公共交通站', 'transport_accessible' => '设有无障碍设施 ♿', 'transport_not_accessible' => '没有无障碍设施 🚫',
+    'transport_status_normal' => '正常服务', 'transport_status_advisory' => '服务通知／特别时间表',
+    'transport_no_disruption' => '所有系统运行正常，此路线目前没有延误或服务中断。',
+    'transport_days' => ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'],
     'wishlist_added' => '景点已加入愿望清单。',
     'wishlist_removed' => '景点已从愿望清单中移除。',
     'collection_name_required' => '请为收藏集命名。',

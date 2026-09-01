@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ExploreMY travel dashboard">
+    <meta name="description" content="{{ __('misc.dashboard.meta') }}">
     <title>ExploreMY - {{ __('ui.dashboard.title') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
 </head>
 <body>
-<a class="skip-link" href="#main-content">Skip to dashboard content</a>
+<a class="skip-link" href="#main-content">{{ __('misc.dashboard.skip') }}</a>
 @include('components.navbar')
 
 <main id="main-content" class="dashboard-page" tabindex="-1">
@@ -43,7 +43,7 @@
                 <div class="preference-message" role="status">{{ __('ui.dashboard.no_interests') }} <a href="{{ route('travel-preferences.edit') }}">{{ __('ui.dashboard.update') }} <span aria-hidden="true">&rarr;</span></a></div>
             @else
                 <p class="preference-intro">{{ __('ui.dashboard.interest_intro') }}</p>
-                <ul class="interest-chips" aria-label="Your travel interests">@foreach($preferences as $preference)<li>{{ $preference->localized_name }}</li>@endforeach</ul>
+                <ul class="interest-chips" aria-label="{{ __('misc.dashboard.interests') }}">@foreach($preferences as $preference)<li>{{ $preference->localized_name }}</li>@endforeach</ul>
             @endif
             <div class="travel-notes-card"><span>{{ __('ui.dashboard.travel_notes') }}</span><p>{{ filled($user->bio) ? $user->bio : __('ui.dashboard.no_notes') }}</p>@if(blank($user->bio))<a href="{{ route('profile') }}#personal">{{ __('ui.profile.travel_notes') }} <span aria-hidden="true">&rarr;</span></a>@endif</div>
         </section>

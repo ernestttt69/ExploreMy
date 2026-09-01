@@ -10,7 +10,7 @@
 
 			<div class="d-flex justify-content-between align-items-center">
 
-				<a href="{{ route('dashboard') }}" class="nav-brand-container text-decoration-none" aria-label="Back to dashboard">
+				<a href="{{ route('dashboard') }}" class="nav-brand-container text-decoration-none" aria-label="{{ __('ui.profile.back') }}">
 
 					<div class="nav-logo-badge">
 						<img src="{{ asset('images/ExploreMy_icon.jpeg') }}">
@@ -28,8 +28,8 @@
 					<a
 						href="{{ route('saved-places.index') }}"
 						class="nav-saved-places {{ request()->routeIs('saved-places.*') ? 'active' : '' }}"
-						title="Saved places"
-						aria-label="Saved places"
+						title="{{ __('ui.footer.saved') }}"
+						aria-label="{{ __('ui.footer.saved') }}"
 					>
 						<span aria-hidden="true">&#9825;</span>
 					</a>
@@ -90,7 +90,7 @@
 					<a href="{{ route('rewards') }}" class="nav-link-custom rewards-nav-link {{ request()->routeIs('rewards') ? 'active' : '' }}">
 						{{ __('pages.common.rewards') }}
 						@if($hasPendingRewards)
-							<span class="nav-reward-dot" aria-label="Rewards waiting to be collected"></span>
+							<span class="nav-reward-dot" aria-label="{{ __('rewards.collect') }}"></span>
 						@endif
 					</a>
 				</li>

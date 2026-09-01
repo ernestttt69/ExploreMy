@@ -554,3 +554,78 @@
     from{opacity:0;transform:scale(.08) translateY(15px)}
     to{opacity:1;transform:scale(var(--cluster-scale)) translateY(0)}
 }
+
+/* Deliberate foliage growth: each level adds a small number of larger leaf clusters. */
+.rewards-hero .hero-tree:not(.tree-level-0)>.tree-crown-one{
+    left:calc(50% - (var(--foliage-size) / 2));
+    bottom:calc(var(--trunk-height) - 7px);
+    width:var(--foliage-size);
+    height:calc(var(--foliage-size) * .84);
+    border-radius:52% 48% 55% 45%;
+    background:linear-gradient(145deg,#72bd70,#3e8d53);
+    box-shadow:var(--foliage-clusters);
+    filter:drop-shadow(0 5px 6px rgba(8,63,46,.18));
+    transform:none;
+    animation:tree-grow .5s cubic-bezier(.2,.8,.2,1) both;
+}
+.rewards-hero .tree-level-1{--foliage-size:26px;--foliage-clusters:none}
+.rewards-hero .tree-level-2{--foliage-size:30px;--foliage-clusters:-16px 10px 0 -5px #4d9959,16px 10px 0 -5px #438c51}
+.rewards-hero .tree-level-3{--foliage-size:34px;--foliage-clusters:-20px 11px 0 -4px #438e53,20px 11px 0 -4px #4e9b5b,-8px -13px 0 -4px #67b46d}
+.rewards-hero .tree-level-4{--foliage-size:38px;--foliage-clusters:-24px 13px 0 -3px #3e884e,24px 13px 0 -3px #479556,-13px -16px 0 -3px #5eaa65,13px -16px 0 -3px #68b66d}
+.rewards-hero .tree-level-5{--foliage-size:42px;--foliage-clusters:-29px 15px 0 -2px #3d874e,29px 15px 0 -2px #438f53,-17px -18px 0 -2px #56a460,0 -24px 0 -2px #6cba70,17px -18px 0 -2px #4b9859}
+.rewards-hero .tree-level-6{--foliage-size:46px;--foliage-clusters:-34px 17px 0 -1px #377f49,34px 17px 0 -1px #408c51,-23px -17px 0 -1px #4b9859,0 -27px 0 -1px #6bb76d,23px -17px 0 -1px #58a762,-12px 28px 0 -2px #3e894f,12px 28px 0 -2px #479556}
+.rewards-hero .tree-level-7{--foliage-size:50px;--foliage-clusters:-39px 19px 0 0 #377f49,39px 19px 0 0 #408c51,-28px -18px 0 0 #469354,0 -31px 0 0 #6bb86e,28px -18px 0 0 #58a762,-20px 31px 0 -1px #3d884e,0 35px 0 -1px #459355,20px 31px 0 -1px #4d9c5c}
+.rewards-hero .tree-level-8{--foliage-size:54px;--foliage-clusters:-44px 21px 0 1px #367f4a,44px 21px 0 1px #408d52,-33px -18px 0 1px #459355,-11px -32px 0 1px #60ad66,15px -32px 0 1px #6abb70,35px -17px 0 1px #4d9a5a,-27px 34px 0 0 #39854d,0 39px 0 0 #459354,27px 34px 0 0 #4b9959}
+.rewards-hero .tree-level-9{--foliage-size:58px;--foliage-clusters:-49px 23px 0 2px #347c48,49px 23px 0 2px #3e8b50,-38px -17px 0 2px #438f53,-17px -35px 0 2px #5aa762,12px -37px 0 2px #6ab96f,39px -17px 0 2px #4b9859,-33px 37px 0 1px #39864e,-10px 44px 0 1px #438f53,14px 44px 0 1px #4b9859,34px 37px 0 1px #3b864e}
+.rewards-hero .tree-level-10,
+.rewards-hero .hero-tree.tree-stage-ancient{--foliage-size:62px;--foliage-clusters:-55px 25px 0 3px #337b48,55px 25px 0 3px #3d894f,-44px -16px 0 3px #418e52,-25px -34px 0 3px #55a35f,0 -43px 0 3px #69b86e,25px -34px 0 3px #5cac65,44px -16px 0 3px #479556,-40px 40px 0 2px #37834b,-14px 50px 0 2px #408e52,16px 50px 0 2px #4a9859,41px 40px 0 2px #39854d}
+
+/* Reaching level 10 locks the visual height; later levels keep this mature tree. */
+.rewards-hero .hero-tree.tree-stage-ancient{
+    --trunk-height:230px;
+    --trunk-width:18px;
+    height:350px;
+}
+.rewards-hero .hero-tree.tree-stage-ancient>.tree-trunk{height:var(--trunk-height);width:var(--trunk-width)}
+
+/* Softer, irregular foliage gives every cluster a more organic silhouette. */
+.rewards-hero .hero-tree:not(.tree-level-0)>.tree-crown-one{
+    background:
+        radial-gradient(ellipse 38% 33% at 31% 24%,rgba(164,220,130,.48) 0 38%,transparent 42%),
+        radial-gradient(ellipse 32% 29% at 72% 32%,rgba(103,181,105,.46) 0 42%,transparent 46%),
+        radial-gradient(ellipse 42% 34% at 50% 76%,rgba(28,104,58,.25) 0 45%,transparent 49%),
+        linear-gradient(148deg,#78bd73 0%,#4d9d5c 52%,#2f7747 100%);
+    border-radius:48% 55% 46% 53% / 54% 45% 57% 46%;
+}
+.rewards-hero .tree-level-1>.tree-trunk::before,
+.rewards-hero .tree-level-1>.tree-trunk::after,
+.rewards-hero .tree-level-2>.tree-trunk::before,
+.rewards-hero .tree-level-2>.tree-trunk::after,
+.rewards-hero .tree-level-3>.tree-trunk::before,
+.rewards-hero .tree-level-3>.tree-trunk::after{display:none}
+.rewards-hero .tree-level-4>.tree-trunk::before,
+.rewards-hero .tree-level-4>.tree-trunk::after,
+.rewards-hero .tree-level-5>.tree-trunk::before,
+.rewards-hero .tree-level-5>.tree-trunk::after,
+.rewards-hero .tree-level-6>.tree-trunk::before,
+.rewards-hero .tree-level-6>.tree-trunk::after,
+.rewards-hero .tree-level-7>.tree-trunk::before,
+.rewards-hero .tree-level-7>.tree-trunk::after{
+    top:auto;
+    bottom:28%;
+    width:7px;
+    height:48%;
+    background:linear-gradient(#75472c,#955f39);
+}
+.rewards-hero .tree-level-4>.tree-trunk::before,
+.rewards-hero .tree-level-5>.tree-trunk::before,
+.rewards-hero .tree-level-6>.tree-trunk::before,
+.rewards-hero .tree-level-7>.tree-trunk::before{left:-3px;transform:rotate(-34deg)}
+.rewards-hero .tree-level-4>.tree-trunk::after,
+.rewards-hero .tree-level-5>.tree-trunk::after,
+.rewards-hero .tree-level-6>.tree-trunk::after,
+.rewards-hero .tree-level-7>.tree-trunk::after{right:-3px;transform:rotate(31deg)}
+
+/* Keep the trunk clean: hide the two decorative side branches. */
+.rewards-hero .hero-tree>.tree-trunk::before,
+.rewards-hero .hero-tree>.tree-trunk::after{display:none}

@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'reward_points_insufficient' => 'Mata Hijau anda tidak mencukupi.',
+    'attraction_search_required' => 'Sila masukkan tempat untuk dicari.',
+    'attraction_start_required' => 'Sila pilih tarikh mula.',
+    'attraction_start_today' => 'Tarikh mula tidak boleh sebelum hari ini.',
+    'attraction_end_required' => 'Sila pilih tarikh tamat.',
+    'attraction_end_after_start' => 'Tarikh tamat tidak boleh sebelum tarikh mula.',
+    'admin_attraction_added' => 'Tarikan berjaya ditambah.',
+    'admin_attraction_updated' => 'Tarikan berjaya dikemas kini.',
+    'admin_attraction_deleted' => 'Tarikan berjaya dipadam.',
+    'transport_origin_destination_required' => 'Tempat mula dan destinasi diperlukan.',
+    'transport_station' => 'Stesen Transit', 'transport_accessible' => 'Boleh diakses ♿', 'transport_not_accessible' => 'Tidak boleh diakses 🚫',
+    'transport_status_normal' => 'Perkhidmatan Normal', 'transport_status_advisory' => 'Makluman Perkhidmatan / Jadual Khas',
+    'transport_no_disruption' => 'Semua sistem beroperasi lancar. Tiada kelewatan atau gangguan aktif pada laluan ini.',
+    'transport_days' => ['Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu', 'Ahad'],
     'wishlist_added' => 'Tarikan telah ditambah ke senarai hajat anda.',
     'wishlist_removed' => 'Tarikan telah dikeluarkan daripada senarai hajat anda.',
     'collection_name_required' => 'Berikan nama untuk koleksi anda.',

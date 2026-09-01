@@ -102,7 +102,7 @@ class RoutePlanningController extends Controller
                 $metrics = $this->getGoogleTransitMetrics($places, $travelMode);
             } catch (\RuntimeException $exception) {
                 $travelMode = 'DRIVE';
-                $fallbackNotice = 'No public-transport route was available for all selected destinations. This itinerary uses driving instead.';
+                $fallbackNotice = __('route.fallback');
                 $metrics = $this->getGoogleTransitMetrics($places, $travelMode, true);
                 [$places, $metrics, $omittedPlaces] = $this->connectedRouteSubset(
                     $places,
@@ -111,7 +111,7 @@ class RoutePlanningController extends Controller
 
                 if (count($places) < 2) {
                     throw new UnexpectedValueException(
-                        'Google Maps could not connect at least two selected destinations by public transport or road.'
+                        __('route.connect_error')
                     );
                 }
             }
@@ -187,7 +187,7 @@ class RoutePlanningController extends Controller
                 for ($destination = 0; $destination < $placeCount; $destination++) {
                     if ($origin !== $destination && $optimizationValues[$origin][$destination] === null) {
                         throw new UnexpectedValueException(
-                            'Google Maps does not provide complete fare data for these transit routes.'
+                            __('route.fare_incomplete')
                         );
                     }
                 }
@@ -294,16 +294,16 @@ class RoutePlanningController extends Controller
 
         $labels = [
             'fastest' => [
-                'title' => 'Fastest Saved Places Itinerary',
-                'description' => 'The fastest order for visiting your selected places using Google transit times',
+                'title' => __('route.fastest_title'),
+                'description' => __('route.fastest_result'),
             ],
             'shortest' => [
-                'title' => 'Shortest Saved Places Itinerary',
-                'description' => 'The shortest order for visiting your selected places using Google transit distances',
+                'title' => __('route.shortest_title'),
+                'description' => __('route.shortest_result'),
             ],
             'lowest_cost' => [
-                'title' => 'Lowest Cost Saved Places Itinerary',
-                'description' => 'The lowest-fare order for visiting your selected places using Google transit fares',
+                'title' => __('route.lowest_title'),
+                'description' => __('route.lowest_result'),
             ],
         ];
 
@@ -311,8 +311,8 @@ class RoutePlanningController extends Controller
             'preference' => $preference,
             'option_index' => $optionIndex,
             'option_label' => $optionIndex === 0
-                ? 'Recommended'
-                : 'Alternative ' . $optionIndex,
+                ? __('route.recommended')
+                : __('route.alternative', ['number' => $optionIndex]),
             'title' => $labels[$preference]['title'],
             'description' => $labels[$preference]['description'],
             'stops' => $stops,
@@ -478,7 +478,7 @@ class RoutePlanningController extends Controller
                 'destination' => $this->routeWaypoint($to),
                 'travelMode' => $travelMode,
                 'computeAlternativeRoutes' => false,
-                'languageCode' => 'en',
+                'languageCode' => app()->getLocale() === 'zh' ? 'zh-CN' : app()->getLocale(),
                 'units' => 'METRIC',
             ];
             if ($travelMode === 'TRANSIT') {
@@ -540,7 +540,7 @@ class RoutePlanningController extends Controller
                     if ($stepDeparture->greaterThan($cursor)) {
                         $tripSteps[] = $this->makeTimelineStep(
                             'WAIT',
-                            'Wait for service',
+                            __('route.wait'),
                             $currentLocation,
                             $currentLocation,
                             $cursor,
@@ -585,9 +585,9 @@ class RoutePlanningController extends Controller
 
                 $stepArrival = $cursor->addSeconds($stepDuration);
                 $stepLabel = match ($mode) {
-                    'DRIVE' => 'Drive',
-                    'BICYCLE' => 'Cycle',
-                    default => 'Walk',
+                    'DRIVE' => __('route.drive'),
+                    'BICYCLE' => __('route.cycle'),
+                    default => __('route.walk'),
                 };
                 $tripSteps[] = $this->makeTimelineStep(
                     $mode,
@@ -618,7 +618,7 @@ class RoutePlanningController extends Controller
                 }
 
                 if ($tripStep['mode'] === 'WALK') {
-                    $part = 'Walk to ' . $tripStep['to'];
+                    $part = __('route.walk_to', ['place' => $tripStep['to']]);
                 } else {
                     $part = $tripStep['mode'] . ' ' . $tripStep['label']
                         . ' (' . $tripStep['from'] . ' to ' . $tripStep['to'] . ')';
@@ -678,19 +678,19 @@ class RoutePlanningController extends Controller
     ): array
     {
         if (count($destinationKeys) !== count(array_unique($destinationKeys))) {
-            throw new UnexpectedValueException('Each destination can only be added once.');
+            throw new UnexpectedValueException(__('route.duplicate'));
         }
 
         if (!$savedSource) {
             $places = [];
             foreach ($destinationKeys as $destinationKey) {
                 if (!preg_match('/^catalog:(\d+)$/', $destinationKey, $matches)) {
-                    throw new UnexpectedValueException('One or more selected destinations are invalid.');
+                    throw new UnexpectedValueException(__('route.invalid'));
                 }
 
                 $placeIndex = (int) $matches[1];
                 if (!isset(self::PLACES[$placeIndex])) {
-                    throw new UnexpectedValueException('One or more selected destinations are invalid.');
+                    throw new UnexpectedValueException(__('route.invalid'));
                 }
 
                 $places[] = [
@@ -712,7 +712,7 @@ class RoutePlanningController extends Controller
         foreach ($destinationKeys as $destinationKey) {
             if (!preg_match('/^wishlist:\d+$/', $destinationKey)
                 || !$savedPlaces->has($destinationKey)) {
-                throw new UnexpectedValueException('One or more selected saved places are invalid.');
+                throw new UnexpectedValueException(__('route.invalid_saved'));
             }
 
             $wishlist = $savedPlaces->get($destinationKey);

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Public Transport Route Search - ExploreMy</title>
+    <title>{{ __('transport.title') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('css/transport.css') }}">
@@ -36,14 +36,14 @@
     @if(session('selected_info'))
         <div class="alert alert-info">
             ℹ️ <strong>{{ session('selected_info')['name'] }}</strong><br>
-            Operating Hours: {{ session('selected_info')['hours'] }}<br>
-            Status: {{ session('selected_info')['status'] }}
+            {{ __('transport.hours') }} {{ session('selected_info')['hours'] }}<br>
+            {{ __('transport.status') }} {{ session('selected_info')['status'] }}
         </div>
     @endif
 
     <!-- Section 1: Route Search Form & Nearby Search -->
     <div class="card-panel">
-        <h2 class="card-title">Search Transport & Walking Directions</h2>
+        <h2 class="card-title">{{ __('transport.heading') }}</h2>
         
         <div class="gmaps-card">
             <form action="{{ route('transport.search') }}" method="GET" id="search-form">
@@ -53,12 +53,12 @@
                     <label class="mode-btn-option {{ ($mode ?? 'transit') === 'transit' ? 'active' : '' }}" onclick="selectMode(this)">
                         <input type="radio" name="mode" value="transit" {{ ($mode ?? 'transit') === 'transit' ? 'checked' : '' }}>
                         <span class="mode-icon" aria-hidden="true">🚉</span>
-                        Step-by-Step Transit
+                        {{ __('transport.public_transport') }}
                     </label>
                     <label class="mode-btn-option {{ ($mode ?? '') === 'walking' ? 'active' : '' }}" onclick="selectMode(this)">
                         <input type="radio" name="mode" value="walking" {{ ($mode ?? '') === 'walking' ? 'checked' : '' }}>
                         <span class="mode-icon" aria-hidden="true">🚶‍♀️</span>
-                        Walking Directions
+                        {{ __('transport.walking') }}
                     </label>
                 </div>
 <div class="gmaps-input-group">
@@ -71,7 +71,7 @@
                         id="origin-input" 
                         name="origin" 
                         class="gmaps-input" 
-                        placeholder="Choose starting point..." 
+                placeholder="{{ __('transport.origin_placeholder') }}"
                         value="{{ old('origin', $origin ?? '') }}" 
                         required 
                         autocomplete="off">
@@ -86,7 +86,7 @@
                         id="destination-input" 
                         name="destination" 
                         class="gmaps-input" 
-                        placeholder="Choose destination..." 
+                placeholder="{{ __('transport.destination_placeholder') }}"
                         value="{{ old('destination', $destination ?? '') }}" 
                         required 
                         autocomplete="off">
@@ -94,17 +94,17 @@
             </div>
                 <!-- Connecting Line -->
                 <div class="gmaps-connector">
-                    <button type="button" class="btn-swap" onclick="swapLocations()" title="Swap Starting Location and Destination">
+                    <button type="button" class="btn-swap" onclick="swapLocations()" title="{{ __('misc.transport.swap') }}">
                         ⇅
                     </button>
                 </div>
         </div>
-                <button type="submit" class="gmaps-btn">Search Route</button>
+            <button type="submit" class="gmaps-btn">{{ __('transport.search') }}</button>
             </form>
 
             <!-- Trigger for View Nearby Stations -->
             <button type="button" class="btn-nearby" onclick="fetchNearbyStations()">
-                📍 View Nearby Stations
+                📍 {{ __('transport.nearby') }}
             </button>
 
             <!-- Hidden form for GPS coordinates -->
@@ -119,15 +119,15 @@
 <!-- Section 2: Transport Line Info & Static Route Map -->
     <div class="card-panel">
         <div class="service-header" onclick="toggleServiceInfo()">
-            <h2 class="card-title">ℹ️ Check Transport Line Info & Service Status</h2>
+            <h2 class="card-title">ℹ️ {{ __('transport.line_heading') }}</h2>
             <span id="toggle-icon">+</span>
         </div>
 
         <div id="service-info-panel" class="service-panel-hidden">
-            <p class="service-panel-desc">Select a public transport line to view operators, operating hours, frequency, and real-time disruptions:</p>
+            <p class="service-panel-desc">{{ __('transport.line_intro') }}</p>
             <form action="{{ route('transport.line-info') }}" method="GET" class="service-form">
                 <select name="line_code" class="form-control" style="max-width: 320px;">
-                    <option value="">-- Select Transport Line --</option>
+                    <option value="">{{ __('transport.select_line') }}</option>
                     <option value="KJ">LRT Kelana Jaya Line (KJ)</option>
                     <option value="AG">LRT Ampang Line (AG)</option>
                     <option value="KG">MRT Kajang Line (KG)</option>
@@ -136,7 +136,7 @@
                     <option value="SA">LRT Shah Alam Line (SA)</option>
                     <option value="KTM">KTM Komuter Line</option>
                 </select>
-                <button type="submit" class="btn-service">Check Line Info</button>
+                <button type="submit" class="btn-service">{{ __('transport.check_line') }}</button>
             </form>
 
             <!-- Display Line Info Result -->
@@ -145,16 +145,16 @@
                 <div class="line-status-card" style="border-left: 5px solid {{ $info['color'] }}; background: #f8fafc; padding: 16px; border-radius: 12px; margin-top: 16px;">
                     <h3 style="color: #1b4332; margin-bottom: 8px;">{{ $info['name'] }}</h3>
                     <div style="font-size: 13px; display: grid; gap: 6px;">
-                        <div>🏢 <strong>Operator:</strong> {{ $info['operator'] }}</div>
-                        <div>🕒 <strong>Operating Hours:</strong> {{ $info['hours'] }}</div>
-                        <div>⚡ <strong>Service Frequency:</strong> {{ $info['frequency'] }}</div>
+                        <div>🏢 <strong>{{ __('transport.operator') }}</strong> {{ $info['operator'] }}</div>
+                        <div>🕒 <strong>{{ __('transport.hours') }}</strong> {{ $info['hours'] }}</div>
+                        <div>⚡ <strong>{{ __('transport.frequency') }}</strong> {{ $info['frequency'] }}</div>
                         <div>
-                            🟢 <strong>Status:</strong> 
-                            <span class="fare-tag" style="background: {{ $info['status'] === 'Normal Service' ? '#dcfce7' : '#fef3c7' }}; color: {{ $info['status'] === 'Normal Service' ? '#166534' : '#92400e' }};">
+                            🟢 <strong>{{ __('transport.status') }}</strong>
+                            <span class="fare-tag" style="background: {{ $info['status'] === __('messages.transport_status_normal') ? '#dcfce7' : '#fef3c7' }}; color: {{ $info['status'] === __('messages.transport_status_normal') ? '#166534' : '#92400e' }};">
                                 {{ $info['status'] }}
                             </span>
                         </div>
-                        <div>⚠️ <strong>Disruptions / Notes:</strong> {{ $info['disruptions'] }}</div>
+                        <div>⚠️ <strong>{{ __('transport.disruptions') }}</strong> {{ $info['disruptions'] }}</div>
                     </div>
                 </div>
             @endif
@@ -162,16 +162,16 @@
             <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;">
             
             <!-- Static Image Map inside the panel -->
-            <h3 style="color: #1b4332; margin-bottom: 12px; font-size: 18px;">🗺️ Klang Valley Integrated Transit Map</h3>
+            <h3 style="color: #1b4332; margin-bottom: 12px; font-size: 18px;">🗺️ {{ __('transport.map') }}</h3>
             <div style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; text-align: center; padding: 10px;">
-                <a href="{{ asset('images/route_map.png') }}" target="_blank" title="Click to view full size">
+                <a href="{{ asset('images/route_map.png') }}" target="_blank" title="{{ __('transport.map_hint') }}">
                     <img 
                         src="{{ asset('images/route_map.png') }}" 
                         alt="Klang Valley Integrated Transit Map" 
                         style="width: 100%; height: auto; max-height: 700px; object-fit: contain; cursor: zoom-in;"
                     >
                 </a>
-                <p style="font-size: 12px; color: #718096; margin-top: 8px;">Click on the map to view it in full size.</p>
+                <p style="font-size: 12px; color: #718096; margin-top: 8px;">{{ __('transport.map_hint') }}</p>
             </div>
         </div>
     </div>
@@ -179,7 +179,7 @@
 <!-- Section 3: Nearby Stations Results -->
     @if(isset($nearbyStations) && count($nearbyStations) > 0)
         <div class="card-panel">
-            <h2 class="card-title">Nearby Public Transport Stations</h2>
+            <h2 class="card-title">{{ __('transport.nearby') }}</h2>
             <div class="stations-grid">
                 @foreach($nearbyStations as $station)
                     <div class="station-item">
@@ -190,9 +190,9 @@
                         </div>
                         <div class="station-name">{{ $station['name'] }}</div>
                         <div class="step-desc">📍 {{ $station['address'] }}</div>
-                        <div class="station-distance">📏 Distance: <strong>{{ $station['distance'] }}</strong></div>
+                        <div class="station-distance">📏 {{ __('transport.distance') }} <strong>{{ $station['distance'] }}</strong></div>
                         <button onclick="viewStationDetails('{{ $station['place_id'] }}')" class="btn-toggle-route" style="margin-top:8px;">
-                            View Details
+                            {{ __('transport.details') }}
                         </button>
                     </div>
                 @endforeach
@@ -205,41 +205,41 @@
     <div class="modal-content">
         <button type="button" class="close-btn" onclick="closeStationDetails()">&times;</button>
         
-        <h3 id="detail-station-name">Station Name</h3>
-        <p id="detail-station-address" class="station-address">Station Address</p>
+        <h3 id="detail-station-name">{{ __('transport.station_name') }}</h3>
+        <p id="detail-station-address" class="station-address">{{ __('transport.station_address') }}</p>
 
         <div class="details-grid">
             <div class="detail-item">
-                <span class="detail-label">♿ Wheelchair Access</span>
+                <span class="detail-label">♿ {{ __('transport.wheelchair') }}</span>
                 <span id="detail-wheelchair" class="detail-value">-</span>
             </div>
             <div class="detail-item">
-                <span class="detail-label">🕒 Current Status</span>
+                <span class="detail-label">🕒 {{ __('transport.current_status') }}</span>
                 <span id="detail-status" class="detail-value">-</span>
             </div>
             <div class="detail-item">
-                <span class="detail-label">⭐ Rating</span>
+                <span class="detail-label">⭐ {{ __('transport.rating') }}</span>
                 <span id="detail-rating" class="detail-value">-</span>
             </div>
             <div class="detail-item">
-                <span class="detail-label">📞 Phone</span>
+                <span class="detail-label">📞 {{ __('transport.phone') }}</span>
                 <span id="detail-phone" class="detail-value">-</span>
             </div>
         </div>
 
         <div class="hours-section">
-            <h4>Operating Hours</h4>
+            <h4>{{ __('transport.operating_hours') }}</h4>
             <ul id="detail-opening-hours"></ul>
         </div>
 
         <div id="reviews-section" class="reviews-section">
-            <h4>Recent Reviews</h4>
+            <h4>{{ __('transport.reviews') }}</h4>
             <div id="detail-reviews-list"></div>
         </div>
 
         <div class="modal-actions">
-            <a id="detail-maps-link" href="#" target="_blank" class="btn-primary-modal">View on Google Maps 🗺️</a>
-            <button type="button" class="btn-secondary-modal" onclick="setAsOriginFromModal()">Set as Starting Point 📍</button>
+            <a id="detail-maps-link" href="#" target="_blank" class="btn-primary-modal">{{ __('transport.view_maps') }} 🗺️</a>
+            <button type="button" class="btn-secondary-modal" onclick="setAsOriginFromModal()">{{ __('transport.set_origin') }} 📍</button>
         </div>
     </div>
 </div>
@@ -251,18 +251,18 @@
         <!-- Header & Instant Sorting Controls Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
             <h2 class="card-title" style="margin-bottom: 0;">
-                {{ ($mode ?? 'transit') === 'walking' ? '🚶 Walking Routes' : '🚌 Public Transport Routes' }} 
-                ({{ count($routes) }} options found)
+                {{ ($mode ?? 'transit') === 'walking' ? '🚶 ' . __('transport.walking_routes') : '🚌 ' . __('transport.transit_routes') }}
+                ({{ __('transport.options_found', ['count' => count($routes)]) }})
             </h2>
 
             <!-- Sorting Dropdown Bar -->
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 13px; font-weight: 600; color: #475569;">⚡ Sort by:</span>
+                <span style="font-size: 13px; font-weight: 600; color: #475569;">⚡ {{ __('transport.sort') }}</span>
                 
                 <select id="routeSortSelect" onchange="sortRoutes(this.value)" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 13px; font-weight: 500; cursor: pointer; color: #1e293b;">
-                    <option value="duration">⏱️ Fastest Duration</option>
-                    <option value="distance">📏 Shortest Distance</option>
-                    <option value="fare">💰 Lowest Fare</option>
+                    <option value="duration">⏱️ {{ __('transport.fastest') }}</option>
+                    <option value="distance">📏 {{ __('transport.shortest') }}</option>
+                    <option value="fare">💰 {{ __('transport.lowest_fare') }}</option>
                 </select>
             </div>
         </div>
@@ -278,11 +278,11 @@
                     
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <strong class="option-title" style="color:#1b4332; font-size:16px;">Option {{ $index + 1 }}: {{ $route['duration'] }}</strong>
+                            <strong class="option-title" style="color:#1b4332; font-size:16px;">{{ __('transport.option', ['number' => $index + 1]) }} {{ $route['duration'] }}</strong>
                             <span class="step-desc">({{ $route['distance'] }})</span>
                         </div>
                         <span class="fare-tag">
-                            {{ $route['mode'] === 'walking' ? 'Cost: Free 🚶' : 'Total Fare: RM ' . $route['total_fare'] }}
+                            {{ $route['mode'] === 'walking' ? __('transport.free') . ' 🚶' : __('transport.total_fare', ['fare' => $route['total_fare']]) }}
                         </span>
                     </div>
 
@@ -297,12 +297,12 @@
 <div style="display: flex; gap: 8px; margin-top: 10px;">
     <!-- Toggle Step-by-Step Directions -->
     <button class="btn-toggle-route" onclick="showRouteDetails({{ $index }})" style="flex: 1;">
-        Select Route & View Step-by-Step Directions 👇
+        {{ __('transport.select_route') }} 👇
     </button>
 
     <!-- Export / Print PDF Button -->
     <button type="button" class="btn-toggle-route" onclick="exportRoute({{ $index }})" style="background-color: #2d6a4f; color: white; width: auto; padding: 0 16px;">
-        📄 Export / Save PDF
+        📄 {{ __('transport.export') }}
     </button>
 </div>
 
@@ -313,7 +313,7 @@
                                     {{ $step['icon'] }} {{ $step['title'] }}
                                     
                                     @if(!empty($step['is_transfer']))
-                                        <span class="transfer-badge">🔄 Transfer Station</span>
+                                        <span class="transfer-badge">🔄 {{ __('transport.transfer') }}</span>
                                     @endif
 
                                     <span class="step-fare-tag">
@@ -327,8 +327,8 @@
 
                                 @if($step['type'] === 'transit')
                                     <div style="font-size: 12px; color: #555; margin-top: 4px;">
-                                        📍 <strong>Board:</strong> {{ $step['dep_station'] }} <br>
-                                        🏁 <strong>Alight:</strong> {{ $step['arr_station'] }} ({{ $step['num_stops'] }} stops, {{ $step['distance'] }})
+                                        📍 <strong>{{ __('transport.board') }}</strong> {{ $step['dep_station'] }} <br>
+                                        🏁 <strong>{{ __('transport.alight') }}</strong> {{ $step['arr_station'] }} ({{ __('transport.stops', ['count' => $step['num_stops']]) }}, {{ $step['distance'] }})
                                     </div>
                                 @endif
                             </div>
@@ -344,6 +344,12 @@
 </div>
 
 <script>
+@php($transportTranslations = [
+    'gpsFailed' => __('misc.transport.gps_failed'),
+    'gpsUnsupported' => __('misc.transport.gps_unsupported'),
+    'option' => __('misc.transport.option', ['number' => ':number']),
+])
+const transportTranslations = {{ Illuminate\Support\Js::from($transportTranslations) }};
 function selectMode(element) {
     document.querySelectorAll('.mode-btn-option').forEach(el => el.classList.remove('active'));
     element.classList.add('active');
@@ -372,7 +378,7 @@ function findNearbyStations() {
     const originInput = document.getElementById('origin-input');
     
     if (!originInput || originInput.value.trim() === '') {
-        alert("Please enter a starting location before searching for nearby stations!");
+        alert({{ Illuminate\Support\Js::from(__('transport.enter_origin')) }});
         setTimeout(() => {
             originInput.focus();
             originInput.style.border = "2px solid #e63946";
@@ -408,7 +414,7 @@ function viewStationDetails(placeId) {
         .then(response => response.json())
         .then(res => {
             if (!res.success) {
-                alert('Could not load station details.');
+                alert({{ Illuminate\Support\Js::from(__('transport.load_failed')) }});
                 return;
             }
 
@@ -426,10 +432,10 @@ function viewStationDetails(placeId) {
             // Open/Closed Status
             const statusEl = document.getElementById('detail-status');
             if (data.is_open_now === true) {
-                statusEl.innerText = 'Open Now';
+                statusEl.innerText = {{ Illuminate\Support\Js::from(__('transport.open_now')) }};
                 statusEl.style.color = '#2d6a4f';
             } else if (data.is_open_now === false) {
-                statusEl.innerText = 'Closed';
+                statusEl.innerText = {{ Illuminate\Support\Js::from(__('transport.closed')) }};
                 statusEl.style.color = '#d90429';
             } else {
                 statusEl.innerText = 'N/A';
@@ -459,7 +465,7 @@ function viewStationDetails(placeId) {
                     reviewsContainer.appendChild(div);
                 });
             } else {
-                reviewsContainer.innerHTML = '<p>No reviews available.</p>';
+                reviewsContainer.innerHTML = '<p>' + {{ Illuminate\Support\Js::from(__('transport.no_reviews')) }} + '</p>';
             }
 
             // Display Modal
@@ -534,11 +540,11 @@ function fetchNearbyStations() {
                 window.location.href = `/transport/nearby?lat=${lat}&lng=${lng}&t=${new Date().getTime()}`;
             },
             (error) => {
-                alert('Unable to retrieve current location. Please type a starting point in the box.');
+                alert(transportTranslations.gpsFailed);
             }
         );
     } else {
-        alert('Geolocation is not supported by your browser. Please type a starting point in the box.');
+        alert(transportTranslations.gpsUnsupported);
     }
 }
 
@@ -563,7 +569,7 @@ function sortRoutes(criterion) {
             const timeSpan = card.querySelector('.step-desc');
             const fullTitleText = titleEl.textContent;
             const timePart = fullTitleText.split(': ')[1] || '';
-            titleEl.textContent = `Option ${index + 1}: ${timePart}`;
+            titleEl.textContent = `${transportTranslations.option.replace(':number', index + 1)} ${timePart}`;
         }
     });
 }

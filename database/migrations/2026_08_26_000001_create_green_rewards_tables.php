@@ -73,7 +73,7 @@ return new class extends Migration
         Schema::create('green_trees', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('user_id')->unique();
-            $table->unsignedInteger('level')->default(1);
+            $table->unsignedInteger('level')->default(0);
             $table->unsignedInteger('experience')->default(0);
             $table->string('growth_stage')->default('Seedling');
             $table->timestamps();

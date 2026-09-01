@@ -56,7 +56,7 @@ class AuthController extends Controller
                 'user_agent' => $request->userAgent(),
                 'logged_in_at' => Carbon::now(),
             ]);
-			app(GreenRewardService::class)->claimDailyLogin($user);
+			app(GreenRewardService::class)->queueActivity($user, 'daily_login');
 
             return response()->json([
                 'success' => true,

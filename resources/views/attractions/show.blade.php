@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,17 +35,17 @@
             <a
                 href="{{ url('/attractions') }}"
                 class="details-nav-button details-nav-back"
-                aria-label="Back to Explore"
+            aria-label="{{ __('explore.back') }}"
             >
-                ← Back to Explore
+            ← {{ __('attraction.back') }}
             </a>
 
             <a
                 href="{{ route('saved-places.index') }}"
                 class="details-nav-button details-nav-saved"
-                aria-label="View saved places"
+            aria-label="{{ __('explore.saved_places') }}"
             >
-                ♥ Saved places
+            ♥ {{ __('attraction.saved_places') }}
             </a>
 
         </div>
@@ -102,7 +102,7 @@
 
                         @if($attraction->images->count() > 1)
 
-                            <div class="image-dots" aria-label="Attraction images">
+            <div class="image-dots" aria-label="{{ __('explore.images') }}">
 
                                 @foreach($attraction->images as $image)
 
@@ -110,7 +110,7 @@
                                         type="button"
                                         class="image-dot {{ $loop->first ? 'active' : '' }}"
                                         onclick="showImage({{ $loop->index }})"
-                                        aria-label="Show image {{ $loop->iteration }} of {{ $loop->count }}"
+                        aria-label="{{ __('explore.show_image', ['current' => $loop->iteration, 'total' => $loop->count]) }}"
                                     ></button>
 
                                 @endforeach
@@ -126,15 +126,15 @@
                         <div class="gallery-controls">
 
                             <button type="button" onclick="showPreviousImage()">
-                                &larr; Previous
+                    &larr; {{ __('attraction.previous') }}
                             </button>
 
                             <span id="imagePosition">
-                                Photo 1 of {{ $attraction->images->count() }}
+                    {{ __('attraction.photo', ['current' => 1, 'total' => $attraction->images->count()]) }}
                             </span>
 
                             <button type="button" onclick="showNextImage()">
-                                Next &rarr;
+                    {{ __('attraction.next') }} &rarr;
                             </button>
 
                         </div>
@@ -160,13 +160,13 @@
                     @forelse($attraction->preferences as $preference)
 
                         <span class="category-badge">
-                            {{ $preference->category_name }}
+                            {{ $preference->localized_name }}
                         </span>
 
                     @empty
 
                         <span class="category-badge">
-                            Uncategorized
+                            {{ __('explore.uncategorized') }}
                         </span>
 
                     @endforelse
@@ -205,7 +205,7 @@
                                 type="submit"
                                 class="wishlist-button wishlisted"
                             >
-                                ♥ Remove from Wishlist
+                        ♥ {{ __('attraction.remove_wishlist') }}
                             </button>
 
                         </form>
@@ -223,7 +223,7 @@
                                 type="submit"
                                 class="wishlist-button"
                             >
-                                ♡ Add to Wishlist
+                        ♡ {{ __('attraction.add_wishlist') }}
                             </button>
 
                         </form>
@@ -245,11 +245,11 @@
                     <div class="section-title">
 
                         <p class="section-kicker">
-                            About this place
+                        {{ __('attraction.about_place') }}
                         </p>
 
                         <h2>
-                            About {{ $attraction->attraction_name }}
+                    {{ __('attraction.about', ['name' => $attraction->attraction_name]) }}
                         </h2>
 
                     </div>
@@ -265,7 +265,7 @@
                         @else
 
                             <p class="empty-text">
-                                No description is available for this attraction.
+                        {{ __('attraction.no_description') }}
                             </p>
 
                         @endif
@@ -279,11 +279,11 @@
                     <div class="section-title">
 
                         <p class="section-kicker">
-                            Plan your visit
+                        {{ __('attraction.plan') }}
                         </p>
 
                         <h2>
-                            Visitor Information
+                    {{ __('attraction.visitor') }}
                         </h2>
 
                     </div>
@@ -299,11 +299,11 @@
                             <div>
 
                                 <span class="detail-label">
-                                    Location
+                            {{ __('attraction.location') }}
                                 </span>
 
                                 <p>
-                                    {{ $attraction->location ?: 'Location unavailable' }}
+                            {{ $attraction->location ?: __('attraction.location_unavailable') }}
                                 </p>
 
                             </div>
@@ -319,11 +319,11 @@
                             <div>
 
                                 <span class="detail-label">
-                                    Budget
+                            {{ __('attraction.budget') }}
                                 </span>
 
                                 <p>
-                                    {{ $attraction->budget_level ?: 'Price unavailable' }}
+                            {{ $attraction->budget_level ? __('explore.' . strtolower($attraction->budget_level)) : __('attraction.price_unavailable') }}
                                 </p>
 
                             </div>
@@ -339,7 +339,7 @@
                             <div>
 
                                 <span class="detail-label">
-                                    Opening Hours
+                            {{ __('attraction.hours') }}
                                 </span>
 
                                 @if($attraction->operating_hours)
@@ -351,7 +351,7 @@
                                 @else
 
                                     <p>
-                                        Opening hours unavailable
+                                {{ __('attraction.hours_unavailable') }}
                                     </p>
 
                                 @endif
@@ -369,11 +369,11 @@
                             <div>
 
                                 <span class="detail-label">
-                                    Nearby Transport
+                            {{ __('attraction.transport') }}
                                 </span>
 
                                 <p>
-                                    {{ $attraction->nearby_transport ?: 'Transport information unavailable' }}
+                            {{ $attraction->nearby_transport ?: __('attraction.transport_unavailable') }}
                                 </p>
 
                             </div>
@@ -391,7 +391,7 @@
                 <div class="rating-card">
 
                     <span class="side-card-label">
-                        Google Rating
+                    {{ __('attraction.google_rating') }}
                     </span>
 
                     <div class="large-rating">
@@ -409,13 +409,13 @@
                     @if($attraction->rating)
 
                         <p>
-                            Rated {{ number_format((float) $attraction->rating, 1) }} out of 5
+                    {{ __('attraction.rated', ['rating' => number_format((float) $attraction->rating, 1)]) }}
                         </p>
 
                     @else
 
                         <p>
-                            Rating unavailable
+                    {{ __('attraction.rating_unavailable') }}
                         </p>
 
                     @endif
@@ -425,7 +425,7 @@
                 <div class="side-card">
 
                     <span class="side-card-label">
-                        Attraction Type
+                    {{ __('attraction.type') }}
                     </span>
 
                     <div class="side-category-list">
@@ -433,13 +433,13 @@
                         @forelse($attraction->preferences as $preference)
 
                             <span>
-                                {{ $preference->category_name }}
+                            {{ $preference->localized_name }}
                             </span>
 
                         @empty
 
                             <span>
-                                Uncategorized
+                            {{ __('explore.uncategorized') }}
                             </span>
 
                         @endforelse
@@ -451,7 +451,7 @@
                 <div class="side-card">
 
                     <span class="side-card-label">
-                        State
+                    {{ __('attraction.state') }}
                     </span>
 
                     <h3>
@@ -467,17 +467,17 @@
                     </span>
 
                     <h3>
-                        Planning a trip?
+                {{ __('attraction.planning') }}
                     </h3>
 
                     <p>
-                        Save this attraction to your wishlist so you can find it again later.
+                {{ __('attraction.save_intro') }}
                     </p>
 
                     @if($isWishlisted)
 
                         <span class="saved-message">
-                            ♥ Saved to your wishlist
+                    ♥ {{ __('attraction.saved') }}
                         </span>
 
                     @else
@@ -487,7 +487,7 @@
                             onclick="document.querySelector('.wishlist-button').click(); return false;"
                             class="save-link"
                         >
-                            Save this attraction →
+                    {{ __('attraction.save') }} →
                         </a>
 
                     @endif
@@ -504,14 +504,14 @@
                 href="{{ route('attractions.index') }}"
                 class="back-button"
             >
-                ← Explore More Attractions
+            ← {{ __('attraction.explore_more') }}
             </a>
 
             <a
                 href="{{ route('saved-places.index') }}"
                 class="back-button secondary-back-button"
             >
-                ♡ Saved Places
+            ♡ {{ __('attraction.saved_places') }}
             </a>
 
         </div>
@@ -521,7 +521,8 @@
 </main>
 
 <script>
-    const attractionImages = @json($attraction->images->map(fn ($image) => asset($image->image_path))->values());
+const attractionImages = @json($attraction->images->map(fn ($image) => asset($image->image_path))->values());
+const photoLabel = {{ Illuminate\Support\Js::from(__('attraction.photo', ['current' => ':current', 'total' => ':total'])) }};
     let activeImageIndex = 0;
 
     function showImage(imageIndex) {
@@ -549,7 +550,7 @@
         const imagePosition = document.getElementById('imagePosition');
 
         if (imagePosition) {
-            imagePosition.textContent = `Photo ${activeImageIndex + 1} of ${attractionImages.length}`;
+        imagePosition.textContent = photoLabel.replace(':current', activeImageIndex + 1).replace(':total', attractionImages.length);
         }
     }
 
