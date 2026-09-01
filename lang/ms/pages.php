@@ -1,0 +1,30 @@
+<?php
+return [
+    'common'=>['trips'=>'Perjalanan Saya','rewards'=>'Ganjaran'],
+    'shortcuts'=>['transport'=>'Cari laluan dan stesen berdekatan','trips'=>'Semak itinerari yang disimpan','rewards'=>'Besarkan pokok dan gunakan mata'],
+    'transport'=>[
+        'title'=>'Pengangkutan','eyebrow'=>'Bergerak di Malaysia','heading'=>'Pergi lebih jauh dengan yakin.','intro'=>'Daripada rangkaian rel bandar hingga perjalanan antara bandar yang indah, cari cara terbaik untuk bergerak di Malaysia.',
+        'rail'=>'Rel','rail_title'=>'MRT, LRT & Monorel','rail_text'=>"Sambungan pantas di Kuala Lumpur dan Lembah Klang. Gunakan kad Touch 'n Go untuk pertukaran lebih mudah.",
+        'bus'=>'Bas','bus_title'=>'Bas bandar & antara bandar','bus_text'=>'Perkhidmatan mampu milik menghubungkan kawasan bandar, pekan dan destinasi utama di Semenanjung Malaysia.',
+        'road'=>'Jalan raya','road_title'=>'Teksi & e-panggilan','road_text'=>'Teksi bermeter dan e-panggilan menawarkan perjalanan terus yang fleksibel di bandar dan kawasan pelancongan.',
+        'beyond'=>'Lebih jauh','beyond_title'=>'Penerbangan & feri','beyond_text'=>'Penerbangan domestik menghubungkan semenanjung dengan Sabah dan Sarawak, manakala feri menuju ke pulau popular.',
+        'note'=>'Nota pengembara','plan'=>'Rancang sebelum bertolak','note_text'=>'Jadual, tambang dan waktu operasi boleh berubah. Semak dengan pengendali sebelum memulakan perjalanan, terutamanya pada cuti umum.',
+    ],
+    'trips'=>['title'=>'Perjalanan Dirancang Saya','create'=>'Cipta Itinerari Baharu','days'=>'Hari','estimated'=>'Anggaran','view'=>'Lihat Itinerari','empty'=>'Anda belum merancang sebarang perjalanan.'],
+    'about'=>[
+        'title'=>'Tentang Malaysia','eyebrow'=>'Malaysia Sebenar Asia','heading'=>'Kenali Malaysia','intro'=>'Hutan hujan purba, bandar meriah, pulau tropika dan pelbagai budaya bersatu dalam satu destinasi istimewa.',
+        'states'=>'negeri','territories'=>'wilayah persekutuan','language'=>'bahasa kebangsaan','contrast'=>'Negara penuh kontras','experiences'=>'Satu negara, pelbagai pengalaman',
+        'story1'=>'Malaysia terletak di Asia Tenggara dan terdiri daripada Semenanjung Malaysia serta Malaysia Timur di Borneo. Pengembara dapat menikmati bandar moden, pekan bersejarah, tanah tinggi, pantai dan hutan hujan tropika purba.',
+        'story2'=>'Identitinya dibentuk oleh masyarakat Melayu, Cina, India, Orang Asli dan banyak lagi. Kepelbagaian ini terserlah dalam bahasa, perayaan, seni bina dan budaya makanan.',
+        'living'=>'Budaya hidup','traditions'=>'Pelbagai tradisi, dibanggakan bersama','culture_intro'=>'Budaya Malaysia dapat dirasai melalui masyarakat, perayaan, makanan, seni dan amalan harian.',
+        'people'=>'Masyarakat & perayaan','community'=>'Komuniti','calendar'=>'Kalendar dipenuhi perayaan','calendar_text'=>'Hari Raya, Tahun Baharu Cina, Deepavali, Gawai dan Kaamatan menyatukan masyarakat melalui rumah terbuka, muzik, tarian dan makanan.',
+        'flavours'=>'Cita rasa','food'=>'Makanan','meeting'=>'Pertemuan pelbagai cita rasa','meeting_text'=>'Tradisi Melayu, Cina, India, Peranakan dan Orang Asli menjadikan setiap wilayah mempunyai rasa tersendiri.',
+        'craft'=>'Kraf & warisan','architecture'=>'Seni bina','stories'=>'Kisah dalam setiap perincian','stories_text'=>'Rumah kayu, masjid, kuil, rumah persatuan dan rumah kedai kolonial mendedahkan kemahiran dan pertukaran berabad-abad.',
+        'languages'=>'bahasa dituturkan','unesco'=>'Tapak Warisan Dunia UNESCO','population'=>'penduduk dan kisah yang tidak terkira','strength'=>'Kekuatan Malaysia terletak pada cara perbezaan menjadi identiti bersama.',
+        'performing'=>'Seni persembahan','performing_text'=>'Temui mak yong, wayang kulit, kompang dan irama sape dari Borneo.',
+        'crafts'=>'Kraf tradisional','crafts_text'=>'Batik, songket, manik, ukiran kayu dan perak mengekalkan ilmu turun-temurun.',
+        'nature'=>'Alam & identiti','nature_text'=>'Hutan, sungai dan laut membentuk tradisi, mata pencarian dan penghormatan terhadap bumi.',
+        'know'=>'Baik untuk diketahui','glance'=>'Sekilas pandang Malaysia','welcome'=>'Hospitaliti mesra dan hubungan baik menjadikan Malaysia mudah diterokai.',
+        'capital'=>'Ibu negara','admin'=>'Pusat pentadbiran','currency'=>'Mata wang','climate'=>'Iklim','tropical'=>'Tropika sepanjang tahun','ready'=>'Sedia meneroka?','speak'=>'Temui Malaysia yang dekat di hati anda.','personalise'=>'Peribadikan perjalanan',
+    ],
+];

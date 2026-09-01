@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use App\Models\LoginActivity;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -23,6 +24,7 @@ class ProfileController extends Controller
 
 	public function update(Request $request)
 	{
+		/** @var User $user */
 		$user = Auth::user();
 
 		$request->validate([
@@ -65,6 +67,11 @@ class ProfileController extends Controller
 
 		$user->save();
 
+		// The middleware selected the locale before this request changed the
+		// preference. Switch immediately so the redirected flash message is
+		// translated using the language the user just selected.
+		app()->setLocale($user->preferred_language);
+
 		if ($oldProfilePicture && str_starts_with($oldProfilePicture, '/profile_images/')) {
 			File::delete(public_path(ltrim($oldProfilePicture, '/')));
 		}
@@ -79,6 +86,7 @@ class ProfileController extends Controller
 	public function destroy(Request $request)
 	{
 		$request->validate(['confirmation' => ['required', 'in:DELETE']]);
+		/** @var User $user */
 		$user = Auth::user();
 		$picture = $user->profile_picture;
 		Auth::logout();

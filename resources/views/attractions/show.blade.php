@@ -34,9 +34,18 @@
 
             <a
                 href="{{ url('/attractions') }}"
-                class="back-button"
+                class="details-nav-button details-nav-back"
+                aria-label="Back to Explore"
             >
                 ← Back to Explore
+            </a>
+
+            <a
+                href="{{ route('saved-places.index') }}"
+                class="details-nav-button details-nav-saved"
+                aria-label="View saved places"
+            >
+                ♥ Saved places
             </a>
 
         </div>
@@ -91,28 +100,42 @@
 
                         @endif
 
+                        @if($attraction->images->count() > 1)
+
+                            <div class="image-dots" aria-label="Attraction images">
+
+                                @foreach($attraction->images as $image)
+
+                                    <button
+                                        type="button"
+                                        class="image-dot {{ $loop->first ? 'active' : '' }}"
+                                        onclick="showImage({{ $loop->index }})"
+                                        aria-label="Show image {{ $loop->iteration }} of {{ $loop->count }}"
+                                    ></button>
+
+                                @endforeach
+
+                            </div>
+
+                        @endif
+
                     </div>
 
                     @if($attraction->images->count() > 1)
 
-                        <div class="image-thumbnails">
+                        <div class="gallery-controls">
 
-                            @foreach($attraction->images as $image)
+                            <button type="button" onclick="showPreviousImage()">
+                                &larr; Previous
+                            </button>
 
-                                <button
-                                    type="button"
-                                    class="image-thumbnail {{ $loop->first ? 'active' : '' }}"
-                                    onclick="changeMainImage('{{ asset($image->image_path) }}', this)"
-                                >
+                            <span id="imagePosition">
+                                Photo 1 of {{ $attraction->images->count() }}
+                            </span>
 
-                                    <img
-                                        src="{{ asset($image->image_path) }}"
-                                        alt="{{ $attraction->attraction_name }}"
-                                    >
-
-                                </button>
-
-                            @endforeach
+                            <button type="button" onclick="showNextImage()">
+                                Next &rarr;
+                            </button>
 
                         </div>
 
@@ -498,11 +521,19 @@
 </main>
 
 <script>
-    function changeMainImage(imageUrl, thumbnail) {
+    const attractionImages = @json($attraction->images->map(fn ($image) => asset($image->image_path))->values());
+    let activeImageIndex = 0;
+
+    function showImage(imageIndex) {
         const mainImage = document.getElementById('mainAttractionImage');
         const placeholder = document.getElementById('mainImagePlaceholder');
 
-        mainImage.src = imageUrl;
+        if (!mainImage || attractionImages.length === 0) {
+            return;
+        }
+
+        activeImageIndex = (imageIndex + attractionImages.length) % attractionImages.length;
+        mainImage.src = attractionImages[activeImageIndex];
         mainImage.style.display = 'block';
 
         if (placeholder) {
@@ -510,12 +541,24 @@
         }
 
         document
-            .querySelectorAll('.image-thumbnail')
-            .forEach(function(item) {
-                item.classList.remove('active');
+            .querySelectorAll('.image-dot')
+            .forEach(function(dot, index) {
+                dot.classList.toggle('active', index === activeImageIndex);
             });
 
-        thumbnail.classList.add('active');
+        const imagePosition = document.getElementById('imagePosition');
+
+        if (imagePosition) {
+            imagePosition.textContent = `Photo ${activeImageIndex + 1} of ${attractionImages.length}`;
+        }
+    }
+
+    function showNextImage() {
+        showImage(activeImageIndex + 1);
+    }
+
+    function showPreviousImage() {
+        showImage(activeImageIndex - 1);
     }
 </script>
 

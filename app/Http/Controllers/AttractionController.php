@@ -7,6 +7,7 @@ use App\Models\PreferenceCategory;
 use App\Models\State;
 use App\Models\UserPreference;
 use App\Models\Wishlist;
+use App\Services\GreenRewardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -30,23 +31,9 @@ class AttractionController extends Controller
                         'string',
                         'max:255',
                     ],
-                    'start_date' => [
-                        'required',
-                        'date',
-                        'after_or_equal:today',
-                    ],
-                    'end_date' => [
-                        'required',
-                        'date',
-                        'after_or_equal:start_date',
-                    ],
                 ],
                 [
                     'search.required' => 'Please enter a place to search.',
-                    'start_date.required' => 'Please select a start date.',
-                    'start_date.after_or_equal' => 'The start date cannot be before today.',
-                    'end_date.required' => 'Please select an end date.',
-                    'end_date.after_or_equal' => 'The end date cannot be before the start date.',
                 ]
             );
 
@@ -67,23 +54,11 @@ class AttractionController extends Controller
         if ($searchSubmitted) {
             $search = trim($request->input('search'));
 
-            $query->where(function ($q) use ($search) {
-                $q->where(
-                    'attraction_name',
-                    'like',
-                    '%' . $search . '%'
-                )
-                ->orWhere(
-                    'location',
-                    'like',
-                    '%' . $search . '%'
-                )
-                ->orWhere(
-                    'description',
-                    'like',
-                    '%' . $search . '%'
-                );
-            });
+            $query->where(
+                'attraction_name',
+                'like',
+                '%' . $search . '%'
+            );
 
             if ($request->filled('state_id')) {
                 $query->where(
@@ -153,13 +128,23 @@ class AttractionController extends Controller
 
         $attractions = $query->paginate(12);
 
+        $wishlistedAttractionIds = Wishlist::where('user_id', Auth::id())
+            ->whereIn(
+                'attraction_id',
+                collect($attractions->items())->pluck('attraction_id')
+            )
+            ->pluck('attraction_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
         return view(
             'attractions.index',
             compact(
                 'attractions',
                 'states',
                 'categories',
-                'searchSubmitted'
+                'searchSubmitted',
+                'wishlistedAttractionIds'
             )
         );
     }
@@ -214,13 +199,14 @@ class AttractionController extends Controller
                 $attraction->attraction_id;
 
             $wishlist->save();
+            app(GreenRewardService::class)->awardActivity(Auth::user(), 'save_attraction');
         }
 
         return redirect()
             ->back()
             ->with(
                 'success',
-                'Attraction added to your wishlist.'
+                __('messages.wishlist_added')
             );
     }
 
@@ -240,7 +226,7 @@ class AttractionController extends Controller
             ->back()
             ->with(
                 'success',
-                'Attraction removed from your wishlist.'
+                __('messages.wishlist_removed')
             );
     }
 }

@@ -31,7 +31,7 @@ public function search(Request $request)
     }
 
     if (empty($origin) || empty($destination)) {
-        return redirect()->back()->withInput()->with('error', 'Please enter both origin and destination.');
+        return redirect()->back()->withInput()->with('error', __('messages.transport_locations_required'));
     }
 
     $apiKey = config('services.google.maps_api_key');
@@ -48,7 +48,7 @@ public function search(Request $request)
     $data = $response->json();
 
     if ($response->failed() || ($data['status'] ?? '') !== 'OK') {
-        $errorMessage = $data['error_message'] ?? 'Unable to find route between these locations.';
+        $errorMessage = $data['error_message'] ?? __('messages.transport_route_unavailable');
         return view('transport', compact('origin', 'destination', 'mode', 'sortBy'))->with('error', $errorMessage);
     }
 
@@ -255,7 +255,7 @@ public function search(Request $request)
         }
 
         if (empty($lat) || empty($lng)) {
-            return redirect()->back()->with('error', 'Unable to find coordinates for "' . e($origin) . '".');
+            return redirect()->back()->with('error', __('messages.transport_coordinates_unavailable', ['origin' => e($origin)]));
         }
 
         // 2. Focused Places Nearby search with a tight 3.5km radius for immediate local stations
@@ -395,7 +395,7 @@ public function lineInfo(Request $request)
     $lineCode = strtoupper(trim($request->query('line_code', '')));
 
     if (empty($lineCode)) {
-        return redirect()->back()->with('error', 'Please select a valid transport line.');
+        return redirect()->back()->with('error', __('messages.transport_line_required'));
     }
 
     // Transit Line Configuration
@@ -410,7 +410,7 @@ public function lineInfo(Request $request)
     ];
 
     if (!array_key_exists($lineCode, $lines)) {
-        return redirect()->back()->with('error', "Transport line code '{$lineCode}' was not found.");
+        return redirect()->back()->with('error', __('messages.transport_line_missing', ['code' => $lineCode]));
     }
 
     $selectedLine = $lines[$lineCode];

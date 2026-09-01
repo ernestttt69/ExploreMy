@@ -104,52 +104,6 @@
 
                 </div>
 
-                <div class="date-field">
-
-                    <label for="start_date">
-                        Trip starts
-                    </label>
-
-                    <input
-                        type="date"
-                        id="start_date"
-                        name="start_date"
-                        value="{{ old('start_date', request('start_date')) }}"
-                        min="{{ today()->format('Y-m-d') }}"
-                        class="{{ $errors->has('start_date') ? 'input-error' : '' }}"
-                    >
-
-                    @if($errors->has('start_date'))
-                        <p class="field-error">
-                            {{ $errors->first('start_date') }}
-                        </p>
-                    @endif
-
-                </div>
-
-                <div class="date-field">
-
-                    <label for="end_date">
-                        Trip ends
-                    </label>
-
-                    <input
-                        type="date"
-                        id="end_date"
-                        name="end_date"
-                        value="{{ old('end_date', request('end_date')) }}"
-                        min="{{ old('start_date', request('start_date')) ?: today()->format('Y-m-d') }}"
-                        class="{{ $errors->has('end_date') ? 'input-error' : '' }}"
-                    >
-
-                    @if($errors->has('end_date'))
-                        <p class="field-error">
-                            {{ $errors->first('end_date') }}
-                        </p>
-                    @endif
-
-                </div>
-
                 <button
                     type="submit"
                     class="search-button"
@@ -189,8 +143,6 @@
                         href="{{ route('attractions.index', [
                             'search_submitted' => request('search_submitted'),
                             'search' => request('search'),
-                            'start_date' => request('start_date'),
-                            'end_date' => request('end_date')
                         ]) }}"
                         class="clear-filter"
                     >
@@ -519,13 +471,34 @@
                                 {{ Str::limit($attraction->description, 100) }}
                             </p>
 
-                            <a
-                                href="{{ route('attractions.show', $attraction->attraction_id) }}"
-                                class="details-button"
-                            >
-                                View Attraction
-                                <span>→</span>
-                            </a>
+                            <div class="attraction-card-actions">
+
+                                <a
+                                    href="{{ route('attractions.show', $attraction->attraction_id) }}"
+                                    class="details-button"
+                                >
+                                    View Attraction
+                                    <span>→</span>
+                                </a>
+
+                                @if(in_array((int) $attraction->attraction_id, $wishlistedAttractionIds, true))
+
+                                    <form method="POST" action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="card-wishlist-button is-saved" aria-label="Remove {{ $attraction->attraction_name }} from wishlist">♥ Saved</button>
+                                    </form>
+
+                                @else
+
+                                    <form method="POST" action="{{ route('attractions.wishlist.add', $attraction->attraction_id) }}">
+                                        @csrf
+                                        <button type="submit" class="card-wishlist-button" aria-label="Add {{ $attraction->attraction_name }} to wishlist">♡ Save</button>
+                                    </form>
+
+                                @endif
+
+                            </div>
 
                         </div>
 
@@ -677,7 +650,7 @@
                 </h2>
 
                 <p>
-                    Start a search by entering a place and your trip dates.
+                    Start a search by entering a place you want to explore.
                 </p>
 
             </div>
@@ -688,31 +661,8 @@
 
 </main>
 
-<script>
-    const startDate = document.getElementById('start_date');
-    const endDate = document.getElementById('end_date');
 
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const systemDate = `${year}-${month}-${day}`;
-
-    startDate.min = systemDate;
-    endDate.min = systemDate;
-
-    startDate.addEventListener('change', function () {
-        if (this.value) {
-            endDate.min = this.value;
-
-            if (endDate.value && endDate.value < this.value) {
-                endDate.value = '';
-            }
-        } else {
-            endDate.min = systemDate;
-        }
-    });
-</script>
+@include('components.footer')
 
 </body>
 </html>

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>My Planned Trips — ExploreMY</title>
+	<title>{{ __('pages.trips.title') }} — ExploreMY</title>
 
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="{{ asset('css/dashboard.css') }}" rel="stylesheet">
 	<link href="{{ asset('css/trips.css') }}" rel="stylesheet">
 </head>
 <body>
@@ -15,9 +16,9 @@
 	<main class="container py-4">
 
 		<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 trips-page-header mb-4">
-			<h1 class="mb-0">My Planned Trips</h1>
-			<a href="{{ route('itineraries.create') }}" class="btn btn-create-itinerary">
-				+ Create New Itinerary
+			<h1 class="mb-0">{{ __('pages.trips.title') }}</h1>
+			<a href="{{ route('route.index') }}" class="btn btn-create-itinerary">
+				+ {{ __('pages.trips.create') }}
 			</a>
 		</div>
 
@@ -29,14 +30,14 @@
 						<h2>{{ $trip->title }}</h2>
 						<p class="trip-meta">
 							{{ $trip->start_date->format('M d') }} - {{ $trip->end_date->format('M d, Y') }}
-							&bull; {{ $trip->days }} Days
+							&bull; {{ $trip->days }} {{ __('pages.trips.days') }}
 						</p>
 						<div class="co2-badge">
-							Estimated: {{ $trip->co2_kg }}kg CO&#8322;
+							{{ __('pages.trips.estimated') }}: {{ $trip->co2_kg }}kg CO&#8322;
 						</div>
 						<div>
 							<a href="{{ route('itineraries.show', $trip->id) }}" class="btn btn-view-itinerary">
-								View Itinerary &rarr;
+								{{ __('pages.trips.view') }} &rarr;
 							</a>
 						</div>
 					</div>
@@ -44,7 +45,7 @@
 			@empty
 				<div class="col-12">
 					<p class="text-center text-muted">
-						You haven't planned any trips yet.
+						{{ __('pages.trips.empty') }}
 					</p>
 				</div>
 			@endforelse

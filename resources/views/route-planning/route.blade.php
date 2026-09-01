@@ -5,7 +5,7 @@
 @push('styles')
 <link
     rel="stylesheet"
-    href="{{ asset('css/route-planning.css') }}"
+    href="{{ asset('css/route-planning.css') }}?v={{ filemtime(public_path('css/route-planning.css')) }}"
 >
 @endpush
 
@@ -17,7 +17,10 @@
 
     @if($usingSavedPlaces)
         <section class="saved-route-summary">
-            <span>Your saved places</span>
+            <span class="saved-places-label">
+                <span class="saved-places-icon" aria-hidden="true">&#9825;</span>
+                {{ $collection ? $collection->name : 'Your saved places' }}
+            </span>
             <h2>{{ $savedPlaces->count() }} destinations ready</h2>
             <div>
                 @foreach($savedPlaces->take(8) as $savedPlace)
@@ -44,7 +47,7 @@
         </div>
     @endif
 
-    <div class="route-workspace">
+    <div class="route-workspace {{ session('routeResult') ? 'has-route-result' : '' }}">
     @if (session('routeResult'))
         @php($routeResult = session('routeResult'))
         <section class="route-result">
@@ -61,13 +64,18 @@
                         Google Maps could not connect these places by road or public transit.
                     </div>
                 @endif
+                @if(!empty($routeResult['fallback_notice']))
+                    <div class="route-fallback-warning">
+                        {{ $routeResult['fallback_notice'] }}
+                    </div>
+                @endif
             </div>
 
             @if (session('routeOptions'))
                 <div class="route-options-heading">
                     <div>
                         <strong>{{ count(session('routeOptions')) }} Route Options Found</strong>
-                        <span>Compare the available public-transport routes</span>
+                        <span>Compare the available {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'driving' : 'public-transport' }} routes</span>
                     </div>
                 </div>
 
@@ -89,14 +97,16 @@
                                     <span>Total time</span>
                                     <strong>{{ $option['total_duration_display'] }}</strong>
                                 </div>
-                                <div>
-                                    <span>Total fare</span>
-                                    <strong>
-                                        {{ $option['total_fare'] !== null
-                                            ? $option['fare_currency'] . ' ' . number_format($option['total_fare'], 2)
-                                            : 'Unavailable' }}
-                                    </strong>
-                                </div>
+                                @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE')
+                                    <div>
+                                        <span>Total fare</span>
+                                        <strong>
+                                            {{ $option['total_fare'] !== null
+                                                ? $option['fare_currency'] . ' ' . number_format($option['total_fare'], 2)
+                                                : 'Unavailable' }}
+                                        </strong>
+                                    </div>
+                                @endif
                                 <div>
                                     <span>Distance</span>
                                     <strong>{{ number_format($option['total_distance'], 2) }} km</strong>
@@ -126,9 +136,13 @@
                             @else
                                 <form action="{{ route('route.preference') }}" method="POST">
                                     @csrf
-                                    @if($usingSavedPlaces)<input type="hidden" name="source" value="saved">@endif
+            @if($usingSavedPlaces)<input type="hidden" name="source" value="saved">@endif
+            @if($collection)<input type="hidden" name="collection_id" value="{{ $collection->collection_id }}">@endif
                                     <input type="hidden" name="optimization_preference" value="{{ $routeResult['preference'] }}">
                                     <input type="hidden" name="route_option_index" value="{{ $optionIndex }}">
+                                    @foreach ($option['stops'] as $stop)
+                                        <input type="hidden" name="destination_keys[]" value="{{ $stop['route_key'] }}">
+                                    @endforeach
                                     <button type="submit" class="select-route-button">
                                         Select This Route &rarr;
                                     </button>
@@ -144,7 +158,7 @@
                     id="route-map"
                     class="route-map"
                     role="img"
-                    aria-label="Interactive map of the public-transport route"
+                    aria-label="Interactive map of the {{ ($routeResult['travel_mode'] ?? 'TRANSIT') === 'DRIVE' ? 'driving' : 'public-transport' }} route"
                 ></div>
             @else
                 <div class="route-map-warning">
@@ -196,11 +210,13 @@
                                 <small>
                                     {{ $leg['duration_display'] }}
                                     &middot; {{ number_format($leg['distance'], 2) }} km
-                                    &middot;
-                                    @if ($leg['fare'] !== null)
-                                        {{ $leg['fare_currency'] }} {{ number_format($leg['fare'], 2) }}
-                                    @else
-                                        Fare unavailable
+                                    @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE')
+                                        &middot;
+                                        @if ($leg['fare'] !== null)
+                                            {{ $leg['fare_currency'] }} {{ number_format($leg['fare'], 2) }}
+                                        @else
+                                            Fare unavailable
+                                        @endif
                                     @endif
                                 </small>
                             </div>
@@ -211,22 +227,74 @@
                                 <strong>Arrive at {{ $leg['to'] }}</strong>
                             </div>
                         </div>
+                        <button
+                            type="button"
+                            class="guidance-button"
+                            data-guidance-open="guidance-{{ $loop->index }}"
+                        >
+                            View step-by-step guidance
+                        </button>
                     </section>
                 @endforeach
             </div>
+
+            @foreach ($routeResult['transit_legs'] as $leg)
+                <div
+                    id="guidance-{{ $loop->index }}"
+                    class="guidance-modal"
+                    data-guidance-modal
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="guidance-title-{{ $loop->index }}"
+                    hidden
+                >
+                    <div class="guidance-dialog">
+                        <div class="guidance-dialog-heading">
+                            <div>
+                                <span>Step-by-step guidance</span>
+                                <h3 id="guidance-title-{{ $loop->index }}">{{ $leg['from'] }} &rarr; {{ $leg['to'] }}</h3>
+                            </div>
+                            <button type="button" class="guidance-close" data-guidance-close aria-label="Close guidance"></button>
+                        </div>
+                        <button type="button" class="guidance-button" data-reward-activity="export_guidance" data-reward-url="{{ route('rewards.activity') }}">Export step-by-step guidance</button>
+                        <ol class="guidance-list">
+                            @foreach ($leg['steps'] as $step)
+                                <li>
+                                    <span class="guidance-step-number">{{ $loop->iteration }}</span>
+                                    <div>
+                                        <strong>{{ $step['label'] }}</strong>
+                                        <span>{{ $step['from'] }} &rarr; {{ $step['to'] }}</span>
+                                        <small>
+                                            {{ $step['departure_time'] }}–{{ $step['arrival_time'] }}
+                                            &middot; {{ $step['duration'] }}
+                                            &middot; {{ $step['distance'] }}
+                                        </small>
+                                        @if (!empty($step['headsign']))
+                                            <small>Headsign: {{ $step['headsign'] }}</small>
+                                        @endif
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ol>
+                    </div>
+                </div>
+            @endforeach
+
             <div class="route-total">
                 <span>Total distance</span>
                 <strong>{{ number_format($routeResult['total_distance'], 2) }} km</strong>
                 <span>Estimated travel time</span>
                 <strong>{{ $routeResult['total_duration_display'] }}</strong>
-                <span>Estimated fare</span>
-                <strong>
-                    @if ($routeResult['total_fare'] !== null)
-                        {{ $routeResult['fare_currency'] }} {{ number_format($routeResult['total_fare'], 2) }}
-                    @else
-                        Not available from Google
-                    @endif
-                </strong>
+                @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE')
+                    <span>Estimated fare</span>
+                    <strong>
+                        @if ($routeResult['total_fare'] !== null)
+                            {{ $routeResult['fare_currency'] }} {{ number_format($routeResult['total_fare'], 2) }}
+                        @else
+                            Not available from Google
+                        @endif
+                    </strong>
+                @endif
             </div>
         </section>
     @endif
@@ -239,6 +307,7 @@
 
         @if($usingSavedPlaces)
             <input type="hidden" name="source" value="saved">
+            @if($collection)<input type="hidden" name="collection_id" value="{{ $collection->collection_id }}">@endif
         @endif
 
         <section class="preference-card">
@@ -249,6 +318,54 @@
             <p class="google-attribution">Powered by Google, &copy; {{ date('Y') }} Google</p>
 
             @php($selectedPreference = old('optimization_preference', 'fastest'))
+            @php($selectedDestinationKeys = old(
+                'destination_keys',
+                session('routeResult')
+                    ? array_column(session('routeResult')['stops'], 'route_key')
+                    : array_slice(array_column($availablePlaces, 'route_key'), 0, 2)
+            ))
+            <div class="itinerary-editor" data-itinerary-editor>
+                <div class="itinerary-editor-heading">
+                    <div>
+                        <strong>Destinations</strong>
+                        <small>Arrange your stops in the order you want to visit them.</small>
+                    </div>
+                    <span data-destination-count>{{ count($selectedDestinationKeys) }} stops</span>
+                </div>
+
+                <ol class="itinerary-list" data-itinerary-list>
+                    @foreach ($selectedDestinationKeys as $destinationKey)
+                        @php($destination = collect($availablePlaces)->firstWhere('route_key', $destinationKey))
+                        @if ($destination)
+                            <li class="itinerary-item" data-destination-key="{{ $destination['route_key'] }}">
+                                <input type="hidden" name="destination_keys[]" value="{{ $destination['route_key'] }}">
+                                <span class="itinerary-position">{{ $loop->iteration }}</span>
+                                <strong>{{ $destination['name'] }}</strong>
+                                <div class="itinerary-actions">
+                                    <button type="button" data-move="up" aria-label="Move {{ $destination['name'] }} up">&uarr;</button>
+                                    <button type="button" data-move="down" aria-label="Move {{ $destination['name'] }} down">&darr;</button>
+                                    <button type="button" data-remove aria-label="Remove {{ $destination['name'] }}">&times;</button>
+                                </div>
+                            </li>
+                        @endif
+                    @endforeach
+                </ol>
+
+                <div class="itinerary-add">
+                    <label for="add-destination">Add destination</label>
+                    <select id="add-destination" data-add-destination>
+                        <option value="">Choose a place</option>
+                        @foreach ($availablePlaces as $destination)
+                            <option value="{{ $destination['route_key'] }}" data-name="{{ $destination['name'] }}">
+                                {{ $destination['name'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="button" data-add-stop>Add stop</button>
+                </div>
+                <p class="itinerary-hint" data-itinerary-hint>Choose at least two destinations.</p>
+            </div>
+
             <div class="preference-list">
                 <label class="preference-option {{ $selectedPreference === 'fastest' ? 'selected' : '' }}">
                     <input
@@ -315,10 +432,10 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/route-planning.js') }}"></script>
+<script src="{{ asset('js/route-planning.js') }}?v={{ filemtime(public_path('js/route-planning.js')) }}"></script>
 @if (session('routeResult') && $googleMapsBrowserKey)
-    <script>
-        window.routeMapData = @json(session('routeResult'));
+    <script type="application/json" id="route-map-data">
+        {!! Js::from(session('routeResult')) !!}
     </script>
     <script
         async

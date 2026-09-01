@@ -1,3 +1,8 @@
+@php
+	$pendingRewardActivities = session('pending_reward_activities', []);
+	$hasPendingRewards = collect($pendingRewardActivities)->sum() > 0;
+@endphp
+
 <header class="header-wrapper fixed-top">
 	<div class="container">
 
@@ -18,6 +23,15 @@
 				</a>
 
 				<div class="d-flex align-items-center gap-3">
+
+					<a
+						href="{{ route('saved-places.index') }}"
+						class="nav-saved-places {{ request()->routeIs('saved-places.*') ? 'active' : '' }}"
+						title="Saved places"
+						aria-label="Saved places"
+					>
+						<span aria-hidden="true">&#9825;</span>
+					</a>
 
 					<a href="{{ route('profile') }}" class="nav-user-pill text-decoration-none text-dark">
 
@@ -68,7 +82,16 @@
 
 				<li>
 					<a href="{{ route('trips.index') }}" class="nav-link-custom {{ request()->routeIs('trips.*') ? 'active' : '' }}">
-						My Trips
+						{{ __('pages.common.trips') }}
+					</a>
+				</li>
+
+				<li>
+					<a href="{{ route('rewards') }}" class="nav-link-custom rewards-nav-link {{ request()->routeIs('rewards') ? 'active' : '' }}">
+						{{ __('pages.common.rewards') }}
+						@if($hasPendingRewards)
+							<span class="nav-reward-dot" aria-label="Rewards waiting to be collected"></span>
+						@endif
 					</a>
 				</li>
 
