@@ -583,13 +583,15 @@ function exportRoute(index) {
         }
     });
 
-    // 3. Trigger native print dialog
-    window.print();
+    // 3. Small delay to ensure DOM updates before browser triggers print preview
+    setTimeout(() => {
+        window.print();
+    }, 50);
 
     // 4. Clean up classes after printing window closes
-    setTimeout(() => {
+    window.onafterprint = () => {
         cards.forEach(card => card.classList.remove('print-active'));
-    }, 1000);
+    };
 }
 
 </script>
