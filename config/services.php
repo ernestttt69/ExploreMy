@@ -31,4 +31,16 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'weather' => [
+        'api_key' => env('WEATHER_API_KEY'),
+        'endpoint' => env('WEATHER_API_ENDPOINT', 'https://api.open-meteo.com/v1/forecast'),
+        'historical_endpoint' => env('WEATHER_HISTORICAL_ENDPOINT', 'https://archive-api.open-meteo.com/v1/archive'),
+        'timeout' => (int) env('WEATHER_TIMEOUT', 3),
+    ],
+
+    'places' => [
+        'geocoding_endpoint' => env('PLACES_GEOCODING_ENDPOINT', 'https://geocoding-api.open-meteo.com/v1/search'),
+        'timeout' => (int) env('PLACES_TIMEOUT', 3),
+    ],
+
 ];

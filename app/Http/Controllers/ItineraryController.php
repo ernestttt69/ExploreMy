@@ -79,10 +79,10 @@ class ItineraryController extends Controller
         return view('itineraries.show', [
             'trip' => $trip,
             'itinerary' => $this->tripPayload($trip),
-            'canEdit' => true,
+            'canEdit' => false,
             'shareToken' => null,
             'sharedPermission' => null,
-            'clientConfig' => $this->clientConfig($trip, true),
+            'clientConfig' => $this->clientConfig($trip, false),
         ]);
     }
 
@@ -98,10 +98,10 @@ class ItineraryController extends Controller
         return view('itineraries.show', [
             'trip' => $trip,
             'itinerary' => $this->tripPayload($trip),
-            'canEdit' => $share->canEdit(),
+            'canEdit' => false,
             'shareToken' => $token,
             'sharedPermission' => $share->permission,
-            'clientConfig' => $this->clientConfig($trip, $share->canEdit(), $token),
+            'clientConfig' => $this->clientConfig($trip, false, $token),
         ]);
     }
 
@@ -563,22 +563,15 @@ class ItineraryController extends Controller
             'canEdit' => $canEdit,
             'isShared' => $shared,
             'csrfToken' => csrf_token(),
-            'itemStoreUrl' => $shared
-                ? route('itineraries.shared.items.store', ['token' => $shareToken])
-                : route('itineraries.items.store', $trip),
-            'itemUrlTemplate' => $shared
-                ? route('itineraries.shared.items.update', ['token' => $shareToken, 'item' => '__ITEM__'])
-                : route('itineraries.items.update', ['trip' => $trip, 'item' => '__ITEM__']),
-            'itemDeleteUrlTemplate' => $shared
-                ? route('itineraries.shared.items.destroy', ['token' => $shareToken, 'item' => '__ITEM__'])
-                : route('itineraries.items.destroy', ['trip' => $trip, 'item' => '__ITEM__']),
-            'ecoUrlTemplate' => $shared
-                ? route('itineraries.shared.items.eco', ['token' => $shareToken, 'item' => '__ITEM__'])
-                : route('itineraries.items.eco', ['trip' => $trip, 'item' => '__ITEM__']),
-            'saveUrl' => $shared ? null : route('itineraries.save', $trip),
-            'syncUrl' => $shared ? null : route('itineraries.sync', $trip),
-            'reorderUrl' => $shared ? null : route('itineraries.items.reorder', $trip),
+            'itemStoreUrl' => null,
+            'itemUrlTemplate' => null,
+            'itemDeleteUrlTemplate' => null,
+            'ecoUrlTemplate' => null,
+            'saveUrl' => null,
+            'syncUrl' => null,
+            'reorderUrl' => null,
             'shareUrl' => $shared ? null : route('itineraries.share', $trip),
+            'weatherUrl' => $shared ? null : route('itinerary.weather', ['itinerary_id' => $trip->getKey()]),
         ];
     }
 }
