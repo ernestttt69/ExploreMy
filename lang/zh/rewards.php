@@ -25,4 +25,6 @@ return [
     'transaction_activities' => ['daily_login' => '每日登录', 'save_attraction' => '收藏景点', 'generate_itinerary' => '生成行程', 'export_itinerary' => '导出行程', 'export_guidance' => '导出指南', 'share_itinerary' => '分享行程', 'purchase' => '购买', 'fertilize' => '为树施肥', 'fertilizer_purchase' => '购买肥料'],
     'shop_items' => ['leaf_starter' => ['name' => '新叶肥料', 'description' => '温和促进成长中树木的肥料。'], 'rainforest_mix' => ['name' => '雨林混合肥', 'description' => '灵感源自马来西亚森林的丰富养分。'], 'canopy_crate' => ['name' => '树冠肥料箱', 'description' => '为积极探索者准备的强效配方。']],
     'action_failed' => '无法完成此操作。', 'collected' => '已领取',
+    'rewards_ready' => ':count 个奖励可领取', 'rewards_remaining' => '{0} 没有剩余奖励|[1,*] 还有 :count 个奖励',
+    'none_ready' => '暂无可领取奖励', 'collect_one' => '领取 1/:count',
 ];

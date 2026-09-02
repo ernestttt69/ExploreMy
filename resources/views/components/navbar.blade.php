@@ -36,7 +36,7 @@
 
 					<a href="{{ route('profile') }}" class="nav-user-pill text-decoration-none text-dark">
 
-						<img src="{{ Auth::user()->profile_picture }}" class="nav-avatar">
+						<img src="{{ Auth::user()->profile_picture ?: asset('images/default-avatar.svg') }}" class="nav-avatar" alt="{{ Auth::user()->name }}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.svg') }}'">
 						<span>
 							{{ Auth::user()->name }}
 						</span>

@@ -195,13 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll('[data-reward-activity="export_guidance"]').forEach(button => {
-        button.addEventListener('click', () => {
-            rewardEvent(button);
-            window.print();
-        });
-    });
-
     document.querySelectorAll('[data-reward-activity="share_itinerary"]').forEach(button => {
         button.addEventListener('click', async () => {
             try {

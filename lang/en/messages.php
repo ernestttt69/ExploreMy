@@ -30,6 +30,7 @@ return [
     'tree_grew' => 'Your tree grew by using :item.',
     'activity_unavailable' => 'This activity has no reward ready to collect.',
     'itinerary_reward_claimed' => 'Itinerary generation reward claimed: 50 Green Points.',
+    'activity_reward_claimed' => ':activity reward collected. :remaining.',
     'reward_failed' => 'This reward could not be claimed.',
     'achievement_unavailable' => 'This achievement is not ready to collect.',
     'achievement_collected' => ':points Green Points collected for :achievement.',

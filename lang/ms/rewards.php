@@ -24,5 +24,7 @@ return [
     'activity_points' => ['tree_milestone' => '+50 hingga +150'],
     'transaction_activities' => ['daily_login' => 'Log masuk harian', 'save_attraction' => 'Simpan tarikan', 'generate_itinerary' => 'Jana jadual perjalanan', 'export_itinerary' => 'Eksport jadual perjalanan', 'export_guidance' => 'Eksport panduan', 'share_itinerary' => 'Kongsi jadual perjalanan', 'purchase' => 'Pembelian', 'fertilize' => 'Bajakan pokok', 'fertilizer_purchase' => 'Pembelian baja'],
     'shop_items' => ['leaf_starter' => ['name' => 'Permulaan Daun', 'description' => 'Rangsangan lembut untuk pokok yang sedang membesar.'], 'rainforest_mix' => ['name' => 'Campuran Hutan Hujan', 'description' => 'Nutrien kaya yang diinspirasikan oleh hutan Malaysia.'], 'canopy_crate' => ['name' => 'Peti Kanopi', 'description' => 'Campuran berkuasa untuk pengembara yang bercita-cita tinggi.']],
+    'rewards_ready' => ':count ganjaran sedia dikutip', 'rewards_remaining' => '{0} Tiada ganjaran berbaki|[1,*] :count ganjaran berbaki',
+    'none_ready' => 'Tiada ganjaran sedia dikutip', 'collect_one' => 'Kutip 1 daripada :count',
     'action_failed' => 'Tindakan ini tidak dapat diselesaikan.', 'collected' => 'Telah dikutip',
 ];

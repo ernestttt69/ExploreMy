@@ -30,6 +30,7 @@ return [
     'tree_grew' => 'Pokok anda membesar selepas menggunakan :item.',
     'activity_unavailable' => 'Aktiviti ini belum mempunyai ganjaran untuk dikutip.',
     'itinerary_reward_claimed' => 'Ganjaran penjanaan jadual perjalanan diterima: 50 Mata Hijau.',
+    'activity_reward_claimed' => 'Ganjaran :activity telah dikutip. :remaining.',
     'reward_failed' => 'Ganjaran ini tidak dapat dikutip.',
     'achievement_unavailable' => 'Pencapaian ini belum sedia untuk dikutip.',
     'achievement_collected' => ':points Mata Hijau dikutip untuk :achievement.',

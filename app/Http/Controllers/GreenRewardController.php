@@ -101,7 +101,12 @@ class GreenRewardController extends Controller
 
         abort_unless($awarded, 422, __('messages.activity_unavailable'));
 
-        return back()->with('success', __('messages.itinerary_reward_claimed'));
+        $remaining = (int) session('pending_reward_activities.' . $validated['activity'], 0);
+
+        return back()->with('success', __('messages.activity_reward_claimed', [
+            'activity' => __('rewards.activity_names.' . $validated['activity']),
+            'remaining' => trans_choice('rewards.rewards_remaining', $remaining, ['count' => $remaining]),
+        ]));
     }
 
     public function collectAchievement(GreenAchievement $achievement)

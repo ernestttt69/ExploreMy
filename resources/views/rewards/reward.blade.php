@@ -91,7 +91,27 @@
                 ['key' => 'share_itinerary', 'points' => '+30', 'icon' => '↗'],
                 ['key' => 'tree_milestone', 'points' => __('rewards.activity_points.tree_milestone'), 'icon' => '✦'],
             ])
-            <div class="badges-row">@foreach($badgeActivities as $activity)<div class="badge-item badge-activity"><span class="badge-art">{{ $activity['icon'] }}</span><strong>{{ __('rewards.activity_names.' . $activity['key']) }}</strong><small>{{ $activity['points'] }} {{ __('rewards.green_points') }} · {{ __('rewards.activity_frequency.' . $activity['key']) }}</small>@if(session('pending_reward_activities.' . $activity['key'], 0) > 0)<form method="POST" action="{{ route('rewards.activity.collect') }}">@csrf<input type="hidden" name="activity" value="{{ $activity['key'] }}"><button type="submit" class="collect-button">{{ __('rewards.collect') }}</button></form>@else<button type="button" class="collect-button" disabled>{{ __('rewards.collect') }}</button>@endif</div>@endforeach</div>
+            <div class="badges-row">
+                @foreach($badgeActivities as $activity)
+                    @php($pendingCount = (int) session('pending_reward_activities.' . $activity['key'], 0))
+                    <div class="badge-item badge-activity">
+                        <span class="badge-art">{{ $activity['icon'] }}</span>
+                        <strong>{{ __('rewards.activity_names.' . $activity['key']) }}</strong>
+                        <small>{{ $activity['points'] }} {{ __('rewards.green_points') }} · {{ __('rewards.activity_frequency.' . $activity['key']) }}</small>
+                        @if($pendingCount > 0)
+                            <span class="pending-reward-count">{{ trans_choice('rewards.rewards_ready', $pendingCount, ['count' => $pendingCount]) }}</span>
+                            <form method="POST" action="{{ route('rewards.activity.collect') }}">
+                                @csrf
+                                <input type="hidden" name="activity" value="{{ $activity['key'] }}">
+                                <button type="submit" class="collect-button">{{ __('rewards.collect_one', ['count' => $pendingCount]) }}</button>
+                            </form>
+                        @else
+                            <span class="pending-reward-count pending-reward-count-empty">{{ __('rewards.none_ready') }}</span>
+                            <button type="button" class="collect-button" disabled>{{ __('rewards.collect') }}</button>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
         </section>
 
         <section class="rewards-section rewards-tools" aria-labelledby="tree-title">

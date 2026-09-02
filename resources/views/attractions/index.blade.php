@@ -104,52 +104,6 @@
 
                 </div>
 
-                 <div class="date-field">
-
-                    <label for="start_date">
-                        {{ __('explore.starts') }}
-                    </label>
-
-                    <input
-                        type="date"
-                        id="start_date"
-                        name="start_date"
-                        value="{{ old('start_date', request('start_date')) }}"
-                        min="{{ today()->format('Y-m-d') }}"
-                        class="{{ $errors->has('start_date') ? 'input-error' : '' }}"
-                    >
-
-                    @if($errors->has('start_date'))
-                        <p class="field-error">
-                            {{ $errors->first('start_date') }}
-                        </p>
-                    @endif
-
-                </div>
-
-                <div class="date-field">
-
-                    <label for="end_date">
-                        {{ __('explore.ends') }}
-                    </label>
-
-                    <input
-                        type="date"
-                        id="end_date"
-                        name="end_date"
-                        value="{{ old('end_date', request('end_date')) }}"
-                        min="{{ old('start_date', request('start_date')) ?: today()->format('Y-m-d') }}"
-                        class="{{ $errors->has('end_date') ? 'input-error' : '' }}"
-                    >
-
-                    @if($errors->has('end_date'))
-                        <p class="field-error">
-                            {{ $errors->first('end_date') }}
-                        </p>
-                    @endif
-
-                 </div>
-
                  <button
                     type="submit"
                     class="search-button"

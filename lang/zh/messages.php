@@ -41,4 +41,5 @@ return [
     'route_api_missing' => '尚未配置 Google Maps Routes API 密钥。',
     'route_calculation_failed' => 'Google Maps 无法计算路线，请重试。',
     'route_calculated' => ':title 已成功计算。',
+    'activity_reward_claimed' => '已领取:activity奖励。:remaining。',
 ];

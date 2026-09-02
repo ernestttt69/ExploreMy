@@ -60,6 +60,8 @@
     <div class="route-workspace {{ session('routeResult') ? 'has-route-result' : '' }}">
     @if (session('routeResult'))
         @php($routeResult = session('routeResult'))
+        @php($routeLegs = collect($routeResult['transit_legs'] ?? []))
+        @php($isFlightOnlyRoute = $routeLegs->isNotEmpty() && $routeLegs->every(fn ($leg) => !empty($leg['is_cross_region_transfer'])))
         <section class="route-result">
             <div class="card-heading">
                 <h2>{{ $routeResult['title'] }}</h2>
@@ -198,7 +200,7 @@
                 </section>
             @endif
 
-            @if ($googleMapsBrowserKey)
+            @if ($googleMapsBrowserKey && !$isFlightOnlyRoute)
                 <div
                     id="route-map"
                     class="route-map"
@@ -327,7 +329,6 @@
                             </div>
                             <button type="button" class="guidance-close" data-guidance-close aria-label="{{ __('route.close_guidance') }}"></button>
                         </div>
-                        <button type="button" class="guidance-button" data-reward-activity="export_guidance" data-reward-url="{{ route('rewards.activity') }}">{{ __('route.export_guidance') }}</button>
                         <ol class="guidance-list">
                             @foreach ($leg['steps'] as $step)
                                 <li>
@@ -551,7 +552,7 @@
 window.routeTranslations = {{ Illuminate\Support\Js::from($routeTranslations) }};
 </script>
 <script src="{{ asset('js/route-planning.js') }}?v={{ filemtime(public_path('js/route-planning.js')) }}"></script>
-@if (session('routeResult') && $googleMapsBrowserKey)
+@if (session('routeResult') && $googleMapsBrowserKey && !($isFlightOnlyRoute ?? false))
     <script type="application/json" id="route-map-data">
         @json(session('routeResult'))
     </script>

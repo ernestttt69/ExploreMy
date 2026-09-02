@@ -24,5 +24,7 @@ return [
     'activity_points' => ['tree_milestone' => '+50 to +150'],
     'transaction_activities' => ['daily_login' => 'Daily login', 'save_attraction' => 'Save attraction', 'generate_itinerary' => 'Generate itinerary', 'export_itinerary' => 'Export itinerary', 'export_guidance' => 'Export guidance', 'share_itinerary' => 'Share itinerary', 'purchase' => 'Purchase', 'fertilize' => 'Fertilize tree', 'fertilizer_purchase' => 'Fertilizer purchase'],
     'shop_items' => ['leaf_starter' => ['name' => 'Leaf Starter', 'description' => 'A gentle boost for a growing tree.'], 'rainforest_mix' => ['name' => 'Rainforest Mix', 'description' => 'Rich nutrients inspired by Malaysia\'s forests.'], 'canopy_crate' => ['name' => 'Canopy Crate', 'description' => 'A powerful blend for ambitious explorers.']],
+    'rewards_ready' => '{1} :count reward ready|[2,*] :count rewards ready', 'rewards_remaining' => '{0} No rewards remain|{1} :count reward remains|[2,*] :count rewards remain',
+    'none_ready' => 'No reward ready', 'collect_one' => 'Collect 1 of :count',
     'action_failed' => 'This action could not be completed.', 'collected' => 'Collected',
 ];

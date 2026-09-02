@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ __('transport.title') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
@@ -301,7 +302,7 @@
     </button>
 
     <!-- Export / Print PDF Button -->
-    <button type="button" class="btn-toggle-route" onclick="exportRoute({{ $index }})" style="background-color: #2d6a4f; color: white; width: auto; padding: 0 16px;">
+    <button type="button" class="btn-toggle-route" onclick="exportRoute({{ $index }}, this)" data-reward-url="{{ route('rewards.activity') }}" style="background-color: #2d6a4f; color: white; width: auto; padding: 0 16px;">
         📄 {{ __('transport.export') }}
     </button>
 </div>
@@ -574,7 +575,7 @@ function sortRoutes(criterion) {
     });
 }
 
-function exportRoute(index) {
+function exportRoute(index, button) {
     // 1. Expand step-by-step directions for this card
     const detailPanel = document.getElementById('route-details-' + index);
     if (detailPanel) {
@@ -591,12 +592,27 @@ function exportRoute(index) {
         }
     });
 
-    // 3. Allow the expanded route and print styles to render before preview opens.
+    // 3. Queue the guidance reward from the transportation export only.
+    const rewardUrl = button?.dataset.rewardUrl;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (rewardUrl && csrfToken) {
+        fetch(rewardUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ activity: 'export_guidance' }),
+        }).catch(error => console.error('Unable to queue guidance reward.', error));
+    }
+
+    // 4. Allow the expanded route and print styles to render before preview opens.
     setTimeout(() => {
         window.print();
     }, 50);
 
-    // 4. Clean up classes after printing window closes
+    // 5. Clean up classes after printing window closes
     window.onafterprint = () => {
         cards.forEach(card => card.classList.remove('print-active'));
     };

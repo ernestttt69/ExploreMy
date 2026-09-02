@@ -39,10 +39,19 @@ class AuthController extends Controller
 			}
 
 			$user = User::firstOrNew(['google_id' => $payload['sub']]);
+			$googleAvatar = filter_var($payload['picture'] ?? null, FILTER_VALIDATE_URL) ?: null;
+			$hasMissingLocalAvatar = $user->exists
+				&& str_starts_with((string) $user->profile_picture, '/profile_images/')
+				&& ! file_exists(public_path(ltrim($user->profile_picture, '/')));
+
 			if (! $user->exists) {
-				$user->name = $payload['name'];
-				$user->profile_picture = $payload['picture'];
+				$user->name = $payload['name'] ?? $payload['email'];
 			}
+
+			if ($googleAvatar && (! $user->exists || blank($user->profile_picture) || $hasMissingLocalAvatar)) {
+				$user->profile_picture = $googleAvatar;
+			}
+
 			$user->email = $payload['email'];
 			$user->save();
 
