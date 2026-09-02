@@ -27,15 +27,41 @@ class RoutePlanningController extends Controller
         $usingSavedPlaces = $request->query('source') === 'saved';
         $collection = null;
         $savedPlaces = collect();
+        $savedPlacesCount = 0;
 
         if ($usingSavedPlaces) {
             $collection = $this->collectionForCurrentUser($request->query('collection'));
-            $savedPlaces = $collection
-                ? $this->savedPlacesForCollection($collection)
-                : $this->savedPlacesForCurrentUser();
+            $savedPlacesQuery = $this->savedPlacesQuery($collection);
+            $savedPlacesCount = (clone $savedPlacesQuery)->count();
+            $savedPlaces = (clone $savedPlacesQuery)
+                ->orderByDesc('wishlist_id')
+                ->limit(8)
+                ->get();
+
+            $initialSavedPlaces = (clone $savedPlacesQuery)
+                ->orderByDesc('wishlist_id')
+                ->limit(20)
+                ->get();
+            $selectedWishlistIds = collect(old(
+                'destination_keys',
+                session('routeResult')
+                    ? array_column(session('routeResult')['stops'], 'route_key')
+                    : []
+            ))->map(function ($key) {
+                return preg_match('/^wishlist:(\d+)$/', (string) $key, $matches)
+                    ? (int) $matches[1]
+                    : null;
+            })->filter()->values();
+
+            if ($selectedWishlistIds->isNotEmpty()) {
+                $initialSavedPlaces = $initialSavedPlaces
+                    ->concat((clone $savedPlacesQuery)->whereIn('wishlist_id', $selectedWishlistIds)->get())
+                    ->unique('wishlist_id')
+                    ->values();
+            }
         }
         $availablePlaces = $usingSavedPlaces
-            ? $savedPlaces->take(8)->values()->map(fn ($wishlist): array => [
+            ? $initialSavedPlaces->map(fn ($wishlist): array => [
                 'name' => $wishlist->attraction->attraction_name,
                 'place_id' => $wishlist->attraction->place_id,
                 'route_key' => 'wishlist:' . $wishlist->wishlist_id,
@@ -53,8 +79,50 @@ class RoutePlanningController extends Controller
             'googleMapsBrowserKey' => config('services.google_maps.browser_api_key'),
             'usingSavedPlaces' => $usingSavedPlaces,
             'savedPlaces' => $savedPlaces,
+            'savedPlacesCount' => $savedPlacesCount,
             'collection' => $collection,
             'availablePlaces' => $availablePlaces,
+            'requiresFlight' => $this->placesRequireFlight(
+                $savedPlaces->map(fn ($wishlist): array => [
+                    'state_name' => $wishlist->attraction->state?->state_name,
+                ])->all()
+            ),
+        ]);
+    }
+
+    public function searchSavedPlaces(Request $request)
+    {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'collection_id' => ['nullable', 'integer'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+        $collection = $this->collectionForCurrentUser($validated['collection_id'] ?? null);
+        $query = $this->savedPlacesQuery($collection);
+        $term = trim($validated['q'] ?? '');
+
+        if ($term !== '') {
+            $query->whereHas('attraction', function ($attractionQuery) use ($term) {
+                $attractionQuery->where(function ($matchQuery) use ($term) {
+                    $matchQuery->where('attraction_name', 'like', '%' . $term . '%')
+                        ->orWhere('category', 'like', '%' . $term . '%')
+                        ->orWhereHas('state', fn ($stateQuery) =>
+                            $stateQuery->where('state_name', 'like', '%' . $term . '%'));
+                });
+            });
+        }
+
+        $results = $query->orderByDesc('wishlist_id')->paginate(20);
+
+        return response()->json([
+            'data' => $results->getCollection()->map(fn ($wishlist): array => [
+                'name' => $wishlist->attraction->attraction_name,
+                'route_key' => 'wishlist:' . $wishlist->wishlist_id,
+                'category' => $wishlist->attraction->category,
+                'state' => $wishlist->attraction->state?->state_name,
+            ])->values(),
+            'current_page' => $results->currentPage(),
+            'has_more' => $results->hasMorePages(),
         ]);
     }
 
@@ -68,12 +136,14 @@ class RoutePlanningController extends Controller
             'route_option_index' => [
                 'nullable',
                 'integer',
-                'between:0,2',
+                'between:0,3',
             ],
+            'travel_mode' => ['nullable', 'in:TRANSIT,DRIVE,WALK,BICYCLE'],
             'destination_keys' => ['required', 'array', 'min:2', 'max:8'],
             'destination_keys.*' => ['required', 'string'],
             'source' => ['nullable', 'in:saved'],
             'collection_id' => ['nullable', 'integer'],
+            'start_time' => ['nullable', 'date_format:H:i'],
         ]);
 
         try {
@@ -94,51 +164,98 @@ class RoutePlanningController extends Controller
                 ]);
         }
 
+        $collection = ($validated['source'] ?? null) === 'saved'
+            ? $this->collectionForCurrentUser($validated['collection_id'] ?? null)
+            : null;
+        $planningTimezone = config('app.timezone', 'Asia/Kuala_Lumpur');
+        $planningStartDate = $collection?->start_date
+            ? CarbonImmutable::parse($collection->start_date, $planningTimezone)->startOfDay()
+            : CarbonImmutable::now($planningTimezone)->startOfDay();
+        $planningEndDate = $collection?->end_date
+            ? CarbonImmutable::parse($collection->end_date, $planningTimezone)->startOfDay()
+            : $planningStartDate;
+        $planningStartTime = $collection?->start_time
+            ? substr((string) $collection->start_time, 0, 5)
+            : ($validated['start_time'] ?? CarbonImmutable::now($planningTimezone)->format('H:i'));
+
+        // For a standalone one-day plan, an explicitly selected time that has
+        // already passed means the user intends to travel tomorrow. A blank
+        // time continues to mean "start now" today.
+        if ($collection === null && !empty($validated['start_time'])) {
+            [$requestedHour, $requestedMinute] = array_map(
+                'intval',
+                explode(':', $validated['start_time'])
+            );
+            $requestedDeparture = $planningStartDate->setTime(
+                $requestedHour,
+                $requestedMinute
+            );
+
+            if ($requestedDeparture->lessThanOrEqualTo(CarbonImmutable::now($planningTimezone))) {
+                $planningStartDate = $planningStartDate->addDay();
+                $planningEndDate = $planningStartDate;
+            }
+        }
+
         try {
-            $travelMode = 'TRANSIT';
-            $omittedPlaces = [];
-            $fallbackNotice = null;
-            try {
-                $metrics = $this->getGoogleTransitMetrics($places, $travelMode);
-            } catch (\RuntimeException $exception) {
-                $travelMode = 'DRIVE';
-                $fallbackNotice = __('route.fallback');
-                $metrics = $this->getGoogleTransitMetrics($places, $travelMode, true);
-                [$places, $metrics, $omittedPlaces] = $this->connectedRouteSubset(
+            $crossRegion = $this->placesRequireFlight($places);
+            $routeOptions = $crossRegion
+                ? [$this->buildCrossRegionRoute(
                     $places,
-                    $metrics
+                    $planningStartDate,
+                    $planningEndDate,
+                    $planningStartTime
+                )]
+                : $this->buildTransportModeOptions(
+                    $places,
+                    $validated['optimization_preference']
                 );
 
-                if (count($places) < 2) {
-                    throw new UnexpectedValueException(
-                        __('route.connect_error')
-                    );
-                }
+            if ($routeOptions === []) {
+                throw new UnexpectedValueException(__('route.connect_error'));
             }
 
-            $routeOptions = $this->findOptimalRoutes(
-                $places,
-                $metrics,
-                $validated['optimization_preference'],
-                3,
-                $travelMode
-            );
-            $selectedOptionIndex = (int) ($validated['route_option_index'] ?? 0);
+            $requestedTravelMode = $validated['travel_mode'] ?? null;
+            $selectedOptionIndex = $requestedTravelMode
+                ? array_search($requestedTravelMode, array_column($routeOptions, 'travel_mode'), true)
+                : (int) ($validated['route_option_index'] ?? 0);
+            $selectedOptionIndex = $selectedOptionIndex === false ? 0 : $selectedOptionIndex;
             $routeResult = $routeOptions[$selectedOptionIndex] ?? $routeOptions[0];
-            $routeResult['omitted_places'] = $omittedPlaces;
-            $routeResult['fallback_notice'] = $fallbackNotice;
-            $routeResult['transit_legs'] = $this->getTransitLegs(
-                $routeResult['stops'],
-                $travelMode
-            );
+            $travelMode = $routeResult['travel_mode'];
+            $routeResult['omitted_places'] = [];
+            $routeResult['fallback_notice'] = null;
+            if (!$crossRegion) {
+                $routeResult['transit_legs'] = $this->getTransitLegs(
+                    $routeResult['stops'],
+                    $travelMode,
+                    $planningStartDate,
+                    $planningEndDate,
+                    $planningStartTime
+                );
+            }
+            $routeResult['trip_start_date'] = $planningStartDate->toDateString();
+            $routeResult['trip_end_date'] = $planningEndDate->toDateString();
+            $routeResult['trip_day_count'] = $planningStartDate->diffInDays($planningEndDate) + 1;
+            $routeResult['is_collection_plan'] = $collection !== null;
+            $routeResult['trip_start_time'] = $planningStartTime;
 
             if ($routeResult['transit_legs'] !== []) {
-                $routeResult['departure_time'] = $routeResult['transit_legs'][0]['departure_time'];
+                $routeResult['departure_time'] = $routeResult['transit_legs'][0]['visit_start_time'];
                 $lastLegIndex = array_key_last($routeResult['transit_legs']);
-                $routeResult['arrival_time'] = $routeResult['transit_legs'][$lastLegIndex]['arrival_time'];
-                $routeResult['total_duration_display'] = $this->formatDuration(
-                    array_sum(array_column($routeResult['transit_legs'], 'duration_seconds'))
-                );
+                $lastLeg = $routeResult['transit_legs'][$lastLegIndex];
+                $finalVisitMinutes = (int) (last($routeResult['stops'])['suggested_visit_minutes'] ?? 0);
+                $finalVisitEnd = CarbonImmutable::parse($lastLeg['arrival_at'])->addMinutes($finalVisitMinutes);
+                $routeResult['arrival_time'] = $this->formatTime($finalVisitEnd);
+                $routeResult['final_visit_end_time'] = $this->formatTime($finalVisitEnd);
+                $knownDuration = array_sum(array_column($routeResult['transit_legs'], 'duration_seconds'))
+                    + (array_sum(array_column($routeResult['transit_legs'], 'visit_duration_minutes')) * 60)
+                    + ($finalVisitMinutes * 60);
+                $routeResult['total_duration_display'] = $this->formatDuration($knownDuration);
+                if (!empty($routeResult['has_unestimated_transfer'])) {
+                    $routeResult['total_duration_display'] = $knownDuration > 0
+                        ? $routeResult['total_duration_display'] . ' local + transfer time'
+                        : 'Check flight/ferry schedule';
+                }
             }
         } catch (UnexpectedValueException $exception) {
             return back()
@@ -165,93 +282,207 @@ class RoutePlanningController extends Controller
             ->with('routeOptions', $routeOptions);
     }
 
-    /** Find the exact top routes from the first place using k-best Held-Karp. */
-    private function findOptimalRoutes(
+    /** Build local route legs and explicit air/sea transfers across Malaysia. */
+    private function buildCrossRegionRoute(
         array $places,
-        array $metrics,
-        string $preference,
-        int $optionCount,
-        string $travelMode = 'TRANSIT'
+        CarbonImmutable $planningStartDate,
+        CarbonImmutable $planningEndDate,
+        string $planningStartTime
+    ): array {
+        $legs = [];
+        $planningTimezone = config('app.timezone', 'Asia/Kuala_Lumpur');
+        $cursor = CarbonImmutable::parse(
+            $planningStartDate->toDateString() . ' ' . $planningStartTime,
+            $planningTimezone
+        );
+        $minimumStart = CarbonImmutable::now($planningTimezone)->addMinutes(2);
+        if ($cursor->isBefore($minimumStart)) {
+            $cursor = $minimumStart;
+        }
+        $transferBufferSeconds = 4 * 60 * 60;
+
+        for ($index = 0; $index < count($places) - 1; $index++) {
+            $from = $places[$index];
+            $to = $places[$index + 1];
+            $legDate = $cursor->startOfDay();
+            $visitMinutes = $this->suggestedVisitMinutes($from);
+
+            if ($this->placesRequireFlight([$from, $to])) {
+                $visitStart = $cursor;
+                $cursor = $cursor->addMinutes($visitMinutes);
+                $displayDate = $legDate->format('D, d M Y');
+                $displayTime = $cursor->format('g:i A');
+                $transferArrival = $cursor->addSeconds($transferBufferSeconds);
+                $legs[] = [
+                    'from' => $from['name'],
+                    'to' => $to['name'],
+                    'navigation_url' => null,
+                    'distance' => 0,
+                    'duration_minutes' => 240,
+                    'duration_seconds' => $transferBufferSeconds,
+                    'duration_display' => 'Estimated 4 hrs (not actual travel time)',
+                    'departure_time' => $displayTime,
+                    'arrival_time' => $transferArrival->format('g:i A'),
+                    'arrival_at' => $transferArrival->toIso8601String(),
+                    'trip_date' => $legDate->toDateString(),
+                    'trip_date_display' => $displayDate,
+                    'visit_place' => $from['name'],
+                    'visit_start_time' => $visitStart->format('g:i A'),
+                    'visit_end_time' => $cursor->format('g:i A'),
+                    'visit_duration_minutes' => $visitMinutes,
+                    'visit_duration_display' => $this->formatVisitDuration($visitMinutes),
+                    'segment_duration_display' => $this->formatDuration(
+                        $transferBufferSeconds + ($visitMinutes * 60)
+                    ),
+                    'steps' => [[
+                        'mode' => 'FLIGHT_OR_FERRY',
+                        'label' => 'Take a flight or ferry to East/West Malaysia',
+                        'from' => $from['name'],
+                        'to' => $to['name'],
+                        'departure_time' => $displayTime,
+                        'arrival_time' => $transferArrival->format('g:i A'),
+                        'duration' => 'Estimated 4 hrs — confirm with operator',
+                        'distance' => 'Not estimated',
+                    ]],
+                    'transport_summary' => 'Flight or ferry required',
+                    'fare' => null,
+                    'fare_currency' => null,
+                    'encoded_polylines' => [],
+                    'is_cross_region_transfer' => true,
+                ];
+                $cursor = $transferArrival;
+                continue;
+            }
+
+            try {
+                $localLegs = $this->getTransitLegs(
+                    [$from, $to],
+                    'TRANSIT',
+                    $legDate,
+                    $legDate,
+                    $cursor->format('H:i'),
+                    $cursor
+                );
+            } catch (Throwable $exception) {
+                $localLegs = $this->getTransitLegs(
+                    [$from, $to],
+                    'DRIVE',
+                    $legDate,
+                    $legDate,
+                    $cursor->format('H:i'),
+                    $cursor
+                );
+            }
+
+            $legs = [...$legs, ...$localLegs];
+            $cursor = $cursor
+                ->addMinutes($visitMinutes)
+                ->addSeconds(array_sum(array_column($localLegs, 'duration_seconds')));
+        }
+
+        $stops = array_map(fn (array $place): array => [
+            'name' => $place['name'],
+            'route_key' => $place['route_key'],
+            'place_id' => $place['place_id'] ?? null,
+            'latitude' => $place['latitude'] ?? null,
+            'longitude' => $place['longitude'] ?? null,
+            'suggested_visit_minutes' => $this->suggestedVisitMinutes($place),
+            'suggested_visit_display' => $this->formatVisitDuration($this->suggestedVisitMinutes($place)),
+            'distance_from_previous' => 0,
+        ], $places);
+
+        return [
+            'preference' => 'fastest',
+            'option_index' => 0,
+            'option_label' => 'Mixed transport',
+            'title' => 'Cross-region Malaysia itinerary',
+            'description' => 'Local routes are combined with a flight or ferry transfer while preserving your stop order.',
+            'stops' => $stops,
+            'total_distance' => array_sum(array_column($legs, 'distance')),
+            'total_duration_minutes' => (int) ceil(array_sum(array_column($legs, 'duration_seconds')) / 60),
+            'total_duration_display' => '',
+            'total_fare' => null,
+            'fare_currency' => null,
+            'travel_mode' => 'MIXED',
+            'transit_legs' => $legs,
+            'has_unestimated_transfer' => false,
+        ];
+    }
+
+    /** Build travel-mode alternatives without changing the user's stop order. */
+    private function buildTransportModeOptions(
+        array $places,
+        string $preference
     ): array
     {
-        $placeCount = count($places);
-        $metricName = match ($preference) {
-            'fastest' => 'durations',
-            'lowest_cost' => 'fares',
-            default => 'distances',
+        $path = array_keys($places);
+        $options = [];
+
+        foreach (['TRANSIT', 'DRIVE', 'WALK', 'BICYCLE'] as $travelMode) {
+            try {
+                $metrics = $this->getGoogleTransitMetrics($places, $travelMode);
+                $options[] = $this->buildRouteResult(
+                    $places,
+                    $metrics,
+                    $preference,
+                    $path,
+                    0,
+                    $travelMode
+                );
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        $sortField = match ($preference) {
+            'shortest' => 'total_distance',
+            'lowest_cost' => 'total_fare',
+            default => 'total_duration_minutes',
         };
-        $optimizationValues = $metrics[$metricName];
+        usort($options, function (array $left, array $right) use ($sortField): int {
+            $leftValue = $left[$sortField] ?? PHP_FLOAT_MAX;
+            $rightValue = $right[$sortField] ?? PHP_FLOAT_MAX;
+            return $leftValue <=> $rightValue;
+        });
 
-        if ($preference === 'lowest_cost') {
-            for ($origin = 0; $origin < $placeCount; $origin++) {
-                for ($destination = 0; $destination < $placeCount; $destination++) {
-                    if ($origin !== $destination && $optimizationValues[$origin][$destination] === null) {
-                        throw new UnexpectedValueException(
-                            __('route.fare_incomplete')
-                        );
-                    }
-                }
+        foreach ($options as $index => &$option) {
+            $option['option_index'] = $index;
+            $option['option_label'] = $this->travelModeLabel($option['travel_mode']);
+        }
+        unset($option);
+
+        return $options;
+    }
+
+    private function travelModeLabel(string $travelMode): string
+    {
+        return match ($travelMode) {
+            'DRIVE' => __('route.drive'),
+            'WALK' => __('route.walk'),
+            'BICYCLE' => __('route.cycle'),
+            default => __('route.public_transport'),
+        };
+    }
+
+    private function placesRequireFlight(array $places): bool
+    {
+        $hasEastMalaysia = false;
+        $hasPeninsularMalaysia = false;
+
+        foreach ($places as $place) {
+            $stateName = $place['state_name'] ?? null;
+            if (!$stateName) {
+                continue;
+            }
+
+            if (in_array($stateName, ['Sabah', 'Sarawak', 'Labuan'], true)) {
+                $hasEastMalaysia = true;
+            } else {
+                $hasPeninsularMalaysia = true;
             }
         }
 
-        $states = ['1,0' => [['cost' => 0.0, 'path' => [0]]]];
-        $allVisitedMask = (1 << $placeCount) - 1;
-
-        for ($mask = 1; $mask <= $allVisitedMask; $mask++) {
-            for ($last = 0; $last < $placeCount; $last++) {
-                $key = $mask . ',' . $last;
-                if (!isset($states[$key])) {
-                    continue;
-                }
-
-                foreach ($states[$key] as $candidate) {
-                    for ($next = 1; $next < $placeCount; $next++) {
-                        if (($mask & (1 << $next)) !== 0) {
-                            continue;
-                        }
-
-                        $nextMask = $mask | (1 << $next);
-                        $nextKey = $nextMask . ',' . $next;
-                        $states[$nextKey][] = [
-                            'cost' => $candidate['cost'] + $optimizationValues[$last][$next],
-                            'path' => [...$candidate['path'], $next],
-                        ];
-
-                        usort(
-                            $states[$nextKey],
-                            fn (array $left, array $right): int => $left['cost'] <=> $right['cost']
-                        );
-                        $states[$nextKey] = array_slice($states[$nextKey], 0, $optionCount);
-                    }
-                }
-            }
-        }
-
-        $completedRoutes = [];
-        for ($last = 1; $last < $placeCount; $last++) {
-            $completedRoutes = [
-                ...$completedRoutes,
-                ...($states[$allVisitedMask . ',' . $last] ?? []),
-            ];
-        }
-
-        usort(
-            $completedRoutes,
-            fn (array $left, array $right): int => $left['cost'] <=> $right['cost']
-        );
-
-        return array_map(
-            fn (array $candidate, int $index): array => $this->buildRouteResult(
-                $places,
-                $metrics,
-                $preference,
-                $candidate['path'],
-                $index,
-                $travelMode
-            ),
-            array_slice($completedRoutes, 0, $optionCount),
-            range(0, min($optionCount, count($completedRoutes)) - 1)
-        );
+        return $hasEastMalaysia && $hasPeninsularMalaysia;
     }
 
     private function buildRouteResult(
@@ -270,6 +501,8 @@ class RoutePlanningController extends Controller
                 'place_id' => $places[$placeIndex]['place_id'] ?? null,
                 'latitude' => $places[$placeIndex]['latitude'] ?? null,
                 'longitude' => $places[$placeIndex]['longitude'] ?? null,
+                'suggested_visit_minutes' => $this->suggestedVisitMinutes($places[$placeIndex]),
+                'suggested_visit_display' => $this->formatVisitDuration($this->suggestedVisitMinutes($places[$placeIndex])),
                 'distance_from_previous' => $position === 0
                     ? 0.0
                     : round($metrics['distances'][$path[$position - 1]][$placeIndex] / 1000, 2),
@@ -291,6 +524,10 @@ class RoutePlanningController extends Controller
                 $totals['fare'] += $metrics['fares'][$from][$to];
             }
         }
+
+        // Total itinerary duration includes the suggested time spent at every
+        // attraction as well as travel between stops.
+        $totals['duration'] += array_sum(array_column($stops, 'suggested_visit_minutes')) * 60;
 
         $labels = [
             'fastest' => [
@@ -463,15 +700,44 @@ class RoutePlanningController extends Controller
     /** Fetch a drawable transit route for each consecutive stop. */
     private function getTransitLegs(
         array $stops,
-        string $travelMode = 'TRANSIT'
+        string $travelMode = 'TRANSIT',
+        ?CarbonImmutable $planningStartDate = null,
+        ?CarbonImmutable $planningEndDate = null,
+        ?string $planningStartTime = null,
+        ?CarbonImmutable $initialDepartureTime = null
     ): array
     {
         $legs = [];
-        $departureTime = CarbonImmutable::now('UTC')->addMinutes(2);
+        $planningTimezone = config('app.timezone', 'Asia/Kuala_Lumpur');
+        $planningStartDate ??= CarbonImmutable::now($planningTimezone)->startOfDay();
+        $planningEndDate ??= $planningStartDate;
+        $planningStartTime ??= CarbonImmutable::now($planningTimezone)->format('H:i');
+        [$startHour, $startMinute] = array_map('intval', explode(':', $planningStartTime));
+        $dayCount = max(1, $planningStartDate->diffInDays($planningEndDate) + 1);
+        $legCount = max(1, count($stops) - 1);
+        $activeDayOffset = $initialDepartureTime ? 0 : null;
+        $departureTime = $initialDepartureTime
+            ? $initialDepartureTime->setTimezone($planningTimezone)
+            : CarbonImmutable::now($planningTimezone)->addMinutes(2);
 
         for ($index = 0; $index < count($stops) - 1; $index++) {
             $from = $stops[$index];
             $to = $stops[$index + 1];
+            $dayOffset = min($dayCount - 1, (int) floor($index * $dayCount / $legCount));
+
+            if ($activeDayOffset !== $dayOffset) {
+                $activeDayOffset = $dayOffset;
+                $scheduledStart = $planningStartDate->addDays($dayOffset)->setTime($startHour, $startMinute);
+                $minimumStart = CarbonImmutable::now($planningTimezone)->addMinutes(2);
+                $departureTime = $scheduledStart->isBefore($minimumStart)
+                    ? $minimumStart
+                    : $scheduledStart;
+            }
+
+            $visitMinutes = (int) ($from['suggested_visit_minutes']
+                ?? $this->suggestedVisitMinutes($from));
+            $visitStartTime = $departureTime;
+            $departureTime = $departureTime->addMinutes($visitMinutes);
 
             $routeRequest = [
                 'origin' => $this->routeWaypoint($from),
@@ -632,12 +898,27 @@ class RoutePlanningController extends Controller
             $legs[] = [
                 'from' => $from['name'],
                 'to' => $to['name'],
+                'destination_place_id' => $to['place_id'] ?? null,
+                'destination_latitude' => $to['latitude'] ?? null,
+                'destination_longitude' => $to['longitude'] ?? null,
+                'navigation_url' => $this->googleMapsNavigationUrl($to, $travelMode),
                 'distance' => round(($response['distanceMeters'] ?? 0) / 1000, 2),
                 'duration_minutes' => (int) ceil($durationSeconds / 60),
                 'duration_seconds' => $durationSeconds,
                 'duration_display' => $this->formatDuration($durationSeconds),
                 'departure_time' => $this->formatTime($departureTime),
                 'arrival_time' => $this->formatTime($arrivalTime),
+                'arrival_at' => $arrivalTime->toIso8601String(),
+                'trip_date' => $visitStartTime->toDateString(),
+                'trip_date_display' => $visitStartTime->format('D, d M Y'),
+                'visit_place' => $from['name'],
+                'visit_start_time' => $this->formatTime($visitStartTime),
+                'visit_end_time' => $this->formatTime($departureTime),
+                'visit_duration_minutes' => $visitMinutes,
+                'visit_duration_display' => $this->formatVisitDuration($visitMinutes),
+                'segment_duration_display' => $this->formatDuration(
+                    $durationSeconds + ($visitMinutes * 60)
+                ),
                 'steps' => $tripSteps,
                 'transport_summary' => implode(' → ', $transportParts),
                 'fare' => $fareValue !== null && $fareValue > 0
@@ -653,6 +934,31 @@ class RoutePlanningController extends Controller
         }
 
         return $legs;
+    }
+
+    private function googleMapsNavigationUrl(array $destination, string $travelMode): string
+    {
+        $destinationValue = isset($destination['latitude'], $destination['longitude'])
+            ? $destination['latitude'] . ',' . $destination['longitude']
+            : $destination['name'];
+
+        $parameters = [
+            'api' => 1,
+            'destination' => $destinationValue,
+            'travelmode' => match ($travelMode) {
+                'DRIVE' => 'driving',
+                'WALK' => 'walking',
+                'BICYCLE' => 'bicycling',
+                default => 'transit',
+            },
+            'dir_action' => 'navigate',
+        ];
+
+        if (!empty($destination['place_id'])) {
+            $parameters['destination_place_id'] = $destination['place_id'];
+        }
+
+        return 'https://www.google.com/maps/dir/?' . http_build_query($parameters);
     }
 
     private function routeWaypoint(array $place): array
@@ -703,9 +1009,14 @@ class RoutePlanningController extends Controller
         }
 
         $collection = $this->collectionForCurrentUser($collectionId);
-        $savedPlaces = ($collection
-            ? $this->savedPlacesForCollection($collection)
-            : $this->savedPlacesForCurrentUser())
+        $wishlistIds = collect($destinationKeys)->map(function ($destinationKey) {
+            return preg_match('/^wishlist:(\d+)$/', $destinationKey, $matches)
+                ? (int) $matches[1]
+                : null;
+        })->filter()->values();
+        $savedPlaces = $this->savedPlacesQuery($collection)
+            ->whereIn('wishlist_id', $wishlistIds)
+            ->get()
             ->keyBy(fn ($wishlist): string => 'wishlist:' . $wishlist->wishlist_id);
         $places = [];
 
@@ -720,6 +1031,13 @@ class RoutePlanningController extends Controller
                 'name' => $wishlist->attraction->attraction_name,
                 'place_id' => $wishlist->attraction->place_id,
                 'route_key' => $destinationKey,
+                'category' => $wishlist->attraction->category,
+                'state_name' => $wishlist->attraction->state?->state_name,
+                'is_east_malaysia' => in_array(
+                    $wishlist->attraction->state?->state_name,
+                    ['Sabah', 'Sarawak', 'Labuan'],
+                    true
+                ),
             ];
         }
 
@@ -728,10 +1046,7 @@ class RoutePlanningController extends Controller
 
     private function savedPlacesForCurrentUser()
     {
-        return Wishlist::with('attraction')
-            ->where('user_id', Auth::id())
-            ->whereHas('attraction', fn ($query) => $query->whereNotNull('place_id'))
-            ->get();
+        return $this->savedPlacesQuery()->get();
     }
 
     private function durationToSeconds(string $duration): float
@@ -781,11 +1096,23 @@ class RoutePlanningController extends Controller
 
     private function savedPlacesForCollection(SavedPlaceCollection $collection)
     {
-        return Wishlist::with('attraction')
+        return $this->savedPlacesQuery($collection)->get();
+    }
+
+    private function savedPlacesQuery(?SavedPlaceCollection $collection = null)
+    {
+        $query = Wishlist::with('attraction.state')
             ->where('user_id', Auth::id())
-            ->whereHas('attraction', fn ($query) => $query->whereNotNull('place_id'))
-            ->whereIn('attraction_id', $collection->items()->pluck('attraction_id'))
-            ->get();
+            ->whereHas('attraction', fn ($query) => $query->whereNotNull('place_id'));
+
+        if ($collection) {
+            $query->whereIn(
+                'attraction_id',
+                $collection->items()->select('attraction_id')
+            );
+        }
+
+        return $query;
     }
 
     private function transitLabel(array $line): string
@@ -814,17 +1141,53 @@ class RoutePlanningController extends Controller
         return $time->setTimezone('Asia/Kuala_Lumpur')->format('g:i A');
     }
 
-    private function formatDuration(float $seconds): string
+    private function suggestedVisitMinutes(array $place): int
     {
-        $minutes = (int) ceil($seconds / 60);
+        $text = strtolower(($place['category'] ?? '') . ' ' . ($place['name'] ?? ''));
+
+        return match (true) {
+            str_contains($text, 'theme park'),
+            str_contains($text, 'adventure'),
+            str_contains($text, 'water park') => 180,
+            str_contains($text, 'nature'),
+            str_contains($text, 'beach'),
+            str_contains($text, 'island'),
+            str_contains($text, 'hiking') => 150,
+            str_contains($text, 'museum'),
+            str_contains($text, 'heritage'),
+            str_contains($text, 'culture'),
+            str_contains($text, 'shopping') => 120,
+            str_contains($text, 'food'),
+            str_contains($text, 'cafe'),
+            str_contains($text, 'restaurant') => 90,
+            default => 120,
+        };
+    }
+
+    private function formatVisitDuration(int $minutes): string
+    {
         $hours = intdiv($minutes, 60);
         $remainingMinutes = $minutes % 60;
 
-        if ($hours === 0) {
-            return $remainingMinutes . ' min';
+        return ($hours > 0 ? $hours . ' hr' . ($hours > 1 ? 's' : '') : '')
+            . ($remainingMinutes > 0 ? ($hours > 0 ? ' ' : '') . $remainingMinutes . ' min' : '');
+    }
+
+    private function formatDuration(float $seconds): string
+    {
+        $minutes = (int) ceil($seconds / 60);
+        $days = intdiv($minutes, 1440);
+        $minutesAfterDays = $minutes % 1440;
+        $hours = intdiv($minutesAfterDays, 60);
+        $remainingMinutes = $minutesAfterDays % 60;
+
+        if ($days > 0) {
+            return $days . ' day' . ($days > 1 ? 's' : '')
+                . ' ' . $hours . ' hr' . ($hours !== 1 ? 's' : '')
+                . ' ' . $remainingMinutes . ' min';
         }
 
-        return $hours . ' hr' . ($hours > 1 ? 's' : '')
-            . ($remainingMinutes > 0 ? ' ' . $remainingMinutes . ' min' : '');
+        return $hours . ' hr' . ($hours !== 1 ? 's' : '')
+            . ' ' . $remainingMinutes . ' min';
     }
 }

@@ -158,6 +158,148 @@
     background: #eef2f0;
 }
 
+.route-trip-dates {
+    margin: 8px 0 0;
+    color: #52665e;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.flight-recommendation {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 1px solid #e6c66a;
+    border-radius: 12px;
+    background: #fff9e8;
+    color: #654d0b;
+}
+
+.flight-recommendation strong {
+    flex: 0 0 auto;
+}
+
+.cross-region-transfer-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    margin: 0 20px 20px;
+    padding: 22px;
+    border: 1px solid #a9d4c4;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f4fbf8 0%, #e7f5ef 100%);
+}
+
+.transfer-icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    place-items: center;
+    border-radius: 50%;
+    background: #1f6a52;
+    color: #ffffff;
+    font-size: 25px;
+}
+
+.transfer-kicker {
+    color: #28745b;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.transfer-route {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 7px 0;
+}
+
+.transfer-line {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    color: #28745b;
+}
+
+.transfer-line i {
+    flex: 1;
+    border-top: 1px dashed #68a991;
+}
+
+.transfer-line b {
+    padding: 0 7px;
+}
+
+.transfer-copy p,
+.transfer-copy small {
+    display: block;
+    margin: 0;
+    color: #52665e;
+}
+
+.cross-region-transfer-card > a {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #1f6a52;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+    .cross-region-transfer-card {
+        grid-template-columns: 1fr;
+    }
+
+    .cross-region-transfer-card > a {
+        text-align: center;
+    }
+}
+
+.route-start-time-field,
+.route-start-time-summary {
+    margin: 0 20px 18px;
+    padding: 12px 14px;
+    border: 1px solid #d7e7df;
+    border-radius: 10px;
+    background: #f8fbf9;
+}
+
+.route-start-time-field label,
+.route-start-time-field > small,
+.route-start-time-summary span {
+    display: block;
+    color: #52665e;
+    font-size: 12px;
+}
+
+.route-start-time-field input {
+    margin: 7px 0 4px;
+    padding: 8px 10px;
+    border: 1px solid #b9d6ca;
+    border-radius: 7px;
+}
+
+.route-start-time-summary strong {
+    display: block;
+    margin-top: 3px;
+    color: #173f30;
+}
+
+.route-field-error {
+    display: block;
+    margin-top: 5px;
+    color: #b42318;
+    font-size: 12px;
+}
+
 .route-options-heading {
     display: flex;
     justify-content: space-between;
@@ -484,7 +626,7 @@
 
 .guidance-button {
     align-self: flex-start;
-    margin: 0 12px 12px;
+    margin: 0;
     padding: 8px 10px;
     border: 1px solid #b9d6ca;
     border-radius: 6px;
@@ -493,10 +635,35 @@
     cursor: pointer;
     font-size: 11px;
     font-weight: 700;
+    text-decoration: none;
 }
 
 .guidance-button:hover {
     background: #e5f2ec;
+}
+
+.transit-leg-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 12px 12px;
+}
+
+.navigation-button {
+    background: #245943;
+    color: #ffffff;
+}
+
+.navigation-button:hover {
+    background: #173f30;
+}
+
+.stop-visit-suggestion {
+    display: block;
+    margin-top: 3px;
+    color: #6c7f77;
+    font-size: 11px;
+    font-weight: 500;
 }
 
 .guidance-modal {
@@ -922,6 +1089,33 @@
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 6px;
+}
+
+.saved-place-search {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 5px;
+}
+
+.saved-place-search input {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 12px;
+    border: 1px solid #bfd6ce;
+    border-radius: 7px;
+    background: #fff;
+    color: #123c32;
+}
+
+.saved-place-search small {
+    color: #687c75;
+}
+
+.itinerary-add .saved-place-load-more {
+    grid-column: 1 / -1;
+    justify-self: start;
+    background: transparent;
+    color: #17654f;
 }
 
 .itinerary-add label {

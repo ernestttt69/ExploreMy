@@ -40,6 +40,9 @@ Route::post('/logout', function (Request $request) {
 	$request->session()->invalidate();
 	$request->session()->regenerateToken();
 
+	return redirect('/login');
+})->middleware('auth')->name('logout');
+
 Route::middleware('auth')->group(function () {
 	Route::get('/trips', [ItineraryController::class, 'index'])->name('itineraries.index');
 	Route::post('/trips', [ItineraryController::class, 'store'])->name('itineraries.store');
@@ -62,10 +65,6 @@ Route::put('/shared/itineraries/{token}/items/{item}', [ItineraryController::cla
 Route::delete('/shared/itineraries/{token}/items/{item}', [ItineraryController::class, 'sharedDestroyItem'])->name('itineraries.shared.items.destroy');
 Route::post('/shared/itineraries/{token}/items/{item}/eco-alternative', [ItineraryController::class, 'sharedApplyEcoAlternative'])->name('itineraries.shared.items.eco');
 
-
-	return redirect('/login');
-})->middleware('auth')->name('logout');
-
 Route::get('/profile', [ProfileController::class, 'show'])
 	->middleware('auth')->name('profile');
 
@@ -85,6 +84,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/rewards/achievements/{achievement}/collect', [GreenRewardController::class, 'collectAchievement'])->name('rewards.achievements.collect');
     Route::get('/route-planning', [RoutePlanningController::class, 'index'])
         ->name('route.index');
+    Route::get('/route-planning/saved-places/search', [RoutePlanningController::class, 'searchSavedPlaces'])
+        ->name('route.saved-places.search');
 
     Route::post('/route-preference', [RoutePlanningController::class, 'storePreference'])
         ->name('route.preference');

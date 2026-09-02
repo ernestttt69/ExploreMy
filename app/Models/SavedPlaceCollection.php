@@ -11,7 +11,7 @@ class SavedPlaceCollection extends Model
     protected $table = 'saved_place_collections';
     protected $primaryKey = 'collection_id';
 
-    protected $fillable = ['user_id', 'name', 'start_date', 'end_date'];
+    protected $fillable = ['user_id', 'name', 'start_date', 'end_date', 'start_time'];
 
     public function user(): BelongsTo
     {

@@ -26,10 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const list = editor.querySelector('[data-itinerary-list]');
     const destinationSelect = editor.querySelector('[data-add-destination]');
     const addButton = editor.querySelector('[data-add-stop]');
+    const savedPlaceSearch = editor.querySelector('[data-saved-place-search]');
+    const savedPlaceSearchStatus = editor.querySelector('[data-saved-search-status]');
+    const savedPlaceLoadMore = editor.querySelector('[data-saved-place-load-more]');
     const countLabel = editor.querySelector('[data-destination-count]');
     const hint = editor.querySelector('[data-itinerary-hint]');
     const form = editor.closest('form');
     const minimumDestinations = 2;
+    const maximumDestinations = 8;
+    let savedPlaceSearchPage = 1;
+    let savedPlaceSearchHasMore = true;
+    let savedPlaceSearchTimer = null;
+    let savedPlaceSearchController = null;
 
     const updateEditor = () => {
         const items = [...list.querySelectorAll('.itinerary-item')];
@@ -48,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isValid = items.length >= minimumDestinations;
         hint.hidden = isValid;
         form.querySelector('.continue-button').disabled = !isValid;
+        addButton.disabled = items.length >= maximumDestinations;
     };
 
     const makeItem = (key, name) => {
@@ -67,7 +76,74 @@ document.addEventListener('DOMContentLoaded', () => {
         return item;
     };
 
+    const loadSavedPlaces = async (page = 1, append = false) => {
+        if (!savedPlaceSearch) return;
+
+        savedPlaceSearchController?.abort();
+        savedPlaceSearchController = new AbortController();
+        const url = new URL(savedPlaceSearch.dataset.searchUrl, window.location.origin);
+        const query = savedPlaceSearch.value.trim();
+        const collectionId = savedPlaceSearch.dataset.collectionId;
+        url.searchParams.set('page', String(page));
+        if (query) url.searchParams.set('q', query);
+        if (collectionId) url.searchParams.set('collection_id', collectionId);
+
+        savedPlaceSearchStatus.textContent = 'Searching...';
+        savedPlaceLoadMore.disabled = true;
+
+        try {
+            const response = await fetch(url, {
+                headers: {'Accept': 'application/json'},
+                signal: savedPlaceSearchController.signal,
+            });
+            if (!response.ok) throw new Error('Saved-place search failed.');
+            const result = await response.json();
+
+            if (!append) {
+                destinationSelect.replaceChildren(new Option(
+                    translations.choosePlace || 'Choose a place',
+                    ''
+                ));
+            }
+
+            result.data.forEach(place => {
+                if ([...destinationSelect.options].some(option => option.value === place.route_key)) return;
+                const details = [place.category, place.state].filter(Boolean).join(' · ');
+                const option = new Option(details ? `${place.name} — ${details}` : place.name, place.route_key);
+                option.dataset.name = place.name;
+                destinationSelect.add(option);
+            });
+
+            savedPlaceSearchPage = result.current_page;
+            savedPlaceSearchHasMore = result.has_more;
+            savedPlaceLoadMore.hidden = !savedPlaceSearchHasMore;
+            savedPlaceLoadMore.disabled = false;
+            savedPlaceSearchStatus.textContent = result.data.length
+                ? `${destinationSelect.options.length - 1} matching places loaded`
+                : 'No saved places found';
+            updateEditor();
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            savedPlaceSearchStatus.textContent = 'Could not load saved places. Please try again.';
+            savedPlaceLoadMore.disabled = false;
+        }
+    };
+
+    if (savedPlaceSearch) {
+        savedPlaceSearch.addEventListener('input', () => {
+            clearTimeout(savedPlaceSearchTimer);
+            savedPlaceSearchTimer = setTimeout(() => loadSavedPlaces(1, false), 300);
+        });
+        savedPlaceLoadMore.addEventListener('click', () => {
+            if (savedPlaceSearchHasMore) loadSavedPlaces(savedPlaceSearchPage + 1, true);
+        });
+    }
+
     addButton.addEventListener('click', () => {
+        if (list.querySelectorAll('.itinerary-item').length >= maximumDestinations) {
+            return;
+        }
+
         const option = destinationSelect.selectedOptions[0];
         if (!option || !option.value) {
             return;

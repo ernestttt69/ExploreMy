@@ -84,6 +84,11 @@
                         <input type="date" id="collection-end-date" name="end_date" value="{{ old('end_date') }}" min="{{ old('start_date') ?: today()->format('Y-m-d') }}" class="{{ $errors->has('end_date') ? 'input-error' : '' }}" required>
                         @error('end_date')<p class="collection-error">{{ $message }}</p>@enderror
                     </div>
+                    <div class="collection-date-field">
+                        <label for="collection-start-time">Trip starts at</label>
+                        <input type="time" id="collection-start-time" name="start_time" value="{{ old('start_time', '09:00') }}" class="{{ $errors->has('start_time') ? 'input-error' : '' }}" required>
+                        @error('start_time')<p class="collection-error">{{ $message }}</p>@enderror
+                    </div>
                 </div>
 
                 <label for="collection-places" id="collection-places-label">Select saved places</label>
@@ -154,6 +159,7 @@
                                         @if($collection->start_date && $collection->end_date)
                                             <p class="collection-dates">
                                                 📅 {{ \Carbon\Carbon::parse($collection->start_date)->format('M d') }} - {{ \Carbon\Carbon::parse($collection->end_date)->format('M d, Y') }}
+                                                @if($collection->start_time) &middot; {{ \Carbon\Carbon::parse($collection->start_time)->format('g:i A') }} @endif
                                             </p>
                                         @endif
                                     </div>
