@@ -31,11 +31,8 @@
                 <p>{{ $trip->destination ?: 'Malaysia' }} · {{ $trip->start_date?->format('d M Y') ?? 'Dates to be confirmed' }}{{ $trip->end_date ? ' - '.$trip->end_date->format('d M Y') : '' }}</p>
             </div>
             <div class="title-actions">
-                @if($canEdit)
-                    <button type="button" class="button button-primary" data-action="open-item-dialog">+ Add item</button>
-                @endif
                 @if(!$shareToken)
-                    <button type="button" class="button button-outline" data-action="save">Save</button>
+                    <button type="button" class="button button-outline" data-action="refresh-weather">Refresh weather</button>
                     <div class="export-menu">
                         <button type="button" class="button button-outline" data-action="toggle-export">Export ▾</button>
                         <div class="export-popover" id="export-popover" hidden>

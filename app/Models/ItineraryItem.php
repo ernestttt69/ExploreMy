@@ -14,6 +14,7 @@ class ItineraryItem extends Model
 
     protected $fillable = [
         'trip_id',
+        'place_id',
         'category',
         'title',
         'scheduled_date',
@@ -46,5 +47,10 @@ class ItineraryItem extends Model
     public function trip(): BelongsTo
     {
         return $this->belongsTo(Trip::class, 'trip_id', 'id');
+    }
+
+    public function place(): BelongsTo
+    {
+        return $this->belongsTo(MalaysianPlace::class, 'place_id');
     }
 }

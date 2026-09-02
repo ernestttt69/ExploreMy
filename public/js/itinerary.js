@@ -29,6 +29,8 @@
     let leafletMap = null;
     let leafletLayer = null;
     let draggedId = null;
+    let weatherByDate = {};
+    let weatherByStopId = {};
 
     const itemsElement = document.getElementById('itinerary-items');
     const mapElement = document.getElementById('map-view');
@@ -41,6 +43,7 @@
     hydrateFromCache();
     bindEvents();
     render();
+    loadWeather();
 
     if (offlineDirty && navigator.onLine && config.syncUrl) {
         syncOfflineEdits();
@@ -87,6 +90,8 @@
                 shareDialog.close();
             } else if (action === 'copy-share') {
                 copyShareLink();
+            } else if (action === 'refresh-weather') {
+                loadWeather(true);
             }
         });
 
@@ -186,6 +191,7 @@
             ${rail}
             <div class="day-content">
                 <div class="day-heading"><span>${escapeHtml(description)}</span><span>${escapeHtml(date === 'unscheduled' ? 'Flexible date' : '')}</span></div>
+                ${weatherMarkup(date)}
                 ${items.map(itemCardMarkup).join('')}
             </div>
         </section>`;
@@ -207,6 +213,7 @@
                 <button class="mini-action is-danger" type="button" data-action="delete-item" data-item-id="${item.item_id}">Delete</button>
             </div>`
             : '';
+        const placeWeather = weatherForItem(item);
         const ecoSuggestion = item.eco_suggestion && config.canEdit
             ? `<div class="suggestion-card"><p><strong>Lower-carbon option:</strong> Choose ${escapeHtml(item.eco_suggestion.label)} and save ${number(item.eco_suggestion.saving_kg)} kg CO<sub>2</sub>e. ${escapeHtml(item.eco_suggestion.reason)}</p><button type="button" class="button button-outline" data-action="apply-eco" data-item-id="${item.item_id}">Accept</button></div>`
             : '';
@@ -221,6 +228,7 @@
                     ${controls}
                 </div>
                 ${location}
+                ${placeWeather}
                 <div class="item-meta">
                     <span class="metric-tag">${escapeHtml(labels[item.category] || 'Item')}</span>
                     <span class="metric-tag">${number(item.carbon_kg)} kg CO<sub>2</sub>e</span>
@@ -620,6 +628,112 @@
         breakdownElement.innerHTML = Object.keys(breakdown).length
             ? Object.entries(breakdown).sort(([, a], [, b]) => b - a).map(([category, value]) => `<div class="breakdown-row"><span>${escapeHtml(labels[category] || category)}</span><strong>${number(value)} kg</strong></div>`).join('')
             : '<div class="breakdown-row"><span>Add an item to see your eco summary.</span></div>';
+    }
+
+    /**
+     * Load weather for all geocoded itinerary stops without blocking itinerary use.
+     */
+    function loadWeather(refresh) {
+        if (!config.weatherUrl || !navigator.onLine) {
+            return;
+        }
+
+        const separator = config.weatherUrl.includes('?') ? '&' : '?';
+        const url = refresh ? `${config.weatherUrl}${separator}refresh=1` : config.weatherUrl;
+
+        fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then((response) => response.ok ? response.json() : Promise.reject())
+            .then((payload) => {
+                weatherByDate = payload.stops.reduce((forecastGroups, stop) => {
+                    const date = stop.scheduled_date;
+                    forecastGroups[date] = forecastGroups[date] || [];
+                    forecastGroups[date].push(stop);
+                    return forecastGroups;
+                }, {});
+                weatherByStopId = payload.stops.reduce((stops, stop) => {
+                    stops[String(stop.stop_id)] = stop;
+                    return stops;
+                }, {});
+                render();
+
+                if (refresh) {
+                    showBanner('Weather forecast refreshed.');
+                }
+            })
+            .catch(() => {
+                if (refresh) {
+                    showBanner('Unable to load weather data at this time.', true);
+                }
+            });
+    }
+
+    /**
+     * Build the daily weather widget and any outdoor-activity warning.
+     */
+    function weatherMarkup(date) {
+        const stops = weatherByDate[date];
+
+        if (!stops || !stops.length) {
+            return '';
+        }
+
+        const forecast = stops.find((stop) => stop.weather.available)?.weather || stops[0].weather;
+
+        if (!forecast.available) {
+            return '<div class="weather-widget weather-unavailable">Weather is unavailable for this date.</div>';
+        }
+
+        const alerts = stops.filter((stop) => stop.requires_weather_alert);
+        const estimate = forecast.is_historical_estimate ? '<span class="weather-estimate">Historical climate estimate</span>' : '';
+        const stale = forecast.is_stale ? '<span class="weather-estimate">Last saved forecast</span>' : '';
+        const alertText = alerts.length
+            ? `<div class="weather-alert">Rain alert for outdoor stop${alerts.length === 1 ? '' : 's'}: ${alerts.map((stop) => escapeHtml(stop.title)).join(', ')}.</div>`
+            : '';
+
+        return `<div class="weather-widget">
+            <div class="weather-main"><span class="weather-icon">${weatherIcon(forecast.condition_code)}</span><strong>${escapeHtml(forecast.condition || 'Weather forecast')}</strong><span>${number(forecast.temperature_low)}° - ${number(forecast.temperature_high)}°C</span></div>
+            <div class="weather-meta"><span>Rain ${number(forecast.precipitation_probability)}%</span><span>Humidity ${number(forecast.humidity)}%</span><span>UV ${number(forecast.uv_index)}</span>${estimate}${stale}</div>
+            ${alertText}
+        </div>`;
+    }
+
+    /**
+     * Render the resolved Malaysian place and its forecast directly beside a stop.
+     */
+    function weatherForItem(item) {
+        const stop = weatherByStopId[String(item.item_id)];
+
+        if (!stop) {
+            return '';
+        }
+
+        const place = stop.place ? `<span class="place-link">⌖ ${escapeHtml(stop.place.display_name)}</span>` : '';
+
+        if (!stop.weather.available) {
+            return `<div class="item-place-weather">${place}<span class="item-weather-muted">Weather unavailable</span></div>`;
+        }
+
+        const forecast = stop.weather;
+        const alert = stop.requires_weather_alert ? '<span class="item-weather-alert">Rain alert</span>' : '';
+        const estimate = forecast.is_historical_estimate ? '<span class="item-weather-muted">Climate estimate</span>' : '';
+
+        return `<div class="item-place-weather">${place}<span class="item-weather">${weatherIcon(forecast.condition_code)} ${number(forecast.temperature_low)}°-${number(forecast.temperature_high)}°C · Rain ${number(forecast.precipitation_probability)}%</span>${estimate}${alert}</div>`;
+    }
+
+    /**
+     * Convert a weather code into a compact visual indicator.
+     */
+    function weatherIcon(code) {
+        if ([61, 63, 65, 66, 67, 80, 81, 82].includes(Number(code))) return '☂';
+        if ([95, 96, 99].includes(Number(code))) return 'ϟ';
+        if ([71, 73, 75, 77, 85, 86].includes(Number(code))) return '❄';
+        if ([1, 2, 3].includes(Number(code))) return '☁';
+        return '☀';
     }
 
     /**
