@@ -24,8 +24,8 @@
                 <a class="back-link" href="{{ auth()->check() ? route('itineraries.index') : '#' }}">← My trips</a>
                 <div class="title-line">
                     <h1>{{ $trip->title }}</h1>
-                    @if($sharedPermission)
-                        <span class="permission-badge">{{ $sharedPermission === 'edit' ? 'Collaborative link' : 'View-only link' }}</span>
+                @if($sharedPermission)
+                        <span class="permission-badge">View-only link</span>
                     @endif
                 </div>
                 <p>{{ $trip->destination ?: 'Malaysia' }} · {{ $trip->start_date?->format('d M Y') ?? 'Dates to be confirmed' }}{{ $trip->end_date ? ' - '.$trip->end_date->format('d M Y') : '' }}</p>
@@ -33,13 +33,8 @@
             <div class="title-actions">
                 @if(!$shareToken)
                     <button type="button" class="button button-outline" data-action="refresh-weather">Refresh weather</button>
-                    <div class="export-menu">
-                        <button type="button" class="button button-outline" data-action="toggle-export">Export ▾</button>
-                        <div class="export-popover" id="export-popover" hidden>
-                            <a href="{{ route('itineraries.export.pdf', $trip) }}">Download PDF</a>
-                            <a href="{{ route('itineraries.export.calendar', $trip) }}">Download calendar (.ics)</a>
-                        </div>
-                    </div>
+                    <button type="button" class="button button-primary" data-action="save">Save changes</button>
+                    <a class="button button-outline" href="{{ route('itineraries.export.pdf', $trip) }}">Export PDF</a>
                     <button type="button" class="button button-outline" data-action="open-share-dialog">Share</button>
                 @endif
             </div>
@@ -212,11 +207,9 @@
             <button type="button" class="icon-button" aria-label="Close" data-action="close-share-dialog">×</button>
         </div>
         <label>
-            Permission
-            <select name="permission" id="share-permission">
-                <option value="view">View-only (recommended)</option>
-                <option value="edit">Collaborative editing</option>
-            </select>
+            Share permission
+            <input type="text" value="View only" readonly>
+            <input type="hidden" name="permission" value="view">
         </label>
         <label>
             Link expiry <span class="muted">(optional)</span>

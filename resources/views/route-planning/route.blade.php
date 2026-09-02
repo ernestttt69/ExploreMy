@@ -7,6 +7,7 @@
     rel="stylesheet"
     href="{{ asset('css/route-planning.css') }}?v={{ filemtime(public_path('css/route-planning.css')) }}"
 >
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 @endpush
 
 @section('content')
@@ -200,17 +201,13 @@
                 </section>
             @endif
 
-            @if ($googleMapsBrowserKey && !$isFlightOnlyRoute)
+            @if (!$isFlightOnlyRoute)
                 <div
                     id="route-map"
                     class="route-map"
                     role="img"
                     aria-label="{{ __('route.map_aria', ['mode' => $routeResult['option_label']]) }}"
                 ></div>
-            @elseif (($routeResult['travel_mode'] ?? null) !== 'MIXED')
-                <div class="route-map-warning">
-                    {{ __('route.map_key') }}
-                </div>
             @endif
 
             <div class="trip-overview">
@@ -383,7 +380,7 @@
                 <h2>{{ __('route.preference') }}</h2>
                 <p>{{ __('route.optimise') }}</p>
             </div>
-            <p class="google-attribution">Powered by Google, &copy; {{ date('Y') }} Google</p>
+            <p class="google-attribution">Map data &copy; OpenStreetMap contributors</p>
 
             @if($collection)
                 <div class="route-start-time-summary">
@@ -552,13 +549,11 @@
 window.routeTranslations = {{ Illuminate\Support\Js::from($routeTranslations) }};
 </script>
 <script src="{{ asset('js/route-planning.js') }}?v={{ filemtime(public_path('js/route-planning.js')) }}"></script>
-@if (session('routeResult') && $googleMapsBrowserKey && !($isFlightOnlyRoute ?? false))
+@if (session('routeResult') && !($isFlightOnlyRoute ?? false))
     <script type="application/json" id="route-map-data">
         @json(session('routeResult'))
     </script>
-    <script
-        async
-        src="https://maps.googleapis.com/maps/api/js?key={{ urlencode($googleMapsBrowserKey) }}&libraries=geometry&callback=initRouteMap"
-    ></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>initRouteMap();</script>
 @endif
 @endpush

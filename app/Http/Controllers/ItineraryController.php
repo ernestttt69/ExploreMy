@@ -79,10 +79,10 @@ class ItineraryController extends Controller
         return view('itineraries.show', [
             'trip' => $trip,
             'itinerary' => $this->tripPayload($trip),
-            'canEdit' => false,
+            'canEdit' => true,
             'shareToken' => null,
             'sharedPermission' => null,
-            'clientConfig' => $this->clientConfig($trip, false),
+            'clientConfig' => $this->clientConfig($trip, true),
         ]);
     }
 
@@ -215,7 +215,7 @@ class ItineraryController extends Controller
     {
         $trip = $this->ownedTrip($trip);
         $data = $request->validate([
-            'permission' => ['required', Rule::in(['view', 'edit'])],
+            'permission' => ['required', Rule::in(['view'])],
             'expires_at' => ['nullable', 'date', 'after:now'],
         ]);
         $token = Str::random(64);
@@ -238,7 +238,7 @@ class ItineraryController extends Controller
     /**
      * Download a PDF itinerary and eco summary without an external PDF package.
      */
-    public function exportPdf(Trip $trip)
+    public function exportPdf(Trip $trip): \Illuminate\Http\Response
     {
         $trip = $this->ownedTrip($trip);
         $filename = Str::slug($trip->title ?: 'itinerary').'-itinerary.pdf';
@@ -252,7 +252,7 @@ class ItineraryController extends Controller
     /**
      * Download a calendar-compatible ICS copy of the itinerary.
      */
-    public function exportCalendar(Trip $trip)
+    public function exportCalendar(Trip $trip): \Illuminate\Http\Response
     {
         $trip = $this->ownedTrip($trip);
         $filename = Str::slug($trip->title ?: 'itinerary').'-itinerary.ics';
@@ -557,19 +557,20 @@ class ItineraryController extends Controller
     private function clientConfig(Trip $trip, bool $canEdit, ?string $shareToken = null): array
     {
         $shared = $shareToken !== null;
+        $itemTemplate = '__ITEM__';
 
         return [
             'itinerary' => $this->tripPayload($trip),
             'canEdit' => $canEdit,
             'isShared' => $shared,
             'csrfToken' => csrf_token(),
-            'itemStoreUrl' => null,
-            'itemUrlTemplate' => null,
-            'itemDeleteUrlTemplate' => null,
-            'ecoUrlTemplate' => null,
-            'saveUrl' => null,
-            'syncUrl' => null,
-            'reorderUrl' => null,
+            'itemStoreUrl' => $canEdit ? route('itineraries.items.store', $trip) : null,
+            'itemUrlTemplate' => $canEdit ? route('itineraries.items.update', [$trip, $itemTemplate]) : null,
+            'itemDeleteUrlTemplate' => $canEdit ? route('itineraries.items.destroy', [$trip, $itemTemplate]) : null,
+            'ecoUrlTemplate' => $canEdit ? route('itineraries.items.eco', [$trip, $itemTemplate]) : null,
+            'saveUrl' => $canEdit ? route('itineraries.save', $trip) : null,
+            'syncUrl' => $canEdit ? route('itineraries.sync', $trip) : null,
+            'reorderUrl' => $canEdit ? route('itineraries.items.reorder', $trip) : null,
             'shareUrl' => $shared ? null : route('itineraries.share', $trip),
             'weatherUrl' => $shared ? null : route('itinerary.weather', ['itinerary_id' => $trip->getKey()]),
         ];

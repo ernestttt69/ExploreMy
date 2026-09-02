@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        // The preceding migration leaves the SQLite-compatible schema in its
+        // final usable form without unsupported column-alter operations.
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Step 1: Make attraction_id not nullable (data already backfilled)
         DB::statement('ALTER TABLE saved_place_collection_items MODIFY attraction_id INT UNSIGNED NOT NULL');
 

@@ -81,4 +81,32 @@ class AuthController extends Controller
             ], 500);
         }
 	}
+
+	/**
+	 * Sign in with a local test account when external OAuth is unavailable.
+	 *
+	 * This route is deliberately limited to the local environment, so it can
+	 * never provide an authentication bypass in staging or production.
+	 */
+	public function localLogin(Request $request)
+	{
+		abort_unless(app()->environment('local'), 404);
+
+		$user = User::firstOrCreate(
+			['email' => 'developer@exploremy.local'],
+			[
+				'google_id' => 'local-development-user',
+				'name' => 'Local Developer',
+				'preferred_language' => 'en',
+				'personalisation_consent' => true,
+			]
+		);
+
+		Auth::login($user);
+		$request->session()->regenerate();
+
+		$user->forceFill(['last_login_at' => Carbon::now()])->save();
+
+		return redirect()->route('dashboard');
+	}
 }

@@ -156,14 +156,6 @@ class RoutePlanningController extends Controller
             return back()->withInput()->withErrors(['route' => $exception->getMessage()]);
         }
 
-        if (empty(config('services.google_maps.routes_api_key'))) {
-            return back()
-                ->withInput()
-                ->withErrors([
-                    'route' => __('messages.route_api_missing'),
-                ]);
-        }
-
         $collection = ($validated['source'] ?? null) === 'saved'
             ? $this->collectionForCurrentUser($validated['collection_id'] ?? null)
             : null;
@@ -569,6 +561,10 @@ class RoutePlanningController extends Controller
         bool $allowPartial = false
     ): array
     {
+        if ($this->usesLocalRouting()) {
+            return $this->localRouteMetrics($places, $travelMode);
+        }
+
         $waypoints = array_map(fn (array $place): array => [
             'waypoint' => $this->routeWaypoint($place),
         ], $places);
@@ -707,6 +703,17 @@ class RoutePlanningController extends Controller
         ?CarbonImmutable $initialDepartureTime = null
     ): array
     {
+        if ($this->usesLocalRouting()) {
+            return $this->localTransitLegs(
+                $stops,
+                $travelMode,
+                $planningStartDate,
+                $planningEndDate,
+                $planningStartTime,
+                $initialDepartureTime
+            );
+        }
+
         $legs = [];
         $planningTimezone = config('app.timezone', 'Asia/Kuala_Lumpur');
         $planningStartDate ??= CarbonImmutable::now($planningTimezone)->startOfDay();
@@ -934,6 +941,142 @@ class RoutePlanningController extends Controller
         }
 
         return $legs;
+    }
+
+    /**
+     * Use estimates when no routing provider is configured. This keeps the
+     * local application usable without API keys or outbound server access.
+     */
+    private function usesLocalRouting(): bool
+    {
+        return empty(config('services.google_maps.routes_api_key'));
+    }
+
+    /** Build a local distance matrix from coordinates, with no HTTP request. */
+    private function localRouteMetrics(array $places, string $travelMode): array
+    {
+        $count = count($places);
+        $distances = array_fill(0, $count, array_fill(0, $count, 0.0));
+        $durations = array_fill(0, $count, array_fill(0, $count, 0.0));
+        $fares = array_fill(0, $count, array_fill(0, $count, null));
+        $speedKph = match ($travelMode) {
+            'DRIVE' => 40.0,
+            'BICYCLE' => 14.0,
+            'WALK' => 4.5,
+            default => 24.0,
+        };
+        $roadFactor = $travelMode === 'WALK' ? 1.1 : 1.25;
+
+        for ($origin = 0; $origin < $count; $origin++) {
+            for ($destination = 0; $destination < $count; $destination++) {
+                if ($origin === $destination) {
+                    $fares[$origin][$destination] = 0.0;
+                    continue;
+                }
+
+                $straightLineMetres = $this->straightLineMetres(
+                    $places[$origin],
+                    $places[$destination]
+                );
+                $distanceMetres = $straightLineMetres * $roadFactor;
+                $distances[$origin][$destination] = $distanceMetres;
+                $durations[$origin][$destination] = max(
+                    60,
+                    ($distanceMetres / 1000) / $speedKph * 3600
+                );
+            }
+        }
+
+        return [
+            'distances' => $distances,
+            'durations' => $durations,
+            'fares' => $fares,
+            'fare_currency' => null,
+        ];
+    }
+
+    /** Create a displayable local itinerary without external routing data. */
+    private function localTransitLegs(
+        array $stops,
+        string $travelMode,
+        ?CarbonImmutable $planningStartDate,
+        ?CarbonImmutable $planningEndDate,
+        ?string $planningStartTime,
+        ?CarbonImmutable $initialDepartureTime
+    ): array {
+        $timezone = config('app.timezone', 'Asia/Kuala_Lumpur');
+        $planningStartDate ??= CarbonImmutable::now($timezone)->startOfDay();
+        $planningStartTime ??= CarbonImmutable::now($timezone)->format('H:i');
+        $departure = $initialDepartureTime
+            ? $initialDepartureTime->setTimezone($timezone)
+            : $planningStartDate->setTime(...array_map('intval', explode(':', $planningStartTime)));
+        $minimumStart = CarbonImmutable::now($timezone)->addMinutes(2);
+        if ($departure->isBefore($minimumStart)) {
+            $departure = $minimumStart;
+        }
+
+        $metrics = $this->localRouteMetrics($stops, $travelMode);
+        $legs = [];
+        for ($index = 0; $index < count($stops) - 1; $index++) {
+            $from = $stops[$index];
+            $to = $stops[$index + 1];
+            $visitMinutes = (int) ($from['suggested_visit_minutes'] ?? $this->suggestedVisitMinutes($from));
+            $visitStart = $departure;
+            $departure = $departure->addMinutes($visitMinutes);
+            $durationSeconds = (int) ceil($metrics['durations'][$index][$index + 1]);
+            $distanceMetres = $metrics['distances'][$index][$index + 1];
+            $arrival = $departure->addSeconds($durationSeconds);
+            $modeLabel = $this->travelModeLabel($travelMode);
+
+            $legs[] = [
+                'from' => $from['name'], 'to' => $to['name'],
+                'navigation_url' => null,
+                'distance' => round($distanceMetres / 1000, 2),
+                'duration_minutes' => (int) ceil($durationSeconds / 60),
+                'duration_seconds' => $durationSeconds,
+                'duration_display' => $this->formatDuration($durationSeconds),
+                'departure_time' => $this->formatTime($departure),
+                'arrival_time' => $this->formatTime($arrival),
+                'arrival_at' => $arrival->toIso8601String(),
+                'trip_date' => $visitStart->toDateString(),
+                'trip_date_display' => $visitStart->format('D, d M Y'),
+                'visit_place' => $from['name'],
+                'visit_start_time' => $this->formatTime($visitStart),
+                'visit_end_time' => $this->formatTime($departure),
+                'visit_duration_minutes' => $visitMinutes,
+                'visit_duration_display' => $this->formatVisitDuration($visitMinutes),
+                'segment_duration_display' => $this->formatDuration($durationSeconds + $visitMinutes * 60),
+                'steps' => [[
+                    'mode' => $travelMode, 'label' => $modeLabel,
+                    'from' => $from['name'], 'to' => $to['name'],
+                    'departure_time' => $this->formatTime($departure),
+                    'arrival_time' => $this->formatTime($arrival),
+                    'duration' => $this->formatDuration($durationSeconds),
+                    'distance' => round($distanceMetres / 1000, 2) . ' km',
+                ]],
+                'transport_summary' => $modeLabel . ' estimate (offline)',
+                'fare' => null, 'fare_currency' => null,
+                'encoded_polylines' => [],
+            ];
+            $departure = $arrival;
+        }
+
+        return $legs;
+    }
+
+    private function straightLineMetres(array $from, array $to): float
+    {
+        if (!isset($from['latitude'], $from['longitude'], $to['latitude'], $to['longitude'])) {
+            return 0.0;
+        }
+        $earthRadius = 6371000;
+        $latitudeDelta = deg2rad((float) $to['latitude'] - (float) $from['latitude']);
+        $longitudeDelta = deg2rad((float) $to['longitude'] - (float) $from['longitude']);
+        $a = sin($latitudeDelta / 2) ** 2
+            + cos(deg2rad((float) $from['latitude'])) * cos(deg2rad((float) $to['latitude']))
+            * sin($longitudeDelta / 2) ** 2;
+
+        return $earthRadius * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 
     private function googleMapsNavigationUrl(array $destination, string $travelMode): string

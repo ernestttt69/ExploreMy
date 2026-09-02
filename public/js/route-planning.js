@@ -248,23 +248,24 @@ window.initRouteMap = () => {
     const dataElement = document.getElementById('route-map-data');
     const route = dataElement ? JSON.parse(dataElement.textContent) : null;
 
-    if (!mapElement || !route || !window.google) {
+    if (!mapElement || !route || !window.L) {
         return;
     }
 
     const firstLocatedStop = route.stops.find(
         stop => stop.latitude !== null && stop.longitude !== null
     );
-    const map = new google.maps.Map(mapElement, {
-        center: firstLocatedStop ? {
-            lat: firstLocatedStop.latitude,
-            lng: firstLocatedStop.longitude,
-        } : {lat: 4.2105, lng: 101.9758},
-        zoom: 14,
-        mapTypeControl: false,
-        streetViewControl: false,
-    });
-    const bounds = new google.maps.LatLngBounds();
+    const map = L.map(mapElement).setView(
+        firstLocatedStop
+            ? [firstLocatedStop.latitude, firstLocatedStop.longitude]
+            : [4.2105, 101.9758],
+        12
+    );
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+    const points = [];
     const colours = ['#1565c0', '#7b1fa2', '#00897b', '#ef6c00', '#c62828'];
 
     route.stops.forEach((stop, index) => {
@@ -272,34 +273,16 @@ window.initRouteMap = () => {
             return;
         }
 
-        const position = {lat: stop.latitude, lng: stop.longitude};
-        bounds.extend(position);
-
-        new google.maps.Marker({
-            map,
-            position,
-            label: String(index + 1),
-            title: stop.name,
-        });
+        const position = [stop.latitude, stop.longitude];
+        points.push(position);
+        L.marker(position).addTo(map).bindTooltip(`${index + 1}. ${stop.name}`);
     });
 
-    route.transit_legs.forEach((leg, index) => {
-        leg.encoded_polylines.forEach(encodedPolyline => {
-            const path = google.maps.geometry.encoding.decodePath(
-                encodedPolyline
-            );
+    if (points.length > 1) {
+        L.polyline(points, {
+            color: colours[0], opacity: 0.9, weight: 5, dashArray: '8 6',
+        }).addTo(map);
+        map.fitBounds(L.latLngBounds(points), {padding: [40, 40]});
+    }
 
-            path.forEach(point => bounds.extend(point));
-
-            new google.maps.Polyline({
-                map,
-                path,
-                strokeColor: colours[index % colours.length],
-                strokeOpacity: 0.9,
-                strokeWeight: 5,
-            });
-        });
-    });
-
-    map.fitBounds(bounds, 40);
 };

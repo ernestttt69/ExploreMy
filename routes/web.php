@@ -29,6 +29,8 @@ Route::get('/login', [AuthController::class, 'login'])->name('login');
 
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
+Route::post('/local-login', [AuthController::class, 'localLogin'])->name('local.login');
+
 Route::get('/dashboard', function () {
 	/** @var \App\Models\User $user */
 	$user = auth()->user();
@@ -56,6 +58,13 @@ Route::middleware('auth')->group(function () {
 	Route::get('/trips', [ItineraryController::class, 'index'])->name('itineraries.index');
 	Route::post('/trips', [ItineraryController::class, 'store'])->name('itineraries.store');
 	Route::get('/trips/{trip}', [ItineraryController::class, 'show'])->name('itineraries.show');
+	Route::post('/trips/{trip}/items', [ItineraryController::class, 'storeItem'])->name('itineraries.items.store');
+	Route::put('/trips/{trip}/items/{item}', [ItineraryController::class, 'updateItem'])->name('itineraries.items.update');
+	Route::delete('/trips/{trip}/items/{item}', [ItineraryController::class, 'destroyItem'])->name('itineraries.items.destroy');
+	Route::post('/trips/{trip}/items/reorder', [ItineraryController::class, 'reorder'])->name('itineraries.items.reorder');
+	Route::post('/trips/{trip}/items/{item}/eco-alternative', [ItineraryController::class, 'applyEcoAlternative'])->name('itineraries.items.eco');
+	Route::post('/trips/{trip}/save', [ItineraryController::class, 'save'])->name('itineraries.save');
+	Route::post('/trips/{trip}/sync', [ItineraryController::class, 'sync'])->name('itineraries.sync');
 	Route::post('/trips/{trip}/share', [ItineraryController::class, 'share'])->name('itineraries.share');
 	Route::get('/trips/{trip}/export/pdf', [ItineraryController::class, 'exportPdf'])->name('itineraries.export.pdf');
 	Route::get('/trips/{trip}/export/calendar', [ItineraryController::class, 'exportCalendar'])->name('itineraries.export.calendar');

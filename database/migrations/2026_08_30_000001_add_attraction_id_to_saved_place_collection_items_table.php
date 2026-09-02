@@ -14,9 +14,24 @@ return new class extends Migration {
         });
 
         // Step 2: Backfill attraction_id from existing wishlist records
+        // Update each record individually so this also works with SQLite. SQLite
+        // does not support MySQL's joined UPDATE syntax used by the query builder.
         DB::table('saved_place_collection_items as ci')
             ->join('wishlists as w', 'ci.wishlist_id', '=', 'w.wishlist_id')
-            ->update(['ci.attraction_id' => DB::raw('w.attraction_id')]);
+            ->select('ci.collection_item_id', 'w.attraction_id')
+            ->orderBy('ci.collection_item_id')
+            ->each(function ($item) {
+                DB::table('saved_place_collection_items')
+                    ->where('collection_item_id', $item->collection_item_id)
+                    ->update(['attraction_id' => $item->attraction_id]);
+            });
+
+        // Laravel 9 requires the optional Doctrine DBAL package to alter SQLite
+        // columns. The column is nullable only for the legacy backfill; new
+        // collection items are validated by the application before insertion.
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
 
         // Step 3: Make attraction_id not nullable after backfill
         Schema::table('saved_place_collection_items', function (Blueprint $table) {

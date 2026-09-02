@@ -61,6 +61,15 @@
 			</small>
 		</div>
 
+		@if (app()->environment('local'))
+			<form method="POST" action="{{ route('local.login') }}" class="mt-3">
+				@csrf
+				<button type="submit" class="btn btn-outline-secondary btn-sm">
+					Continue as local developer
+				</button>
+			</form>
+		@endif
+
 	</div>
 </div>
 
