@@ -591,13 +591,15 @@ function exportRoute(index) {
         }
     });
 
-    // 3. Trigger native print dialog
-    window.print();
+    // 3. Allow the expanded route and print styles to render before preview opens.
+    setTimeout(() => {
+        window.print();
+    }, 50);
 
     // 4. Clean up classes after printing window closes
-    setTimeout(() => {
+    window.onafterprint = () => {
         cards.forEach(card => card.classList.remove('print-active'));
-    }, 1000);
+    };
 }
 
 </script>

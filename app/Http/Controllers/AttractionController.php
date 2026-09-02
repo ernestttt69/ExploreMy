@@ -60,23 +60,11 @@ class AttractionController extends Controller
         if ($searchSubmitted) {
             $search = trim($request->input('search'));
 
-            $query->where(function ($q) use ($search) {
-                $q->where(
-                    'attraction_name',
-                    'like',
-                    '%' . $search . '%'
-                )
-                ->orWhere(
-                    'location',
-                    'like',
-                    '%' . $search . '%'
-                )
-                ->orWhere(
-                    'description',
-                    'like',
-                    '%' . $search . '%'
-                );
-            });
+            $query->where(
+                'attraction_name',
+                'like',
+                '%' . $search . '%'
+            );
 
             if ($request->filled('state_id')) {
                 $query->where(
