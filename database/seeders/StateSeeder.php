@@ -2,16 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\State;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class StateSeeder extends Seeder
 {
     public function run(): void
     {
-        $states = [1 => 'Johor', 2 => 'Kedah', 3 => 'Kelantan', 4 => 'Melaka', 5 => 'Negeri Sembilan', 6 => 'Pahang', 7 => 'Penang', 8 => 'Perak', 9 => 'Perlis', 10 => 'Sabah', 11 => 'Sarawak', 12 => 'Selangor', 13 => 'Terengganu', 14 => 'Kuala Lumpur', 15 => 'Labuan', 16 => 'Putrajaya'];
-        foreach ($states as $id => $name) {
-            State::updateOrCreate(['state_id' => $id], ['state_name' => $name]);
-        }
+        $rows = json_decode(file_get_contents(database_path('seeders/data/states.json')), true, 512, JSON_THROW_ON_ERROR);
+        DB::table('states')->upsert($rows, ['state_id'], ['state_name']);
     }
 }

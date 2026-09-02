@@ -17,5 +17,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PreferenceCategorySeeder::class);
         $this->call(StateSeeder::class);
         $this->call(AttractionSeeder::class);
+        $this->call(AttractionPreferenceSeeder::class);
     }
 }

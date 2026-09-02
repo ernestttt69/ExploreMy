@@ -5,7 +5,7 @@
 
 			<div class="d-flex justify-content-between align-items-center">
 
-				<a href="{{ route('dashboard') }}" class="nav-brand-container text-decoration-none" aria-label="Back to dashboard">
+				<a href="{{ route('explore') }}" class="nav-brand-container text-decoration-none" aria-label="Explore Malaysia">
 
 					<div class="nav-logo-badge">
 						<img src="{{ asset('images/ExploreMy_icon.jpeg') }}">
@@ -19,6 +19,7 @@
 
 				<div class="d-flex align-items-center gap-3">
 
+					@auth
 					<a href="{{ route('profile') }}" class="nav-user-pill text-decoration-none text-dark">
 
 						<img src="{{ Auth::user()->profile_picture }}" class="nav-avatar">
@@ -29,14 +30,12 @@
 
 					</a>
 
-					<form method="POST" action="{{ route('logout') }}">
-						@csrf
-
-						<button class="btn btn-logout">
+					<a href="{{ route('logout') }}" class="btn btn-logout text-decoration-none">
 							{{ __('ui.nav.logout') }}
-						</button>
-
-					</form>
+					</a>
+					@else
+					<a href="{{ route('login') }}" class="btn btn-logout text-decoration-none">Login</a>
+					@endauth
 
 				</div>
 
@@ -55,7 +54,7 @@
 				</li>
 
 				<li>
-					<a href="{{ route('attractions.index') }}" class="nav-link-custom {{ request()->routeIs('attractions.*') ? 'active' : '' }}">
+					<a href="{{ route('explore') }}" class="nav-link-custom {{ request()->routeIs('explore') ? 'active' : '' }}">
 						{{ __('ui.nav.explore') }}
 					</a>
 				</li>

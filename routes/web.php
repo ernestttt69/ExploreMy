@@ -7,14 +7,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SavedPlaceController;
 use App\Http\Controllers\TravelPreferenceController;
 use App\Http\Controllers\TransportController;
-use App\Http\Controllers\AttractionController;
+use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\Admin\AttractionController as AdminAttractionController;
 use App\Http\Controllers\Admin\AdminAuthController;
 
 
-Route::get('/', function () {
-	return redirect('/login');
-});
+Route::get('/', [ExploreController::class, 'index'])->name('explore');
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 
@@ -33,12 +31,12 @@ Route::get('/trips', function () {
     return view('trips.index');
 })->middleware('auth')->name('trips.index');
 
-Route::post('/logout', function (Request $request) {
+Route::get('/logout', function (Request $request) {
 	auth()->logout();
 	$request->session()->invalidate();
 	$request->session()->regenerateToken();
 
-	return redirect('/login');
+	return redirect()->route('explore');
 })->middleware('auth')->name('logout');
 
 Route::get('/profile', [ProfileController::class, 'show'])
@@ -51,16 +49,9 @@ Route::post('/profile/update',[ProfileController::class,'update'])
 Route::delete('/profile', [ProfileController::class, 'destroy'])
 	->middleware('auth')->name('profile.destroy');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/attractions', [AttractionController::class, 'index'])
-        ->name('attractions.index');
-    Route::get('/attractions/{id}', [AttractionController::class, 'show'])
-        ->name('attractions.show');
-    Route::post('/attractions/{id}/wishlist', [AttractionController::class, 'addToWishlist'])
-        ->name('attractions.wishlist.add');
-    Route::delete('/attractions/{id}/wishlist', [AttractionController::class, 'removeFromWishlist'])
-        ->name('attractions.wishlist.remove');
+Route::view('/about-malaysia', 'about-malaysia')->name('about-malaysia');
 
+Route::middleware('auth')->group(function () {
     Route::get('/transportation', [TransportController::class, 'index'])
         ->name('transportation');
 
@@ -76,8 +67,6 @@ Route::middleware('auth')->group(function () {
         ->name('transport.station-details');
     Route::get('/transport/line-info', [TransportController::class, 'lineInfo'])
         ->name('transport.line-info');
-
-    Route::view('/about-malaysia', 'about-malaysia')->name('about-malaysia');
 
     Route::get('/saved-places', [SavedPlaceController::class, 'index'])
         ->name('saved-places.index');
