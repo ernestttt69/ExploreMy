@@ -16,9 +16,14 @@ use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\ItineraryWeatherController;
 use App\Http\Controllers\MalaysiaPlaceController;
 
-Route::get('/', function () {
-	return redirect('/login');
-});
+Route::get('/', [AttractionController::class, 'index'])->name('explore');
+
+Route::get('/attractions', [AttractionController::class, 'index'])
+    ->name('attractions.index');
+Route::get('/attractions/{id}', [AttractionController::class, 'show'])
+    ->name('attractions.show');
+
+Route::view('/about-malaysia', 'about-malaysia')->name('about-malaysia');
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 
@@ -42,7 +47,7 @@ Route::post('/logout', function (Request $request) {
 	$request->session()->invalidate();
 	$request->session()->regenerateToken();
 
-	return redirect('/login');
+	return redirect()->route('explore');
 })->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
@@ -98,14 +103,6 @@ Route::middleware('auth')->group(function () {
         ->name('transport.station-details');
     Route::get('/transport/line-info', [TransportController::class, 'lineInfo'])
         ->name('transport.line-info');
-
-    Route::view('/about-malaysia', 'about-malaysia')->name('about-malaysia');
-
-    Route::get('/attractions', [AttractionController::class, 'index'])
-        ->name('attractions.index');
-
-    Route::get('/attractions/{id}', [AttractionController::class, 'show'])
-        ->name('attractions.show');
 
     Route::post('/attractions/{id}/wishlist', [AttractionController::class, 'addToWishlist'])
         ->name('attractions.wishlist.add');

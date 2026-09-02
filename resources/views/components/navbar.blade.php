@@ -10,7 +10,7 @@
 
 			<div class="d-flex justify-content-between align-items-center">
 
-				<a href="{{ route('dashboard') }}" class="nav-brand-container text-decoration-none" aria-label="{{ __('ui.profile.back') }}">
+				<a href="{{ route('explore') }}" class="nav-brand-container text-decoration-none" aria-label="{{ __('ui.nav.explore') }}">
 
 					<div class="nav-logo-badge">
 						<img src="{{ asset('images/ExploreMy_icon.jpeg') }}">
@@ -53,6 +53,10 @@
 					</form>
 
 				</div>
+				@else
+				<div class="d-flex align-items-center gap-3">
+					<a href="{{ route('login') }}" class="btn btn-logout text-decoration-none">{{ __('ui.nav.login') }}</a>
+				</div>
 				@endauth
 			</div>
 
@@ -69,7 +73,7 @@
 				</li>
 
 				<li>
-					<a href="{{ route('attractions.index') }}" class="nav-link-custom {{ request()->routeIs('attractions.*') ? 'active' : '' }}">
+					<a href="{{ route('explore') }}" class="nav-link-custom {{ request()->routeIs('explore', 'attractions.*') ? 'active' : '' }}">
 						{{ __('ui.nav.explore') }}
 					</a>
 				</li>

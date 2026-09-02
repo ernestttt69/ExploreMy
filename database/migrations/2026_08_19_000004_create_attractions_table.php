@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        if (Schema::hasTable('attractions')) {
+            return;
+        }
+
         Schema::create('attractions', function (Blueprint $table) {
             $table->increments('attraction_id');
             $table->string('place_id', 255)->unique();
