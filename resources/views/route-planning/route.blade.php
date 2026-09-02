@@ -364,6 +364,21 @@
                     <strong>{{ $routeResult['fare_currency'] }} {{ number_format($routeResult['total_fare'], 2) }}</strong>
                 @endif
             </div>
+            <div class="save-itinerary-panel">
+                <span class="save-itinerary-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M6 3.75h12a1.25 1.25 0 0 1 1.25 1.25v15.25L12 16.1l-7.25 4.15V5A1.25 1.25 0 0 1 6 3.75Z" />
+                    </svg>
+                </span>
+                <div class="save-itinerary-copy">
+                    <strong>{{ __('itinerary.save_heading') }}</strong>
+                    <span>{{ __('itinerary.save_text') }}</span>
+                </div>
+                <form method="POST" action="{{ route('itineraries.store-generated-route') }}">
+                    @csrf
+                    <button type="submit" class="save-itinerary-button">{{ __('itinerary.save_button') }}</button>
+                </form>
+            </div>
         </section>
     @endif
 

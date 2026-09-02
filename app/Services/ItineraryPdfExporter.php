@@ -26,6 +26,20 @@ class ItineraryPdfExporter
             $lines[] = 'Location: '.($item->location ?: 'Not specified');
             $lines[] = 'Estimated emissions: '.number_format((float) $item->carbon_kg, 2).' kg CO2e';
 
+            if ($item->category === 'transport') {
+                $metadata = $item->metadata ?? [];
+                $lines[] = 'Transport: '.$this->transportLabel($item->transport_mode);
+                $lines[] = 'Distance: '.number_format((float) $item->distance_km, 2).' km';
+
+                if (! empty($metadata['duration'])) {
+                    $lines[] = 'Travel time: '.$metadata['duration'];
+                }
+
+                if (isset($metadata['fare']) && $metadata['fare'] !== null) {
+                    $lines[] = 'Estimated fare: '.($metadata['fare_currency'] ?? 'MYR').' '.number_format((float) $metadata['fare'], 2);
+                }
+            }
+
             if ($item->notes) {
                 $lines[] = 'Notes: '.$item->notes;
             }
@@ -34,6 +48,11 @@ class ItineraryPdfExporter
         }
 
         return $this->buildDocument($this->wrapLines($lines));
+    }
+
+    private function transportLabel(?string $mode): string
+    {
+        return Str::headline((string) ($mode ?: 'Not specified'));
     }
 
     /**

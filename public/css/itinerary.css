@@ -13,7 +13,7 @@
 
 .itinerary-body {
     margin-top: 0;
-    background: linear-gradient(135deg, #f2faf6 0%, #e9f6fb 100%);
+    background: #f5f8f6;
     color: var(--ink);
 }
 

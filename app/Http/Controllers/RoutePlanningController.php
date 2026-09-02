@@ -24,6 +24,10 @@ class RoutePlanningController extends Controller
 
     public function index(Request $request)
     {
+        if ($request->session()->has('routeResult')) {
+            $request->session()->keep(['routeResult', 'routeOptions']);
+        }
+
         $usingSavedPlaces = $request->query('source') === 'saved';
         $collection = null;
         $savedPlaces = collect();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +21,7 @@
 
         <section class="itinerary-titlebar">
             <div>
-                <a class="back-link" href="{{ auth()->check() ? route('itineraries.index') : '#' }}">← My trips</a>
+                <a class="back-link" href="{{ auth()->check() ? route('itineraries.index') : '#' }}">← {{ __('itinerary.back') }}</a>
                 <div class="title-line">
                     <h1>{{ $trip->title }}</h1>
                     @if($sharedPermission)
@@ -32,26 +32,26 @@
             </div>
             <div class="title-actions">
                 @if(!$shareToken)
-                    <button type="button" class="button button-outline" data-action="refresh-weather">Refresh weather</button>
+                    <button type="button" class="button button-outline" data-action="refresh-weather">{{ __('itinerary.refresh_weather') }}</button>
                     <div class="export-menu">
-                        <button type="button" class="button button-outline" data-action="toggle-export">Export ▾</button>
+                        <button type="button" class="button button-outline" data-action="toggle-export">{{ __('itinerary.export') }} ▾</button>
                         <div class="export-popover" id="export-popover" hidden>
-                            <a href="{{ route('itineraries.export.pdf', $trip) }}">Download PDF</a>
-                            <a href="{{ route('itineraries.export.calendar', $trip) }}">Download calendar (.ics)</a>
+                            <a href="{{ route('itineraries.export.pdf', $trip) }}">{{ __('itinerary.download_pdf') }}</a>
+                            <a href="{{ route('itineraries.export.calendar', $trip) }}">{{ __('itinerary.download_calendar') }}</a>
                         </div>
                     </div>
-                    <button type="button" class="button button-outline" data-action="open-share-dialog">Share</button>
+                    <button type="button" class="button button-outline" data-action="open-share-dialog">{{ __('itinerary.share') }}</button>
                 @endif
             </div>
         </section>
 
         <div class="sync-banner" id="sync-banner" role="status" hidden></div>
 
-        <section class="view-switcher card-surface" aria-label="Itinerary layout">
-            <div class="segmented-control" role="tablist" aria-label="Choose a layout">
-                <button class="segment is-active" type="button" data-view="timeline" role="tab" aria-selected="true">Timeline</button>
-                <button class="segment" type="button" data-view="agenda" role="tab" aria-selected="false">Daily agenda</button>
-                <button class="segment" type="button" data-view="map" role="tab" aria-selected="false">Map</button>
+        <section class="view-switcher card-surface" aria-label="{{ __('itinerary.layout') }}">
+            <div class="segmented-control" role="tablist" aria-label="{{ __('itinerary.layout') }}">
+                <button class="segment is-active" type="button" data-view="timeline" role="tab" aria-selected="true">{{ __('itinerary.timeline') }}</button>
+                <button class="segment" type="button" data-view="agenda" role="tab" aria-selected="false">{{ __('itinerary.agenda') }}</button>
+                <button class="segment" type="button" data-view="map" role="tab" aria-selected="false">{{ __('itinerary.map') }}</button>
             </div>
             <div class="view-summary" id="view-summary"></div>
         </section>
@@ -72,8 +72,8 @@
                         @endif
                     </div>
                     <div id="map-view" class="map-view card-surface" hidden>
-                        <div id="itinerary-map" aria-label="Itinerary location map"></div>
-                        <p class="map-help">Add optional latitude and longitude to an itinerary item to place it precisely on the map.</p>
+                        <div id="itinerary-map" aria-label="{{ __('itinerary.map_label') }}"></div>
+                        <p class="map-help">{{ __('itinerary.map_help') }}</p>
                     </div>
                 </section>
 

@@ -590,7 +590,7 @@
         }
 
         leafletLayer = window.L.featureGroup().addTo(leafletMap);
-        const points = state.items.filter((item) => Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude)));
+        const points = state.items.filter(hasValidCoordinates);
 
         points.forEach((item) => {
             window.L.marker([Number(item.latitude), Number(item.longitude)])
@@ -608,6 +608,27 @@
         }
 
         window.setTimeout(() => leafletMap.invalidateSize(), 10);
+    }
+
+    /**
+     * Null coordinates must not be converted to zero: Number(null) is 0,0,
+     * which would incorrectly place transport entries in the Gulf of Guinea.
+     */
+    function hasValidCoordinates(item) {
+        if (item.latitude === null || item.latitude === '' || item.longitude === null || item.longitude === '') {
+            return false;
+        }
+
+        const latitude = Number(item.latitude);
+        const longitude = Number(item.longitude);
+
+        return Number.isFinite(latitude)
+            && Number.isFinite(longitude)
+            && latitude >= -90
+            && latitude <= 90
+            && longitude >= -180
+            && longitude <= 180
+            && !(latitude === 0 && longitude === 0);
     }
 
     /**
@@ -928,7 +949,8 @@
         const count = state.items.length;
 
         if (currentView === 'map') {
-            return `${state.items.filter((item) => item.latitude !== null && item.longitude !== null).length} mapped stop${state.items.length === 1 ? '' : 's'}`;
+            const mappedCount = state.items.filter(hasValidCoordinates).length;
+            return `${mappedCount} mapped stop${mappedCount === 1 ? '' : 's'}`;
         }
 
         return `${count} ${count === 1 ? 'planned item' : 'planned items'}`;

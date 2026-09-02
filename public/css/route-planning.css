@@ -496,6 +496,104 @@
     font-size: 13px;
 }
 
+.save-itinerary-panel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 8px 22px 22px;
+    padding: 15px;
+    border: 1px solid #c8dfd5;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f4fbf8 0%, #e7f5ef 100%);
+}
+
+.save-itinerary-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.save-itinerary-copy strong,
+.save-itinerary-copy span {
+    display: block;
+}
+
+.save-itinerary-copy strong {
+    color: #173f30;
+    font-size: 14px;
+}
+
+.save-itinerary-copy span {
+    margin-top: 4px;
+    color: #667b73;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.save-itinerary-icon {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    place-items: center;
+    border-radius: 10px;
+    background: #d7ede3;
+    color: #1f604e;
+}
+
+.save-itinerary-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.route-workspace.has-route-result .save-itinerary-panel form {
+    order: initial;
+    width: auto;
+    margin: 0;
+    flex: 0 0 auto;
+}
+
+.save-itinerary-button {
+    min-width: 128px;
+    padding: 11px 16px;
+    border: 0;
+    border-radius: 9px;
+    background: #1f604e;
+    color: #fff;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 5px 14px rgba(31, 96, 78, .18);
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.save-itinerary-button:hover {
+    background: #184f40;
+    box-shadow: 0 7px 18px rgba(31, 96, 78, .24);
+    transform: translateY(-1px);
+}
+
+.save-itinerary-button:active {
+    box-shadow: none;
+    transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+    .save-itinerary-panel {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .route-workspace.has-route-result .save-itinerary-panel form,
+    .save-itinerary-button {
+        width: 100%;
+    }
+}
+
 .route-stops {
     margin: 0;
     padding: 16px 22px 8px 44px;

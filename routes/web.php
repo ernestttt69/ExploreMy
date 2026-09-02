@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
 	Route::get('/malaysia-places', [MalaysiaPlaceController::class, 'search'])->name('malaysia-places.search');
 	Route::get('/trips', [ItineraryController::class, 'index'])->name('itineraries.index');
 	Route::post('/trips', [ItineraryController::class, 'store'])->name('itineraries.store');
+	Route::post('/trips/from-generated-route', [ItineraryController::class, 'storeGeneratedRoute'])->name('itineraries.store-generated-route');
 	Route::get('/trips/{trip}', [ItineraryController::class, 'show'])->name('itineraries.show');
 	Route::post('/trips/{trip}/share', [ItineraryController::class, 'share'])->name('itineraries.share');
 	Route::get('/trips/{trip}/export/pdf', [ItineraryController::class, 'exportPdf'])->name('itineraries.export.pdf');
