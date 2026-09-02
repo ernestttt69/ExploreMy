@@ -52,12 +52,24 @@ class ProfileController extends Controller
 		if($request->hasFile('profile_picture'))
 		{
 			$image = $request->file('profile_picture');
+			$profileImageDirectory = public_path('profile_images');
+
+			File::ensureDirectoryExists($profileImageDirectory, 0775, true);
+			if (! is_writable($profileImageDirectory)) {
+				@chmod($profileImageDirectory, 0775);
+			}
+
+			if (! is_writable($profileImageDirectory)) {
+				return back()
+					->withInput()
+					->withErrors(['profile_picture' => 'The profile image directory is not writable. Please check its folder permissions.']);
+			}
 
 			$imageName = Str::uuid().'.'.$image->extension();
 			$oldProfilePicture = $user->profile_picture;
 
 			$image->move(
-				public_path('profile_images'),
+				$profileImageDirectory,
 				$imageName
 			);
 
