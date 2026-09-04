@@ -14,11 +14,8 @@ return new class extends Migration
             $table->unsignedInteger('attraction_id');
             $table->text('image_path');
 
-            $table->foreign('attraction_id')
-                ->references('attraction_id')
-                ->on('attractions')
-                ->onDelete('cascade')
-                ->onUpdate('cascade');
+            // The attractions table is created by a later legacy migration.
+            // Its foreign key is added after both tables exist.
         });
     }
 

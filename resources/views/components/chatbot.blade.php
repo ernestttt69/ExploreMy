@@ -1,0 +1,36 @@
+@once
+    <link rel="stylesheet" href="{{ asset('css/chatbot.css') }}?v={{ filemtime(public_path('css/chatbot.css')) }}">
+@endonce
+
+<section
+    class="ai-chat"
+    id="ai-chat"
+    data-url="{{ route('chatbot.message') }}"
+    data-welcome="{{ __('chatbot.welcome') }}"
+    data-error="{{ __('chatbot.error') }}"
+    aria-label="{{ __('chatbot.title') }}"
+>
+    <div class="ai-chat__panel" id="ai-chat-panel" hidden>
+        <header class="ai-chat__header">
+            <div>
+                <strong>{{ __('chatbot.title') }}</strong>
+                <small>{{ __('chatbot.subtitle') }}</small>
+            </div>
+            <button class="ai-chat__close" type="button" aria-label="{{ __('chatbot.close') }}">×</button>
+        </header>
+
+        <div class="ai-chat__messages" role="log" aria-live="polite"></div>
+
+        <form class="ai-chat__form">
+            @csrf
+            <label class="visually-hidden" for="ai-chat-input">{{ __('chatbot.placeholder') }}</label>
+            <textarea id="ai-chat-input" maxlength="1500" rows="1" placeholder="{{ __('chatbot.placeholder') }}" required></textarea>
+            <button type="submit">{{ __('chatbot.send') }}</button>
+        </form>
+        <small class="ai-chat__notice">{{ __('chatbot.notice') }}</small>
+    </div>
+</section>
+
+@once
+    <script src="{{ asset('js/chatbot.js') }}?v={{ filemtime(public_path('js/chatbot.js')) }}" defer></script>
+@endonce

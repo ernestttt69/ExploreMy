@@ -11,6 +11,7 @@
 <body class="itinerary-body">
 
 @include('components.navbar')
+<x-page-back :href="route('dashboard')" :label="__('ui.profile.back')" />
 
 <main class="itinerary-page trip-index-page">
     <div class="container">

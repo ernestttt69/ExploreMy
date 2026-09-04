@@ -29,7 +29,24 @@ class PreferenceCategory extends Model
 
     public function getLocalizedNameAttribute(): string
     {
-        $key = 'ui.categories.'.strtolower($this->category_name);
+        // Category names come from reference data and may contain spaces or
+        // symbols (for example "Culture & Heritage"). Map the stable IDs to
+        // translation keys instead of deriving an invalid key from the label.
+        $translationKeys = [
+            1 => 'nature',
+            2 => 'adventure',
+            3 => 'culture_heritage',
+            4 => 'family',
+            5 => 'food_drinks',
+            6 => 'shopping',
+            7 => 'beach',
+            8 => 'city',
+            9 => 'relaxation',
+        ];
+
+        $slug = $translationKeys[(int) $this->preference_id]
+            ?? str($this->category_name)->slug('_')->toString();
+        $key = 'ui.categories.'.$slug;
         $translated = __($key);
 
         return $translated === $key ? $this->category_name : $translated;

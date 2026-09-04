@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attraction;
+use App\Models\AttractionImage;
 use App\Models\State;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -31,41 +33,52 @@ class AttractionController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
-        $data['image_path'] = $this->storeImage($request);
-        Attraction::create($data);
+        unset($data['images']);
+        $attraction = Attraction::create($data);
+        $this->storeImages($request, $attraction);
 
         return redirect()->route('admin.attractions.index')->with('success', __('messages.admin_attraction_added'));
     }
 
     public function edit(Attraction $attraction)
     {
+        $attraction->load('images');
+
         return view('admin.attractions.form', ['attraction' => $attraction, 'states' => State::orderBy('state_name')->get()]);
     }
 
     public function update(Request $request, Attraction $attraction)
     {
         $data = $this->validated($request, $attraction);
-        if ($request->hasFile('image')) {
-            $oldImage = $attraction->image_path;
-            $data['image_path'] = $this->storeImage($request);
-            if ($oldImage && str_starts_with($oldImage, '/attraction_images/')) {
-                File::delete(public_path(ltrim($oldImage, '/')));
-            }
-        }
+        unset($data['images']);
         $attraction->update($data);
+        $this->storeImages($request, $attraction);
 
         return redirect()->route('admin.attractions.index')->with('success', __('messages.admin_attraction_updated'));
     }
 
     public function destroy(Attraction $attraction)
     {
-        $image = $attraction->image_path;
+        $images = $attraction->images()->pluck('image_path')->push($attraction->image_path)->filter()->unique();
         $attraction->delete();
-        if ($image && str_starts_with($image, '/attraction_images/')) {
-            File::delete(public_path(ltrim($image, '/')));
-        }
+        $images->each(fn (string $image) => $this->deleteLocalImage($image));
 
         return back()->with('success', __('messages.admin_attraction_deleted'));
+    }
+
+    public function destroyImage(Attraction $attraction, AttractionImage $image)
+    {
+        abort_unless($image->attraction_id === $attraction->attraction_id, 404);
+
+        $path = $image->image_path;
+        $image->delete();
+        $this->deleteLocalImage($path);
+
+        if ($attraction->image_path === $path) {
+            $attraction->update(['image_path' => $attraction->images()->value('image_path')]);
+        }
+
+        return back()->with('success', __('admin_images.deleted'));
     }
 
     private function validated(Request $request, ?Attraction $attraction = null): array
@@ -82,17 +95,35 @@ class AttractionController extends Controller
             'budget_level' => ['required', 'string', 'max:20'],
             'nearby_transport' => ['nullable', 'string', 'max:100'],
             'rating' => ['nullable', 'numeric', 'between:0,5'],
-            'image' => ['nullable', 'image', 'max:3072'],
+            'images' => ['nullable', 'array', 'max:10'],
+            'images.*' => ['image', 'max:3072'],
         ]);
     }
 
-    private function storeImage(Request $request): ?string
+    private function storeImages(Request $request, Attraction $attraction): void
     {
-        if (! $request->hasFile('image')) return null;
-        $file = $request->file('image');
+        foreach ($request->file('images', []) as $file) {
+            $path = $this->storeImage($file);
+            $attraction->images()->create(['image_path' => $path]);
+
+            if (! $attraction->image_path) {
+                $attraction->update(['image_path' => $path]);
+            }
+        }
+    }
+
+    private function storeImage(UploadedFile $file): string
+    {
         $name = Str::uuid().'.'.$file->extension();
         $file->move(public_path('attraction_images'), $name);
 
         return '/attraction_images/'.$name;
+    }
+
+    private function deleteLocalImage(string $path): void
+    {
+        if (str_starts_with($path, '/attraction_images/')) {
+            File::delete(public_path(ltrim($path, '/')));
+        }
     }
 }

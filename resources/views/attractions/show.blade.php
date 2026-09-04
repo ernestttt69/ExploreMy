@@ -25,20 +25,13 @@
 <body>
 
 @include('components.navbar')
+<x-page-back :href="route('attractions.index')" :label="__('attraction.back')" />
 
 <main class="attraction-show-page">
 
     <div class="container">
 
         <div class="back-row">
-
-            <a
-                href="{{ url('/attractions') }}"
-                class="details-nav-button details-nav-back"
-            aria-label="{{ __('explore.back') }}"
-            >
-            ← {{ __('attraction.back') }}
-            </a>
 
             <a
                 href="{{ route('saved-places.index') }}"

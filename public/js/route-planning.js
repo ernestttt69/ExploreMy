@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (query) url.searchParams.set('q', query);
         if (collectionId) url.searchParams.set('collection_id', collectionId);
 
-        savedPlaceSearchStatus.textContent = 'Searching...';
+        savedPlaceSearchStatus.textContent = translations.searching || 'Searching...';
         savedPlaceLoadMore.disabled = true;
 
         try {
@@ -119,12 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
             savedPlaceLoadMore.hidden = !savedPlaceSearchHasMore;
             savedPlaceLoadMore.disabled = false;
             savedPlaceSearchStatus.textContent = result.data.length
-                ? `${destinationSelect.options.length - 1} matching places loaded`
-                : 'No saved places found';
+                ? (translations.matchingLoaded || ':count matching places loaded')
+                    .replace(':count', destinationSelect.options.length - 1)
+                : (translations.noSavedPlaces || 'No saved places found');
             updateEditor();
         } catch (error) {
             if (error.name === 'AbortError') return;
-            savedPlaceSearchStatus.textContent = 'Could not load saved places. Please try again.';
+            savedPlaceSearchStatus.textContent = translations.loadFailed
+                || 'Could not load saved places. Please try again.';
             savedPlaceLoadMore.disabled = false;
         }
     };

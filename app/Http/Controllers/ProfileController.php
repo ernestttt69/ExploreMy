@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use App\Models\LoginActivity;
+use App\Models\PreferenceCategory;
 use App\Models\User;
 
 class ProfileController extends Controller
@@ -14,12 +15,14 @@ class ProfileController extends Controller
 	public function show()
 	{
 		$user = Auth::user();
-		$fields = ['name', 'email', 'profile_picture', 'phone', 'date_of_birth', 'nationality', 'bio'];
+		$fields = ['name', 'email', 'profile_picture', 'phone', 'date_of_birth'];
 		$completed = collect($fields)->filter(fn ($field) => filled($user->{$field}))->count();
 		$completion = (int) round(($completed / count($fields)) * 100);
 		$activities = LoginActivity::where('user_id', $user->user_id)->latest('logged_in_at')->limit(5)->get();
+		$categories = PreferenceCategory::orderBy('preference_id')->get();
+		$selectedPreferences = $user->preferenceCategories()->pluck('preference_categories.preference_id')->all();
 
-		return view('profile', compact('user', 'completion', 'activities'));
+		return view('profile', compact('user', 'completion', 'activities', 'categories', 'selectedPreferences'));
 	}
 
 	public function update(Request $request)
@@ -27,13 +30,13 @@ class ProfileController extends Controller
 		/** @var User $user */
 		$user = Auth::user();
 
-		$request->validate([
+		$validated = $request->validate([
 			'name' => 'required|string|max:255',
 			'profile_picture' => 'nullable|image|max:2048',
 			'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\-\s]+$/'],
 			'date_of_birth' => ['nullable', 'date', 'before:today'],
-			'nationality' => ['nullable', 'string', 'max:100'],
-			'bio' => ['nullable', 'string', 'max:500'],
+			'preferences' => ['nullable', 'array'],
+			'preferences.*' => ['integer', 'distinct', 'exists:preference_categories,preference_id'],
 			'preferred_language' => ['required', 'in:en,ms,zh'],
 			'personalisation_consent' => ['nullable', 'boolean'],
 		]);
@@ -42,8 +45,6 @@ class ProfileController extends Controller
 		$user->name = $request->name;
 		$user->phone = $request->phone;
 		$user->date_of_birth = $request->date_of_birth;
-		$user->nationality = $request->nationality;
-		$user->bio = $request->bio;
 		$user->preferred_language = $request->preferred_language;
 		$user->personalisation_consent = $request->boolean('personalisation_consent');
 		$oldProfilePicture = null;
@@ -78,6 +79,7 @@ class ProfileController extends Controller
 
 
 		$user->save();
+		$user->preferenceCategories()->sync($validated['preferences'] ?? []);
 
 		// The middleware selected the locale before this request changed the
 		// preference. Switch immediately so the redirected flash message is

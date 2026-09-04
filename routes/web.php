@@ -7,7 +7,6 @@ use App\Http\Controllers\AttractionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoutePlanningController;
 use App\Http\Controllers\SavedPlaceController;
-use App\Http\Controllers\TravelPreferenceController;
 use App\Http\Controllers\TransportController;
 use App\Http\Controllers\Admin\AttractionController as AdminAttractionController;
 use App\Http\Controllers\Admin\AdminAuthController;
@@ -15,6 +14,7 @@ use App\Http\Controllers\GreenRewardController;
 use App\Http\Controllers\ItineraryController;
 use App\Http\Controllers\ItineraryWeatherController;
 use App\Http\Controllers\MalaysiaPlaceController;
+use App\Http\Controllers\ChatbotController;
 
 Route::get('/', [AttractionController::class, 'index'])->name('explore');
 
@@ -51,6 +51,8 @@ Route::post('/logout', function (Request $request) {
 })->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
+	Route::post('/chatbot/message', ChatbotController::class)
+		->middleware('throttle:15,1')->name('chatbot.message');
 	Route::get('/itinerary-weather', [ItineraryWeatherController::class, 'show'])->name('itinerary.weather');
 	Route::get('/malaysia-places', [MalaysiaPlaceController::class, 'search'])->name('malaysia-places.search');
 	Route::get('/trips', [ItineraryController::class, 'index'])->name('itineraries.index');
@@ -126,11 +128,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/saved-places/collections/{collection}/places/{place}', [SavedPlaceController::class, 'removePlaceFromCollection'])
         ->name('saved-places.collections.places.destroy');
 
-    Route::get('/travel-preferences', [TravelPreferenceController::class, 'edit'])
-        ->name('travel-preferences.edit');
-
-    Route::post('/travel-preferences', [TravelPreferenceController::class, 'update'])
-        ->name('travel-preferences.update');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -140,6 +137,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('admin')->group(function () {
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+        Route::delete('/attractions/{attraction}/images/{image}', [AdminAttractionController::class, 'destroyImage'])
+            ->name('attractions.images.destroy');
         Route::resource('attractions', AdminAttractionController::class)->except('show');
     });
 });

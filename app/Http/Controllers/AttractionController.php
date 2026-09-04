@@ -10,7 +10,6 @@ use App\Models\Wishlist;
 use App\Services\GreenRewardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
 class AttractionController extends Controller
 {
@@ -23,24 +22,19 @@ class AttractionController extends Controller
         $searchSubmitted = $request->input('search_submitted') === '1';
 
         if ($searchSubmitted) {
-            $validator = Validator::make(
-                $request->all(),
-                [
-                    'search' => [
-                        'required',
-                        'string',
-                        'max:255',
-                    ],
-                ],
-                [
-                    'search.required' => __('messages.attraction_search_required'),
-                ]
-            );
+            $hasCriteria =
+                $request->filled('search') ||
+                $request->filled('state_id') ||
+                $request->filled('budget_level') ||
+                $request->filled('rating') ||
+                ! empty($request->input('categories', []));
 
-            if ($validator->fails()) {
+            if (! $hasCriteria) {
                 return redirect()
-                    ->route('attractions.index')
-                    ->withErrors($validator)
+                    ->back()
+                    ->withErrors([
+                        'search' => 'Please enter a place to search or select at least one filter.',
+                    ])
                     ->withInput($request->except('search_submitted'));
             }
         }
@@ -52,13 +46,15 @@ class AttractionController extends Controller
         ]);
 
         if ($searchSubmitted) {
-            $search = trim($request->input('search'));
+            if ($request->filled('search')) {
+                $search = trim($request->input('search'));
 
-            $query->where(
-                'attraction_name',
-                'like',
-                '%' . $search . '%'
-            );
+                $query->where(
+                    'attraction_name',
+                    'like',
+                    '%' . $search . '%'
+                );
+            }
 
             if ($request->filled('state_id')) {
                 $query->where(

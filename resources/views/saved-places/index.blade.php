@@ -26,6 +26,7 @@
 <body>
 
 @include('components.navbar')
+<x-page-back :href="route('profile')" :label="__('saved.back')" />
 
 <main class="container saved-places-page">
 
@@ -47,14 +48,6 @@
 
         </div>
 
-        <a
-            href="{{ url()->previous() }}"
-            class="btn-back"
-            aria-label="{{ __('saved.back_aria') }}"
-        >
-            ← {{ __('saved.back') }}
-        </a>
-
     </div>
 
     @if($savedPlaces->count() > 0)
@@ -75,23 +68,23 @@
 
                 <div class="collection-dates-row">
                     <div class="collection-date-field">
-                        <label for="collection-start-date">Trip starts</label>
+                        <label for="collection-start-date">{{ __('saved_extra.starts') }}</label>
                         <input type="date" id="collection-start-date" name="start_date" value="{{ old('start_date') }}" min="{{ today()->format('Y-m-d') }}" class="{{ $errors->has('start_date') ? 'input-error' : '' }}" required>
                         @error('start_date')<p class="collection-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="collection-date-field">
-                        <label for="collection-end-date">Trip ends</label>
+                        <label for="collection-end-date">{{ __('saved_extra.ends') }}</label>
                         <input type="date" id="collection-end-date" name="end_date" value="{{ old('end_date') }}" min="{{ old('start_date') ?: today()->format('Y-m-d') }}" class="{{ $errors->has('end_date') ? 'input-error' : '' }}" required>
                         @error('end_date')<p class="collection-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="collection-date-field">
-                        <label for="collection-start-time">Trip starts at</label>
+                        <label for="collection-start-time">{{ __('saved_extra.starts_at') }}</label>
                         <input type="time" id="collection-start-time" name="start_time" value="{{ old('start_time', '09:00') }}" class="{{ $errors->has('start_time') ? 'input-error' : '' }}" required>
                         @error('start_time')<p class="collection-error">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
-                <label for="collection-places" id="collection-places-label">Select saved places</label>
+                <label for="collection-places" id="collection-places-label">{{ __('saved_extra.select') }}</label>
 
                 <div class="ms-select" data-fill-target="#collection-places">
                     <div
@@ -106,9 +99,9 @@
                             id="collection-places-search"
                             class="ms-search"
                             type="text"
-                            placeholder="Search places…"
+                            placeholder="{{ __('saved_extra.search') }}"
                             autocomplete="off"
-                            aria-label="Search saved places"
+                            aria-label="{{ __('saved_extra.search_aria') }}"
                         >
                         <span class="ms-chevron" aria-hidden="true"></span>
                     </div>
@@ -165,12 +158,12 @@
                                     </div>
                                     <div class="collection-card-actions">
                                         @if($collection->items_count >= 2)
-                                            <a href="{{ route('route.index', ['source' => 'saved', 'collection' => $collection->collection_id]) }}">Generate trip plan &rarr;</a>
+                                            <a href="{{ route('route.index', ['source' => 'saved', 'collection' => $collection->collection_id]) }}">{{ __('saved_extra.generate') }}</a>
                                         @endif
-                                        <form method="POST" action="{{ route('saved-places.collections.destroy', $collection->collection_id) }}" class="collection-delete-form" onsubmit="return confirm('Delete this collection and all of its places?');">
+                                        <form method="POST" action="{{ route('saved-places.collections.destroy', $collection->collection_id) }}" class="collection-delete-form" onsubmit='return confirm(@js(__("saved.delete_collection_confirm")));'>
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="collection-delete-btn" aria-label="Delete collection">Delete</button>
+                                            <button type="submit" class="collection-delete-btn" aria-label="{{ __('saved.delete_collection_aria') }}">{{ __('saved.delete_collection') }}</button>
                                         </form>
                                     </div>
                                 </div>
@@ -187,10 +180,10 @@
                                                     @endif
                                                     <span>{{ $item->attraction->attraction_name }}</span>
                                                 </a>
-                                                <form method="POST" action="{{ route('saved-places.collections.places.destroy', [$collection->collection_id, $item->collection_item_id]) }}" class="collection-remove-form" onsubmit="return confirm('Remove this place from the collection?');">
+                                                <form method="POST" action="{{ route('saved-places.collections.places.destroy', [$collection->collection_id, $item->collection_item_id]) }}" class="collection-remove-form" onsubmit='return confirm(@js(__("saved.remove_collection_confirm")));'>
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="collection-remove-btn" aria-label="Remove {{ $item->attraction->attraction_name }}">&times;</button>
+                                                    <button type="submit" class="collection-remove-btn" aria-label="{{ __('saved.remove_named', ['name' => $item->attraction->attraction_name]) }}">&times;</button>
                                                 </form>
                                             </div>
                                         @endif
@@ -203,11 +196,11 @@
                                         <summary>{{ __('saved.add_places') }}</summary>
                                         <form method="POST" action="{{ route('saved-places.collections.places.store', $collection->collection_id) }}">
                                             @csrf
-                                            <label for="add-places-{{ $collection->collection_id }}" id="add-places-label-{{ $collection->collection_id }}">Select places to add</label>
+                                            <label for="add-places-{{ $collection->collection_id }}" id="add-places-label-{{ $collection->collection_id }}">{{ __('saved_extra.select_add') }}</label>
                                             <div class="ms-select" data-fill-target="#add-places-{{ $collection->collection_id }}">
                                                 <div class="ms-fields" role="combobox" aria-expanded="false" aria-controls="add-places-opt-{{ $collection->collection_id }}" aria-labelledby="add-places-label-{{ $collection->collection_id }}">
                                                     <div class="ms-chips"></div>
-                                                    <input class="ms-search" type="text" placeholder="Search places…" autocomplete="off" aria-label="Search saved places">
+                                                    <input class="ms-search" type="text" placeholder="{{ __('saved_extra.search') }}" autocomplete="off" aria-label="{{ __('saved_extra.search_aria') }}">
                                                     <span class="ms-chevron" aria-hidden="true"></span>
                                                 </div>
 
@@ -535,7 +528,7 @@
 
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
-                    removeBtn.setAttribute('aria-label', 'Remove ' + label);
+                    removeBtn.setAttribute('aria-label', @js(__('saved.remove_named', ['name' => ':name'])).replace(':name', label));
                     removeBtn.innerHTML = '&times;';
                     removeBtn.addEventListener('click', (e) => {
                         e.preventDefault();

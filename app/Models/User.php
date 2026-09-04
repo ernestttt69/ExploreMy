@@ -24,8 +24,6 @@ class User extends Authenticatable
 		'profile_picture',
 		'phone',
 		'date_of_birth',
-		'nationality',
-		'bio',
 		'preferred_language',
 		'email_notifications',
 		'personalisation_consent',

@@ -27,6 +27,7 @@
 
 <body>
     @include('components.navbar')
+    <x-page-back :href="route('dashboard')" :label="__('ui.profile.back')" />
 
     <main>
         @yield('content')

@@ -14,13 +14,12 @@
         food: '⌑',
         sightseeing: '⌘'
     };
-    const labels = {
-        transport: 'Transport',
-        lodging: 'Lodging',
-        activity: 'Activity',
-        food: 'Food',
-        sightseeing: 'Sightseeing'
-    };
+    const translations = config.translations || {};
+    const t = (key, replacements = {}) => Object.entries(replacements).reduce(
+        (message, [name, value]) => message.replace(`:${name}`, value),
+        translations[key] || key
+    );
+    const labels = Object.fromEntries(['transport', 'lodging', 'activity', 'food', 'sightseeing'].map((key) => [key, t(key)]));
     const cacheKey = `exploremy:itinerary:${config.itinerary.trip_id}`;
     let state = clone(config.itinerary);
     let deletedIds = [];
@@ -113,12 +112,12 @@
         }
 
         window.addEventListener('online', () => {
-            showBanner('Back online. Syncing any itinerary edits saved on this device.');
+            showBanner(t('online'));
             syncOfflineEdits();
         });
 
         window.addEventListener('offline', () => {
-            showBanner('You are offline. Changes will stay on this device until your connection returns.', true);
+            showBanner(t('offline'), true);
         });
     }
 
@@ -157,7 +156,7 @@
         }
 
         const groups = groupItemsByDate(sortedItems());
-        itemsElement.innerHTML = Object.entries(groups).map(([date, items]) => dayGroupMarkup(date, items)).join('');
+        itemsElement.innerHTML = Object.entries(groups).map(([date, items], index) => dayGroupMarkup(date, items, index + 1)).join('');
         bindItemCardEvents();
     }
 
@@ -166,13 +165,13 @@
      */
     function emptyStateMarkup() {
         const action = config.canEdit
-            ? '<button class="button button-primary" type="button" data-action="open-item-dialog">Add activity</button>'
+            ? `<button class="button button-primary" type="button" data-action="open-item-dialog">${escapeHtml(t('add_activity'))}</button>`
             : '';
 
         return `<div class="empty-itinerary card-surface">
             <div class="empty-illustration" aria-hidden="true">✦</div>
-            <h2>Add your first activity</h2>
-            <p>Start with transport, a stay, food, or an activity. We will calculate its estimated footprint as you plan.</p>
+            <h2>${escapeHtml(t('empty_title'))}</h2>
+            <p>${escapeHtml(t('empty_text'))}</p>
             ${action}
         </div>`;
     }
@@ -180,17 +179,17 @@
     /**
      * Create one date group with agenda/timeline cards.
      */
-    function dayGroupMarkup(date, items) {
+    function dayGroupMarkup(date, items, tripDayNumber) {
         const formatted = dateLabel(date);
         const rail = currentView === 'timeline'
             ? `<div class="day-rail"><span class="day-month">${escapeHtml(formatted.month)}</span><span class="day-number">${escapeHtml(formatted.day)}</span><span class="day-year">${escapeHtml(formatted.year)}</span></div>`
-            : `<div class="day-rail"><span class="day-month">Day</span><span class="day-number">${escapeHtml(formatted.day)}</span></div>`;
-        const description = currentView === 'agenda' ? `${formatted.weekday}, ${formatted.month} ${formatted.day}` : `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
+            : `<div class="day-rail"><span class="day-month">${escapeHtml(t('day'))}</span><span class="day-number">${escapeHtml(String(tripDayNumber))}</span></div>`;
+        const description = currentView === 'agenda' ? `${formatted.weekday}, ${formatted.month} ${formatted.day}` : `${items.length} ${t(items.length === 1 ? 'item' : 'items')}`;
 
         return `<section class="day-group" data-date="${escapeAttribute(date)}">
             ${rail}
             <div class="day-content">
-                <div class="day-heading"><span>${escapeHtml(description)}</span><span>${escapeHtml(date === 'unscheduled' ? 'Flexible date' : '')}</span></div>
+                <div class="day-heading"><span>${escapeHtml(description)}</span><span>${escapeHtml(date === 'unscheduled' ? t('flexible_date') : '')}</span></div>
                 ${weatherMarkup(date)}
                 ${items.map(itemCardMarkup).join('')}
             </div>
@@ -209,13 +208,13 @@
             : '';
         const controls = config.canEdit
             ? `<div class="item-card-actions">
-                <button class="mini-action" type="button" data-action="edit-item" data-item-id="${item.item_id}">Edit</button>
-                <button class="mini-action is-danger" type="button" data-action="delete-item" data-item-id="${item.item_id}">Delete</button>
+                <button class="mini-action" type="button" data-action="edit-item" data-item-id="${item.item_id}">${escapeHtml(t('edit'))}</button>
+                <button class="mini-action is-danger" type="button" data-action="delete-item" data-item-id="${item.item_id}">${escapeHtml(t('delete'))}</button>
             </div>`
             : '';
         const placeWeather = weatherForItem(item);
         const ecoSuggestion = item.eco_suggestion && config.canEdit
-            ? `<div class="suggestion-card"><p><strong>Lower-carbon option:</strong> Choose ${escapeHtml(item.eco_suggestion.label)} and save ${number(item.eco_suggestion.saving_kg)} kg CO<sub>2</sub>e. ${escapeHtml(item.eco_suggestion.reason)}</p><button type="button" class="button button-outline" data-action="apply-eco" data-item-id="${item.item_id}">Accept</button></div>`
+            ? `<div class="suggestion-card"><p><strong>${escapeHtml(t('lower_carbon'))}</strong> ${escapeHtml(t('choose'))} ${escapeHtml(item.eco_suggestion.label)} ${escapeHtml(t('and_save'))} ${number(item.eco_suggestion.saving_kg)} ${escapeHtml(t('kg'))} ${escapeHtml(item.eco_suggestion.reason)}</p><button type="button" class="button button-outline" data-action="apply-eco" data-item-id="${item.item_id}">${escapeHtml(t('accept'))}</button></div>`
             : '';
         const draggable = canReorder() ? 'draggable="true"' : '';
 
@@ -223,12 +222,11 @@
             <div class="item-icon" aria-hidden="true">${icons[item.category] || '•'}</div>
             <div>
                 <div class="item-card-top">
-                    <div><h3 class="item-title">${escapeHtml(item.title)}</h3></div>
+                    <div class="item-title-row"><h3 class="item-title">${escapeHtml(item.title)}</h3>${placeWeather}</div>
                     <span class="item-time">${escapeHtml(time)}</span>
                     ${controls}
                 </div>
                 ${location}
-                ${placeWeather}
                 <div class="item-meta">
                     <span class="metric-tag">${escapeHtml(labels[item.category] || 'Item')}</span>
                     <span class="metric-tag">${number(item.carbon_kg)} kg CO<sub>2</sub>e</span>
@@ -316,8 +314,8 @@
 
         itemForm.reset();
         document.getElementById('item-id').value = item ? item.item_id : '';
-        document.getElementById('item-dialog-title').textContent = item ? 'Edit item' : 'Add an item';
-        document.getElementById('item-submit').textContent = item ? 'Save changes' : 'Add item';
+        document.getElementById('item-dialog-title').textContent = item ? t('edit_item') : t('add_item');
+        document.getElementById('item-submit').textContent = item ? t('save_changes') : t('add_item');
         document.getElementById('item-category').value = item ? item.category : 'activity';
         document.getElementById('item-title').value = item ? item.title : '';
         document.getElementById('item-date').value = item ? item.scheduled_date || '' : state.start_date || '';
@@ -374,7 +372,7 @@
                     return;
                 }
 
-                showBanner(error.message || 'The item could not be saved.', true);
+                showBanner(error.message || t('save_failed'), true);
             });
     }
 
@@ -416,7 +414,7 @@
     function deleteItem(itemId) {
         const item = findItem(itemId);
 
-        if (!item || !window.confirm(`Remove “${item.title}” from this itinerary?`)) {
+        if (!item || !window.confirm(t('remove_confirm', { title: item.title }))) {
             return;
         }
 
@@ -433,7 +431,7 @@
                     return;
                 }
 
-                showBanner(error.message || 'The item could not be deleted.', true);
+                showBanner(error.message || t('delete_failed'), true);
             });
     }
 
@@ -473,7 +471,7 @@
                     return;
                 }
 
-                showBanner(error.message || 'The alternative could not be applied.', true);
+                showBanner(error.message || t('alternative_failed'), true);
             });
     }
 
@@ -497,7 +495,7 @@
      */
     function saveItinerary() {
         if (!navigator.onLine) {
-            markOfflineChange('Itinerary saved locally. It will sync when you reconnect.');
+            markOfflineChange(t('saved_locally'));
             return;
         }
 
@@ -560,11 +558,11 @@
         }
 
         navigator.clipboard?.writeText(input.value)
-            .then(() => showBanner('Secure link copied to your clipboard.'))
+            .then(() => showBanner(t('copied')))
             .catch(() => {
                 input.select();
                 document.execCommand('copy');
-                showBanner('Secure link copied to your clipboard.');
+                showBanner(t('copied'));
             });
     }
 
@@ -573,7 +571,7 @@
      */
     function renderMap() {
         if (!window.L) {
-            mapElement.innerHTML = '<p class="map-help">The map needs an internet connection to load. Your itinerary remains available in Timeline and Daily agenda views.</p>';
+            mapElement.innerHTML = `<p class="map-help">${escapeHtml(t('map_offline'))}</p>`;
             return;
         }
 
@@ -594,7 +592,7 @@
 
         points.forEach((item) => {
             window.L.marker([Number(item.latitude), Number(item.longitude)])
-                .bindPopup(`<strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.location || 'Itinerary stop')}`)
+                .bindPopup(`<strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.location || t('itinerary_stop'))}`)
                 .addTo(leafletLayer);
         });
 
@@ -648,7 +646,7 @@
         barElement.style.width = `${Math.min(100, total ? 20 + Math.min(total, 250) / 3.125 : 0)}%`;
         breakdownElement.innerHTML = Object.keys(breakdown).length
             ? Object.entries(breakdown).sort(([, a], [, b]) => b - a).map(([category, value]) => `<div class="breakdown-row"><span>${escapeHtml(labels[category] || category)}</span><strong>${number(value)} kg</strong></div>`).join('')
-            : '<div class="breakdown-row"><span>Add an item to see your eco summary.</span></div>';
+            : `<div class="breakdown-row"><span>${escapeHtml(t('empty_carbon'))}</span></div>`;
     }
 
     /**
@@ -683,13 +681,17 @@
                 render();
 
                 if (refresh) {
-                    showBanner('Weather forecast refreshed.');
+                    const unavailable = payload.stops.filter((stop) => !stop.weather.available).length;
+                    const stale = payload.stops.filter((stop) => stop.weather.is_stale).length;
+                    showBanner(unavailable
+                        ? t('weather_unavailable_stops')
+                        : stale
+                            ? t('weather_cached')
+                            : t('weather_refreshed'), unavailable > 0 || stale > 0);
                 }
             })
             .catch(() => {
-                if (refresh) {
-                    showBanner('Unable to load weather data at this time.', true);
-                }
+                showBanner(t('weather_load_failed'), true);
             });
     }
 
@@ -706,21 +708,31 @@
         const forecast = stops.find((stop) => stop.weather.available)?.weather || stops[0].weather;
 
         if (!forecast.available) {
-            return '<div class="weather-widget weather-unavailable">Weather is unavailable for this date.</div>';
+            return `<div class="weather-widget weather-unavailable">${escapeHtml(t('weather_date_unavailable'))}</div>`;
         }
 
         const alerts = stops.filter((stop) => stop.requires_weather_alert);
-        const estimate = forecast.is_historical_estimate ? '<span class="weather-estimate">Historical climate estimate</span>' : '';
-        const stale = forecast.is_stale ? '<span class="weather-estimate">Last saved forecast</span>' : '';
+        const estimate = forecast.is_historical_estimate ? `<span class="weather-estimate">${escapeHtml(t('historical'))}</span>` : '';
+        const stale = forecast.is_stale ? `<span class="weather-estimate">${escapeHtml(t('last_saved'))}</span>` : '';
         const alertText = alerts.length
-            ? `<div class="weather-alert">Rain alert for outdoor stop${alerts.length === 1 ? '' : 's'}: ${alerts.map((stop) => escapeHtml(stop.title)).join(', ')}.</div>`
+            ? `<div class="weather-alert"><strong>${escapeHtml((t('weather_alert').split('|')[alerts.length === 1 ? 0 : 1] || t('weather_alert')).replace('|', ''))}:</strong> ${alerts.map((stop) => `${escapeHtml(stop.title)} — ${escapeHtml(stop.weather.alert_reason || t('adverse'))}${indoorAlternativesMarkup(stop)}`).join('')}</div>`
             : '';
 
         return `<div class="weather-widget">
-            <div class="weather-main"><span class="weather-icon">${weatherIcon(forecast.condition_code)}</span><strong>${escapeHtml(forecast.condition || 'Weather forecast')}</strong><span>${number(forecast.temperature_low)}° - ${number(forecast.temperature_high)}°C</span></div>
-            <div class="weather-meta"><span>Rain ${number(forecast.precipitation_probability)}%</span><span>Humidity ${number(forecast.humidity)}%</span><span>UV ${number(forecast.uv_index)}</span>${estimate}${stale}</div>
+            <div class="weather-main"><span class="weather-icon">${weatherIcon(forecast.condition_code)}</span><strong>${escapeHtml(forecast.condition || t('weather_forecast'))}</strong><span>${number(forecast.temperature_low)}° - ${number(forecast.temperature_high)}°C</span></div>
+            <div class="weather-meta"><span>${escapeHtml(t('rain'))} ${number(forecast.precipitation_probability)}%</span><span>${escapeHtml(t('humidity'))} ${number(forecast.humidity)}%</span><span>${escapeHtml(t('uv'))} ${number(forecast.uv_index)}</span>${estimate}${stale}</div>
             ${alertText}
         </div>`;
+    }
+
+    function indoorAlternativesMarkup(stop) {
+        const alternatives = Array.isArray(stop.indoor_alternatives) ? stop.indoor_alternatives : [];
+
+        if (!alternatives.length) {
+            return `<span class="indoor-empty">${escapeHtml(t('indoor_generic'))}</span>`;
+        }
+
+        return `<span class="indoor-suggestions">${escapeHtml(t('indoor_alternatives'))} ${alternatives.map((alternative) => `<a href="${escapeAttribute(alternative.url)}">${escapeHtml(alternative.name)}</a>`).join(', ')}.</span>`;
     }
 
     /**
@@ -733,17 +745,15 @@
             return '';
         }
 
-        const place = stop.place ? `<span class="place-link">⌖ ${escapeHtml(stop.place.display_name)}</span>` : '';
-
         if (!stop.weather.available) {
-            return `<div class="item-place-weather">${place}<span class="item-weather-muted">Weather unavailable</span></div>`;
+            return `<span class="item-weather-muted">${escapeHtml(t('weather_unavailable'))}</span>`;
         }
 
         const forecast = stop.weather;
-        const alert = stop.requires_weather_alert ? '<span class="item-weather-alert">Rain alert</span>' : '';
-        const estimate = forecast.is_historical_estimate ? '<span class="item-weather-muted">Climate estimate</span>' : '';
+        const alert = stop.requires_weather_alert ? `<span class="item-weather-alert">${escapeHtml(t(forecast.is_severe ? 'severe_weather' : 'rain_alert'))}</span>` : '';
+        const estimate = forecast.is_historical_estimate ? `<span class="item-weather-muted">${escapeHtml(t('climate_estimate'))}</span>` : '';
 
-        return `<div class="item-place-weather">${place}<span class="item-weather">${weatherIcon(forecast.condition_code)} ${number(forecast.temperature_low)}°-${number(forecast.temperature_high)}°C · Rain ${number(forecast.precipitation_probability)}%</span>${estimate}${alert}</div>`;
+        return `<span class="item-place-weather"><span class="item-weather" title="${escapeAttribute(forecast.condition || t('weather_forecast'))}">${weatherIcon(forecast.condition_code)} ${number(forecast.temperature_low)}°-${number(forecast.temperature_high)}°C · ${escapeHtml(t('rain'))} ${number(forecast.precipitation_probability)}%</span>${estimate}${alert}</span>`;
     }
 
     /**
@@ -797,7 +807,7 @@
                 offlineDirty = Boolean(cached.offlineDirty);
 
                 if (!navigator.onLine) {
-                    showBanner('You are viewing the itinerary cached on this device.', true);
+                    showBanner(t('cached_view'), true);
                 }
             }
         } catch (error) {
@@ -850,7 +860,7 @@
      * Render an error message without losing the current local itinerary state.
      */
     function handleRequestFailure(error) {
-        showBanner(error.message || 'The request could not be completed.', Boolean(error.network));
+        showBanner(error.message || t('request_failed'), Boolean(error.network));
     }
 
     /**

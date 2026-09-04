@@ -53,4 +53,10 @@ return [
         'timeout' => (int) env('PLACES_TIMEOUT', 3),
     ],
 
+    'ollama' => [
+        'endpoint' => env('OLLAMA_ENDPOINT', 'http://127.0.0.1:11434'),
+        'model' => env('OLLAMA_MODEL', 'qwen3:4b-instruct'),
+        'timeout' => (int) env('OLLAMA_TIMEOUT', 90),
+    ],
+
 ];

@@ -315,7 +315,7 @@ public function search(Request $request)
                 'category_badge' => $categoryBadge,
                 'address' => $place['vicinity'] ?? 'N/A',
                 'distance_val' => $distKm,
-                'distance' => round($distKm, 2) . ' km',
+                'distance' => __('messages.transport_distance_km', ['distance' => round($distKm, 2)]),
                 'priority' => $priorityScore,
                 'lat' => $stationLat,
                 'lng' => $stationLng,
@@ -365,9 +365,9 @@ public function stationDetails($placeId)
     $weekdayText = $result['opening_hours']['weekday_text'] ?? collect(__('messages.transport_days'))
         ->map(fn ($day) => $day . ': 06:00 AM – 11:30 PM')->all();
 
-    $phone = $result['international_phone_number'] 
-        ?? $result['formatted_phone_number'] 
-        ?? '+60 3-7885 2585 (RapidKL Transit Info)';
+    $phone = $result['international_phone_number']
+        ?? $result['formatted_phone_number']
+        ?? __('messages.transport_info_phone', ['phone' => '+60 3-7885 2585']);
 
     return response()->json([
         'success' => true,

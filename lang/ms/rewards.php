@@ -2,7 +2,7 @@
 
 return [
     'page_title' => 'Ganjaran Hijau | ExploreMY', 'growing_tree_aria' => 'Pokok anda yang sedang membesar',
-    'tree_aria' => 'Pokok maya :tree anda, setinggi :height meter', 'summary_aria' => 'Ringkasan ganjaran anda', 'progress_aria' => 'Kemajuan ke tahap pokok seterusnya',
+    'tree_aria' => 'Pokok maya :tree anda, setinggi :height meter', 'height_unit' => 'm', 'summary_aria' => 'Ringkasan ganjaran anda', 'progress_aria' => 'Kemajuan ke tahap pokok seterusnya',
     'level_unlock' => 'Tahap :level dibuka pada :exp EXP', 'level_exp' => 'Tahap :level · :exp EXP',
     'tree_stages' => ['seed' => 'Benih', 'small' => 'Pokok kecil', 'growing' => 'Pokok membesar', 'mature' => 'Pokok matang', 'ancient' => 'Pokok tinggi'],
     'green_points' => 'Mata Hijau', 'points' => 'mata', 'level' => 'Tahap :level',

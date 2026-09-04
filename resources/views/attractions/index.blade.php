@@ -25,6 +25,9 @@
 <body>
 
 @include('components.navbar')
+@auth
+<x-page-back :href="route('dashboard')" :label="__('ui.profile.back')" />
+@endauth
 
 <main class="container attractions-page">
 

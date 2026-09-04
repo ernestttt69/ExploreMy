@@ -34,6 +34,19 @@
 						<span aria-hidden="true">&#9825;</span>
 					</a>
 
+					<button
+						type="button"
+						class="nav-ai-chatbot"
+						data-chatbot-toggle
+						aria-expanded="false"
+						aria-controls="ai-chat-panel"
+						title="{{ __('chatbot.open') }}"
+						aria-label="{{ __('chatbot.open') }}"
+					>
+						<span aria-hidden="true">&#128172;</span>
+						<span class="nav-ai-chatbot__label">{{ __('chatbot.open') }}</span>
+					</button>
+
 					<a href="{{ route('profile') }}" class="nav-user-pill text-decoration-none text-dark">
 
 						<img src="{{ Auth::user()->profile_picture ?: asset('images/default-avatar.svg') }}" class="nav-avatar" alt="{{ Auth::user()->name }}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.svg') }}'">
@@ -112,4 +125,7 @@
 
 	</div>
 </header>
+@auth
+	@include('components.chatbot')
+@endauth
 <script src="{{ asset('js/site-interactions.js') }}" defer></script>

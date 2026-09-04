@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<title>ExploreMY - Login</title>
+	<title>{{ __('login.title') }}</title>
 
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="{{ asset('css/login.css') }}">
@@ -13,6 +13,8 @@
 </head>
 
 <body>
+
+<x-page-back :href="route('explore')" :label="__('login.back')" />
 
 <div class="login-wrapper">
 	<div class="card login-card text-center">
@@ -25,17 +27,17 @@
 			<h1 class="brand-title">ExploreMY</h1>
 
 			<p class="brand-tagline">
-				Explore Smarter, Travel Better.
+				{{ __('login.tagline') }}
 			</p>
 		</div>
 
 		<div class="mb-4">
 			<h5 class="welcome-title">
-				Welcome back
+				{{ __('login.welcome') }}
 			</h5>
 
 			<p class="welcome-text">
-				Sign in with Google to start planning your Malaysian journey.
+				{{ __('login.intro') }}
 			</p>
 		</div>
 
@@ -57,7 +59,7 @@
 
 		<div class="mt-3">
 			<small>
-				🔒 Protected by Google Identity Services
+				🔒 {{ __('login.protected') }}
 			</small>
 		</div>
 
@@ -90,7 +92,7 @@ function handleCredentialResponse(response)
 	})
 	.catch(error => {
 		console.error(error);
-		alert("Login failed");
+		alert(@js(__('login.failed')));
 	});
 }
 </script>

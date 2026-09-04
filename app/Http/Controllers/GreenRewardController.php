@@ -36,7 +36,9 @@ class GreenRewardController extends Controller
         $treeStage = $tree->level >= 10 ? 'ancient' : ($tree->level >= 5 ? 'mature' : ($tree->level >= 3 ? 'growing' : ($tree->level >= 2 ? 'small' : 'seed')));
         $treeLabel = __('rewards.tree_stages.' . $treeStage);
         $visualLevel = min(10, $tree->level);
-        $treeHeight = number_format(max(0.1, 0.1 + (($visualLevel - 1) * 0.35)), 2);
+        $treeHeight = $visualLevel === 0
+            ? '0.0'
+            : number_format(0.1 + (($visualLevel - 1) * 0.35), 2);
         $treeProgress = ($currentLevelExperience / $experiencePerLevel) * 100;
         $progressSteps = (int) floor($currentLevelExperience / 20);
         return view('rewards.reward', compact('wallet', 'tree', 'achievements', 'unlocked', 'claimable', 'items', 'inventory', 'transactions', 'nextThreshold', 'treeProgress', 'progressSteps', 'treeStage', 'treeLabel', 'treeHeight'));

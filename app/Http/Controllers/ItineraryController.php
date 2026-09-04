@@ -68,7 +68,7 @@ class ItineraryController extends Controller
         ]));
 
         return redirect()->route('itineraries.show', $trip)
-            ->with('status', 'Your new itinerary is ready. Add the first activity to start planning.');
+            ->with('status', __('itinerary.new_trip_ready'));
     }
 
     /**
@@ -149,10 +149,15 @@ class ItineraryController extends Controller
                         'location' => Str::limit((string) $stop['name'], 180, ''),
                         'latitude' => $stop['latitude'] ?? null,
                         'longitude' => $stop['longitude'] ?? null,
-                        'notes' => ! empty($stop['suggested_visit_display']) ? 'Suggested visit: '.$stop['suggested_visit_display'] : null,
+                        'notes' => ! empty($stop['suggested_visit_display'])
+                            ? __('itinerary.suggested_visit_note', ['duration' => $stop['suggested_visit_display']])
+                            : null,
                         'carbon_kg' => 0,
                         'sort_order' => $sortOrder++,
-                        'metadata' => ['place_id' => $stop['place_id'] ?? null],
+                        'metadata' => [
+                            'place_id' => $stop['place_id'] ?? null,
+                            'suggested_visit_minutes' => $stop['suggested_visit_minutes'] ?? null,
+                        ],
                     ]);
                 }
 
@@ -170,7 +175,7 @@ class ItineraryController extends Controller
         $request->session()->forget(['routeResult', 'routeOptions']);
 
         return redirect()->route('itineraries.show', $trip)
-            ->with('status', 'Itinerary saved successfully. You can now export or share it.');
+            ->with('status', __('itinerary.saved_successfully'));
     }
 
     private function databaseTime(?string $time): ?string
@@ -681,7 +686,7 @@ class ItineraryController extends Controller
             'location' => $item->location,
             'latitude' => $item->latitude,
             'longitude' => $item->longitude,
-            'notes' => $item->notes,
+            'notes' => $this->localizedItemNotes($item),
             'transport_mode' => $item->transport_mode,
             'transport_label' => $this->ecoAlternatives->labelFor($item->transport_mode),
             'distance_km' => $item->distance_km,
@@ -692,6 +697,35 @@ class ItineraryController extends Controller
             'metadata' => $item->metadata,
             'updated_at' => $item->updated_at?->toIso8601String(),
         ];
+    }
+
+    private function localizedItemNotes(ItineraryItem $item): ?string
+    {
+        if ($item->category !== 'sightseeing') {
+            return $item->notes;
+        }
+
+        $minutes = $item->metadata['suggested_visit_minutes'] ?? null;
+        if (! is_numeric($minutes) && preg_match('/Suggested visit:\s*(\d+(?:\.\d+)?)\s*h(?:r|rs)?/i', (string) $item->notes, $matches)) {
+            $minutes = (int) round((float) $matches[1] * 60);
+        }
+
+        if (! is_numeric($minutes)) {
+            return $item->notes;
+        }
+
+        $minutes = (int) $minutes;
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+        $parts = [];
+        if ($hours > 0) {
+            $parts[] = trans_choice('route_form.duration_hour', $hours, ['count' => $hours]);
+        }
+        if ($remainingMinutes > 0) {
+            $parts[] = trans_choice('route_form.duration_minute', $remainingMinutes, ['count' => $remainingMinutes]);
+        }
+
+        return __('itinerary.suggested_visit_note', ['duration' => implode(' ', $parts)]);
     }
 
     /**
@@ -720,6 +754,7 @@ class ItineraryController extends Controller
             'reorderUrl' => null,
             'shareUrl' => $shared ? null : route('itineraries.share', $trip),
             'weatherUrl' => $shared ? null : route('itinerary.weather', ['itinerary_id' => $trip->getKey()]),
+            'translations' => __('itinerary.client'),
         ];
     }
 }

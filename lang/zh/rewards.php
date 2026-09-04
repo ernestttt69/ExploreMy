@@ -2,7 +2,7 @@
 
 return [
     'page_title' => '绿色奖励 | ExploreMY', 'growing_tree_aria' => '您正在成长的树',
-    'tree_aria' => '您的虚拟树“:tree”，高 :height 米', 'summary_aria' => '您的奖励摘要', 'progress_aria' => '距离下一个树木等级的进度',
+    'tree_aria' => '您的虚拟树“:tree”，高 :height 米', 'height_unit' => '米', 'summary_aria' => '您的奖励摘要', 'progress_aria' => '距离下一个树木等级的进度',
     'level_unlock' => '等级 :level 将在 :exp EXP 时解锁', 'level_exp' => '等级 :level · :exp EXP',
     'tree_stages' => ['seed' => '种子', 'small' => '小树', 'growing' => '成长中的树', 'mature' => '成熟的树', 'ancient' => '高大的树'],
     'green_points' => '绿色积分', 'points' => '积分', 'level' => '等级 :level',

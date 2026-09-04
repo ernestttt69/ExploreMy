@@ -236,6 +236,16 @@ class RoutePlanningController extends Controller
                     $planningEndDate,
                     $planningStartTime
                 );
+                foreach ($routeResult['transit_legs'] as $legIndex => $leg) {
+                    if ($legIndex === 0 && isset($leg['origin_latitude'], $leg['origin_longitude'])) {
+                        $routeResult['stops'][0]['latitude'] = $leg['origin_latitude'];
+                        $routeResult['stops'][0]['longitude'] = $leg['origin_longitude'];
+                    }
+                    if (isset($leg['destination_latitude'], $leg['destination_longitude'])) {
+                        $routeResult['stops'][$legIndex + 1]['latitude'] = $leg['destination_latitude'];
+                        $routeResult['stops'][$legIndex + 1]['longitude'] = $leg['destination_longitude'];
+                    }
+                }
             }
             $routeResult['trip_start_date'] = $planningStartDate->toDateString();
             $routeResult['trip_end_date'] = $planningEndDate->toDateString();
@@ -314,7 +324,7 @@ class RoutePlanningController extends Controller
             if ($this->placesRequireFlight([$from, $to])) {
                 $visitStart = $cursor;
                 $cursor = $cursor->addMinutes($visitMinutes);
-                $displayDate = $legDate->format('D, d M Y');
+                $displayDate = $legDate->locale(app()->getLocale())->translatedFormat('D, d M Y');
                 $displayTime = $cursor->format('g:i A');
                 $transferArrival = $cursor->addSeconds($transferBufferSeconds);
                 $legs[] = [
@@ -324,7 +334,7 @@ class RoutePlanningController extends Controller
                     'distance' => 0,
                     'duration_minutes' => 240,
                     'duration_seconds' => $transferBufferSeconds,
-                    'duration_display' => 'Estimated 4 hrs (not actual travel time)',
+                    'duration_display' => __('route_form.estimated_duration', ['duration' => $this->formatDuration($transferBufferSeconds)]),
                     'departure_time' => $displayTime,
                     'arrival_time' => $transferArrival->format('g:i A'),
                     'arrival_at' => $transferArrival->toIso8601String(),
@@ -340,15 +350,15 @@ class RoutePlanningController extends Controller
                     ),
                     'steps' => [[
                         'mode' => 'FLIGHT_OR_FERRY',
-                        'label' => 'Take a flight or ferry to East/West Malaysia',
+                        'label' => __('route_form.transfer_step'),
                         'from' => $from['name'],
                         'to' => $to['name'],
                         'departure_time' => $displayTime,
                         'arrival_time' => $transferArrival->format('g:i A'),
-                        'duration' => 'Estimated 4 hrs — confirm with operator',
-                        'distance' => 'Not estimated',
+                        'duration' => __('route_form.confirm_duration', ['duration' => $this->formatDuration($transferBufferSeconds)]),
+                        'distance' => __('route_form.not_estimated'),
                     ]],
-                    'transport_summary' => 'Flight or ferry required',
+                    'transport_summary' => __('route_form.flight_required'),
                     'fare' => null,
                     'fare_currency' => null,
                     'encoded_polylines' => [],
@@ -761,6 +771,8 @@ class RoutePlanningController extends Controller
                     'X-Goog-FieldMask' => implode(',', [
                         'routes.distanceMeters',
                         'routes.duration',
+                        'routes.legs.startLocation',
+                        'routes.legs.endLocation',
                         'routes.travelAdvisory.transitFare',
                         'routes.legs.steps.distanceMeters',
                         'routes.legs.steps.staticDuration',
@@ -887,11 +899,18 @@ class RoutePlanningController extends Controller
                     continue;
                 }
 
+                if (mb_strtolower(trim($tripStep['from'])) === mb_strtolower(trim($tripStep['to']))) {
+                    continue;
+                }
+
                 if ($tripStep['mode'] === 'WALK') {
                     $part = __('route.walk_to', ['place' => $tripStep['to']]);
                 } else {
-                    $part = $tripStep['mode'] . ' ' . $tripStep['label']
-                        . ' (' . $tripStep['from'] . ' to ' . $tripStep['to'] . ')';
+                    $part = __('route_form.transport_between', [
+                        'label' => $tripStep['label'],
+                        'from' => $tripStep['from'],
+                        'to' => $tripStep['to'],
+                    ]);
                 }
 
                 if ($transportParts === [] || end($transportParts) !== $part) {
@@ -899,12 +918,18 @@ class RoutePlanningController extends Controller
                 }
             }
 
+            $routeLegs = $response['legs'] ?? [];
+            $firstRouteLeg = $routeLegs[0] ?? [];
+            $lastRouteLeg = $routeLegs === [] ? [] : $routeLegs[array_key_last($routeLegs)];
+
             $legs[] = [
                 'from' => $from['name'],
                 'to' => $to['name'],
                 'destination_place_id' => $to['place_id'] ?? null,
-                'destination_latitude' => $to['latitude'] ?? null,
-                'destination_longitude' => $to['longitude'] ?? null,
+                'origin_latitude' => $firstRouteLeg['startLocation']['latLng']['latitude'] ?? $from['latitude'] ?? null,
+                'origin_longitude' => $firstRouteLeg['startLocation']['latLng']['longitude'] ?? $from['longitude'] ?? null,
+                'destination_latitude' => $lastRouteLeg['endLocation']['latLng']['latitude'] ?? $to['latitude'] ?? null,
+                'destination_longitude' => $lastRouteLeg['endLocation']['latLng']['longitude'] ?? $to['longitude'] ?? null,
                 'navigation_url' => $this->googleMapsNavigationUrl($to, $travelMode),
                 'distance' => round(($response['distanceMeters'] ?? 0) / 1000, 2),
                 'duration_minutes' => (int) ceil($durationSeconds / 60),
@@ -914,7 +939,9 @@ class RoutePlanningController extends Controller
                 'arrival_time' => $this->formatTime($arrivalTime),
                 'arrival_at' => $arrivalTime->toIso8601String(),
                 'trip_date' => $visitStartTime->toDateString(),
-                'trip_date_display' => $visitStartTime->format('D, d M Y'),
+                'trip_date_display' => $visitStartTime
+                    ->locale(app()->getLocale())
+                    ->translatedFormat('D, d M Y'),
                 'visit_place' => $from['name'],
                 'visit_start_time' => $this->formatTime($visitStartTime),
                 'visit_end_time' => $this->formatTime($departureTime),
@@ -1082,8 +1109,8 @@ class RoutePlanningController extends Controller
             'arrival_time' => $this->formatTime($arrival),
             'duration' => $this->formatDuration($arrival->diffInSeconds($departure)),
             'distance' => $distanceMeters >= 1000
-                ? number_format($distanceMeters / 1000, 1) . ' km'
-                : $distanceMeters . ' m',
+                ? __('route_form.distance_km', ['distance' => number_format($distanceMeters / 1000, 1)])
+                : __('route_form.distance_m', ['distance' => $distanceMeters]),
         ];
     }
 
@@ -1173,8 +1200,17 @@ class RoutePlanningController extends Controller
         $hours = intdiv($minutes, 60);
         $remainingMinutes = $minutes % 60;
 
-        return ($hours > 0 ? $hours . ' hr' . ($hours > 1 ? 's' : '') : '')
-            . ($remainingMinutes > 0 ? ($hours > 0 ? ' ' : '') . $remainingMinutes . ' min' : '');
+        $parts = [];
+
+        if ($hours > 0) {
+            $parts[] = trans_choice('route_form.duration_hour', $hours, ['count' => $hours]);
+        }
+
+        if ($remainingMinutes > 0 || $parts === []) {
+            $parts[] = trans_choice('route_form.duration_minute', $remainingMinutes, ['count' => $remainingMinutes]);
+        }
+
+        return implode(' ', $parts);
     }
 
     private function formatDuration(float $seconds): string
@@ -1185,13 +1221,15 @@ class RoutePlanningController extends Controller
         $hours = intdiv($minutesAfterDays, 60);
         $remainingMinutes = $minutesAfterDays % 60;
 
+        $parts = [];
+
         if ($days > 0) {
-            return $days . ' day' . ($days > 1 ? 's' : '')
-                . ' ' . $hours . ' hr' . ($hours !== 1 ? 's' : '')
-                . ' ' . $remainingMinutes . ' min';
+            $parts[] = trans_choice('route_form.duration_day', $days, ['count' => $days]);
         }
 
-        return $hours . ' hr' . ($hours !== 1 ? 's' : '')
-            . ' ' . $remainingMinutes . ' min';
+        $parts[] = trans_choice('route_form.duration_hour', $hours, ['count' => $hours]);
+        $parts[] = trans_choice('route_form.duration_minute', $remainingMinutes, ['count' => $remainingMinutes]);
+
+        return implode(' ', $parts);
     }
 }

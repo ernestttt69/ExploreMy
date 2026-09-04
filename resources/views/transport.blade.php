@@ -12,6 +12,7 @@
 <body class="transport-page">
 
 @include('components.navbar')
+<x-page-back :href="route('dashboard')" :label="__('ui.profile.back')" />
 
 <div class="transport-container">
 
@@ -427,7 +428,9 @@ function viewStationDetails(placeId) {
             document.getElementById('detail-station-address').innerText = data.address;
             document.getElementById('detail-wheelchair').innerText = data.wheelchair;
             document.getElementById('detail-phone').innerText = data.phone;
-            document.getElementById('detail-rating').innerText = `${data.rating} ★ (${data.user_ratings_total} reviews)`;
+            const ratingReviews = {{ Illuminate\Support\Js::from(__('messages.transport_rating_reviews', ['count' => '__COUNT__'])) }}
+                .replace('__COUNT__', data.user_ratings_total);
+            document.getElementById('detail-rating').innerText = `${data.rating} ★ (${ratingReviews})`;
             document.getElementById('detail-maps-link').href = data.google_maps_url;
 
             // Open/Closed Status

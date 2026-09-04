@@ -2,7 +2,7 @@
 
 return [
     'page_title' => 'Green Rewards | ExploreMY', 'growing_tree_aria' => 'Your growing tree',
-    'tree_aria' => 'Your :tree virtual tree, :height metres tall', 'summary_aria' => 'Your rewards summary', 'progress_aria' => 'Progress to next tree level',
+    'tree_aria' => 'Your :tree virtual tree, :height metres tall', 'height_unit' => 'm', 'summary_aria' => 'Your rewards summary', 'progress_aria' => 'Progress to next tree level',
     'level_unlock' => 'Level :level unlocks at :exp EXP', 'level_exp' => 'Level :level · :exp EXP',
     'tree_stages' => ['seed' => 'Seed', 'small' => 'Small tree', 'growing' => 'Growing tree', 'mature' => 'Mature tree', 'ancient' => 'Tall trunk'],
     'green_points' => 'Green points', 'points' => 'points', 'level' => 'Level :level',

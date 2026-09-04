@@ -145,6 +145,8 @@ class WeatherService
             'condition_code' => null,
             'condition' => null,
             'is_adverse_alert' => false,
+            'is_severe' => false,
+            'alert_reason' => null,
             'is_historical_estimate' => $forecastDate->isAfter(today()->addDays(self::LIVE_FORECAST_DAYS)),
             'is_stale' => false,
         ];
@@ -158,7 +160,22 @@ class WeatherService
      */
     private function applyAlert(array $forecast, bool $isOutdoor): array
     {
-        $forecast['is_adverse_alert'] = $isOutdoor && (float) ($forecast['precipitation_probability'] ?? 0) > 60;
+        $rainProbability = (float) ($forecast['precipitation_probability'] ?? 0);
+        $conditionCode = (int) ($forecast['condition_code'] ?? 0);
+        $isSevere = in_array($conditionCode, [65, 67, 75, 82, 86, 95, 96, 99], true);
+
+        // Cached forecasts are shared across locales. Rebuild all human-readable
+        // labels for the current request so a language switch never shows stale text.
+        $forecast['condition'] = $forecast['condition_code'] === null
+            ? null
+            : $this->conditionLabel($forecast['condition_code']);
+        $forecast['is_severe'] = $isSevere;
+        $forecast['is_adverse_alert'] = $isOutdoor && ($rainProbability > 60 || $isSevere);
+        $forecast['alert_reason'] = match (true) {
+            ! $forecast['is_adverse_alert'] => null,
+            $isSevere => __('itinerary.severe_reason'),
+            default => __('itinerary.rain_reason', ['probability' => (int) $rainProbability]),
+        };
 
         return $forecast;
     }
@@ -195,14 +212,14 @@ class WeatherService
     private function conditionLabel(float|int|null $code): ?string
     {
         return match ((int) $code) {
-            0 => 'Clear sky',
-            1, 2 => 'Partly cloudy',
-            3 => 'Overcast',
-            45, 48 => 'Fog',
-            51, 53, 55, 56, 57 => 'Drizzle',
-            61, 63, 65, 66, 67, 80, 81, 82 => 'Rain',
-            71, 73, 75, 77, 85, 86 => 'Snow',
-            95, 96, 99 => 'Thunderstorm',
+            0 => __('itinerary.conditions.clear'),
+            1, 2 => __('itinerary.conditions.partly_cloudy'),
+            3 => __('itinerary.conditions.overcast'),
+            45, 48 => __('itinerary.conditions.fog'),
+            51, 53, 55, 56, 57 => __('itinerary.conditions.drizzle'),
+            61, 63, 65, 66, 67, 80, 81, 82 => __('itinerary.conditions.rain'),
+            71, 73, 75, 77, 85, 86 => __('itinerary.conditions.snow'),
+            95, 96, 99 => __('itinerary.conditions.thunderstorm'),
             default => null,
         };
     }

@@ -11,10 +11,33 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #eef6f3 0%, #e0f2fe 100%);
+    background: radial-gradient(circle at 92% 5%, #e4f2ec 0, transparent 25%), #f5f8f6;
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: #2d3748;
 }
+
+.page-back-control {
+    position: fixed;
+    z-index: 10;
+    top: 24px;
+    left: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 8px 13px;
+    border: 1px solid #d7e5df;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 7px 22px rgba(18, 60, 49, 0.1);
+    color: #315f50;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.page-back-control svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.page-back-control:hover { color: #123c31; transform: translateX(-2px); }
 
 /* Login Wrapper */
 .login-wrapper {

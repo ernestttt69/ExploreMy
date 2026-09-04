@@ -5,9 +5,16 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
+        // SQLite is used only for isolated automated tests. The preceding
+        // migration already provides the column needed by application code.
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         // Step 1: Make attraction_id not nullable (data already backfilled)
         DB::statement('ALTER TABLE saved_place_collection_items MODIFY attraction_id INT UNSIGNED NOT NULL');
 
@@ -26,6 +33,12 @@ return new class extends Migration {
 
         // Step 4: Make wishlist_id nullable
         DB::statement('ALTER TABLE saved_place_collection_items MODIFY wishlist_id INT UNSIGNED NULL');
+
+        // collection_id needs its own index before MySQL can remove the old
+        // composite index that currently supports its foreign key.
+        Schema::table('saved_place_collection_items', function (Blueprint $table) {
+            $table->index('collection_id');
+        });
 
         // Step 5: Update unique constraint to use attraction_id instead of wishlist_id
         Schema::table('saved_place_collection_items', function (Blueprint $table) {

@@ -28,7 +28,7 @@
                 @endforeach
             </div>
             @if($savedPlacesCount > 8)
-                <small>You can choose up to 8 destinations from all your saved places.</small>
+                <small>{{ __('route_form.up_to_eight') }}</small>
             @elseif($savedPlacesCount < 2)
                 <small>{{ __('route.need_two') }}</small>
             @endif
@@ -36,11 +36,8 @@
 
         @if($requiresFlight || session('flightRequired'))
             <aside class="flight-recommendation" role="note">
-                <strong>Flight required</strong>
-                <span>
-                    Your trip crosses between Peninsular and East Malaysia. The itinerary will include
-                    a flight or ferry transfer, with local transportation planned before and after it.
-                </span>
+                <strong>{{ __('route_form.flight_required') }}</strong>
+                <span>{{ __('route_form.flight_required_description') }}</span>
             </aside>
         @endif
     @endif
@@ -70,12 +67,12 @@
                     {{ $routeResult['option_label'] }}
                 </span>
                 <p class="route-trip-dates">
-                    {{ \Carbon\CarbonImmutable::parse($routeResult['trip_start_date'])->format('d M Y') }}
+                    {{ \Carbon\CarbonImmutable::parse($routeResult['trip_start_date'])->locale(app()->getLocale())->translatedFormat('d M Y') }}
                     @if (($routeResult['trip_day_count'] ?? 1) > 1)
-                        &ndash; {{ \Carbon\CarbonImmutable::parse($routeResult['trip_end_date'])->format('d M Y') }}
-                        ({{ $routeResult['trip_day_count'] }} days)
+                        &ndash; {{ \Carbon\CarbonImmutable::parse($routeResult['trip_end_date'])->locale(app()->getLocale())->translatedFormat('d M Y') }}
+                        ({{ __('route_form.days', ['count' => $routeResult['trip_day_count']]) }})
                     @else
-                        (1 day)
+                        ({{ __('route_form.one_day') }})
                     @endif
                 </p>
                 @if(!empty($routeResult['omitted_places']))
@@ -96,7 +93,7 @@
                 <div class="route-options-heading">
                     <div>
                         <strong>{{ __('route.options_found', ['count' => count(session('routeOptions'))]) }}</strong>
-                        <span>Compare transportation options for your selected stop sequence</span>
+                        <span>{{ __('route_form.compare_options') }}</span>
                     </div>
                 </div>
 
@@ -126,7 +123,7 @@
                                 @endif
                                 <div>
                                     <span>{{ __('route.distance') }}</span>
-                                    <strong>{{ number_format($option['total_distance'], 2) }} km</strong>
+                                    <strong>{{ __('route_form.distance_km', ['distance' => number_format($option['total_distance'], 2)]) }}</strong>
                                 </div>
                             </div>
 
@@ -142,7 +139,7 @@
                                                     : __('route.from_previous', ['distance' => number_format($stop['distance_from_previous'], 2)]) }}
                                             </small>
                                             <small class="stop-visit-suggestion">
-                                                Suggested visit: {{ $stop['suggested_visit_display'] }}
+                                                {{ __('route_form.suggested_visit', ['duration' => $stop['suggested_visit_display']]) }}
                                             </small>
                                         </div>
                                     </li>
@@ -182,20 +179,17 @@
                 <section class="cross-region-transfer-card">
                     <div class="transfer-icon" aria-hidden="true">&#9992;</div>
                     <div class="transfer-copy">
-                        <span class="transfer-kicker">Cross-region transfer</span>
+                        <span class="transfer-kicker">{{ __('route_form.cross_region_transfer') }}</span>
                         <div class="transfer-route">
                             <strong>{{ $transferLeg['from'] }}</strong>
                             <span class="transfer-line"><i></i><b>&#9992;</b><i></i></span>
                             <strong>{{ $transferLeg['to'] }}</strong>
                         </div>
-                        <p>Travel by flight or ferry, then continue with the local itinerary after arrival.</p>
-                        <small>
-                            The four-hour allowance is only a planning estimate, not the actual travel time.
-                            Confirm the departure, arrival, duration, and fare with the airline or ferry operator.
-                        </small>
+                        <p>{{ __('route_form.transfer_description') }}</p>
+                        <small>{{ __('route_form.transfer_warning') }}</small>
                     </div>
                     <a href="https://www.google.com/travel/flights" target="_blank" rel="noopener noreferrer">
-                        Check flights
+                        {{ __('route_form.check_flights') }}
                     </a>
                 </section>
             @endif
@@ -252,8 +246,7 @@
                                 <div>
                                     <strong>{{ $leg['from'] }}</strong>
                                     <small class="stop-visit-suggestion">
-                                        Explore until {{ $leg['visit_end_time'] }}
-                                        &middot; Suggested {{ $leg['visit_duration_display'] }}
+                                        {{ __('route_form.explore_until', ['time' => $leg['visit_end_time'], 'duration' => $leg['visit_duration_display']]) }}
                                     </small>
                                 </div>
                             </div>
@@ -262,10 +255,10 @@
                                 <span>{{ $leg['transport_summary'] }}</span>
                                 <small>
                                     @if(!empty($leg['is_cross_region_transfer']))
-                                        Estimated planning time only &middot; Not an actual flight or ferry duration
+                                        {{ __('route_form.estimated_transfer') }}
                                     @else
                                         {{ $leg['duration_display'] }}
-                                        &middot; {{ number_format($leg['distance'], 2) }} km
+                                        &middot; {{ __('route_form.distance_km', ['distance' => number_format($leg['distance'], 2)]) }}
                                         @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE' && $leg['fare'] !== null)
                                             &middot;
                                             {{ $leg['fare_currency'] }} {{ number_format($leg['fare'], 2) }}
@@ -281,8 +274,7 @@
                                     <strong>{{ __('route.arrive', ['place' => $leg['to']]) }}</strong>
                                     @if($loop->last)
                                         <small class="stop-visit-suggestion">
-                                            Explore until {{ $routeResult['final_visit_end_time'] }}
-                                            &middot; Suggested {{ last($routeResult['stops'])['suggested_visit_display'] }}
+                                            {{ __('route_form.explore_until', ['time' => $routeResult['final_visit_end_time'], 'duration' => last($routeResult['stops'])['suggested_visit_display']]) }}
                                         </small>
                                     @endif
                                 </div>
@@ -303,7 +295,7 @@
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
-                                    {{ __('route.navigate_google_maps') }}
+                                    {{ __('route_form.navigate_google_maps') }}
                                 </a>
                             @endif
                         </div>
@@ -355,7 +347,7 @@
             <div class="route-total">
                 @if (($routeResult['travel_mode'] ?? null) !== 'MIXED')
                     <span>{{ __('route.total_distance') }}</span>
-                    <strong>{{ number_format($routeResult['total_distance'], 2) }} km</strong>
+                    <strong>{{ __('route_form.distance_km', ['distance' => number_format($routeResult['total_distance'], 2)]) }}</strong>
                 @endif
                 <span>{{ __('route.estimated_time') }}</span>
                 <strong>{{ $routeResult['total_duration_display'] }}</strong>
@@ -398,23 +390,23 @@
                 <h2>{{ __('route.preference') }}</h2>
                 <p>{{ __('route.optimise') }}</p>
             </div>
-            <p class="google-attribution">Powered by Google, &copy; {{ date('Y') }} Google</p>
+            <p class="google-attribution">{{ __('route_form.google_attribution', ['year' => date('Y')]) }}</p>
 
             @if($collection)
                 <div class="route-start-time-summary">
-                    <span>Daily starting time</span>
+                    <span>{{ __('route_form.daily_starting_time') }}</span>
                     <strong>{{ \Carbon\CarbonImmutable::parse($collection->start_time ?: '09:00')->format('g:i A') }}</strong>
                 </div>
             @else
                 <div class="route-start-time-field">
-                    <label for="route-start-time">Trip starting time <small>(optional)</small></label>
+                    <label for="route-start-time">{{ __('route_form.trip_starting_time') }} <small>({{ __('route_form.optional') }})</small></label>
                     <input
                         type="time"
                         id="route-start-time"
                         name="start_time"
                         value="{{ old('start_time', session('routeResult')['trip_start_time'] ?? '') }}"
                     >
-                    <small>Leave blank to start now. If the selected time has passed today, the trip starts tomorrow.</small>
+                    <small>{{ __('route_form.start_time_help') }}</small>
                     @error('start_time')<span class="route-field-error">{{ $message }}</span>@enderror
                 </div>
             @endif
@@ -462,10 +454,10 @@
                                 data-saved-place-search
                                 data-search-url="{{ route('route.saved-places.search') }}"
                                 data-collection-id="{{ $collection?->collection_id }}"
-                                placeholder="Search by place, category, or state"
+                                placeholder="{{ __('route_form.search_placeholder') }}"
                                 autocomplete="off"
                             >
-                            <small data-saved-search-status>Showing up to 20 saved places</small>
+                            <small data-saved-search-status>{{ __('route_form.showing_saved_places') }}</small>
                         </div>
                     @endif
                     <select id="add-destination" data-add-destination>
@@ -483,7 +475,7 @@
                             class="saved-place-load-more"
                             data-saved-place-load-more
                             @if($savedPlacesCount <= 20) hidden @endif
-                        >Load more</button>
+                        >{{ __('route_form.load_more') }}</button>
                     @endif
                 </div>
                 <p class="itinerary-hint" data-itinerary-hint>{{ __('route.choose_two') }}</p>
@@ -563,6 +555,10 @@
     'remove' => __('route.remove_destination'),
     'choosePlace' => __('route.choose_place'),
     'shareText' => __('route.share_text'),
+    'searching' => __('route_form.searching'),
+    'matchingLoaded' => __('route_form.matching_loaded'),
+    'noSavedPlaces' => __('route_form.no_saved_places'),
+    'loadFailed' => __('route_form.load_failed'),
 ])
 window.routeTranslations = {{ Illuminate\Support\Js::from($routeTranslations) }};
 </script>

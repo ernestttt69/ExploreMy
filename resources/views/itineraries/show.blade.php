@@ -6,12 +6,13 @@
     <title>{{ $trip->title }} - ExploreMY</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/itinerary.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/itinerary.css') }}?v={{ filemtime(public_path('css/itinerary.css')) }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body class="itinerary-body">
 
 @include('components.navbar')
+<x-page-back :href="$shareToken ? route('explore') : route('itineraries.index')" :label="__('itinerary.back')" />
 
 <main class="itinerary-page itinerary-detail-page">
     <div class="container">
@@ -21,14 +22,13 @@
 
         <section class="itinerary-titlebar">
             <div>
-                <a class="back-link" href="{{ auth()->check() ? route('itineraries.index') : '#' }}">← {{ __('itinerary.back') }}</a>
                 <div class="title-line">
                     <h1>{{ $trip->title }}</h1>
                     @if($sharedPermission)
-                        <span class="permission-badge">{{ $sharedPermission === 'edit' ? 'Collaborative link' : 'View-only link' }}</span>
+                        <span class="permission-badge">{{ $sharedPermission === 'edit' ? __('trip.collab') : __('trip.view_only') }}</span>
                     @endif
                 </div>
-                <p>{{ $trip->destination ?: 'Malaysia' }} · {{ $trip->start_date?->format('d M Y') ?? 'Dates to be confirmed' }}{{ $trip->end_date ? ' - '.$trip->end_date->format('d M Y') : '' }}</p>
+                <p>{{ $trip->destination ?: 'Malaysia' }} · {{ $trip->start_date?->translatedFormat('d M Y') ?? __('trip.dates_tbc') }}{{ $trip->end_date ? ' - '.$trip->end_date->translatedFormat('d M Y') : '' }}</p>
             </div>
             <div class="title-actions">
                 @if(!$shareToken)
@@ -63,10 +63,10 @@
                         @if($trip->items->isEmpty())
                             <div class="empty-itinerary card-surface">
                                 <div class="empty-illustration" aria-hidden="true">✦</div>
-                                <h2>Add your first activity</h2>
-                                <p>Start with transport, a stay, food, or an activity. We will calculate its estimated footprint as you plan.</p>
+                                <h2>{{ __('trip.empty_title') }}</h2>
+                                <p>{{ __('trip.empty_text') }}</p>
                                 @if($canEdit)
-                                    <button class="button button-primary" type="button" data-action="open-item-dialog">Add activity</button>
+                                    <button class="button button-primary" type="button" data-action="open-item-dialog">{{ __('trip.add') }}</button>
                                 @endif
                             </div>
                         @endif
@@ -78,7 +78,7 @@
                 </section>
 
                 <section class="reorder-hint" id="reorder-hint" @if(! $canEdit) hidden @endif>
-                    <span aria-hidden="true">↕</span> Drag cards within a day to reorder them. Changes save automatically when you are online.
+                    <span aria-hidden="true">↕</span> {{ __('trip.reorder') }}
                 </section>
             </div>
 
@@ -86,26 +86,26 @@
                 <section class="carbon-card card-surface">
                     <div class="section-heading">
                         <div>
-                            <span class="eyebrow">Itinerary eco-dashboard</span>
-                            <h2>Carbon footprint</h2>
+                            <span class="eyebrow">{{ __('trip.eco') }}</span>
+                            <h2>{{ __('trip.carbon') }}</h2>
                         </div>
                         <span class="leaf-mark" aria-hidden="true">♧</span>
                     </div>
                     <div class="carbon-total">
                         <span id="carbon-total">0</span>
-                        <small>kg CO<sub>2</sub>e estimated</small>
+                        <small>{{ __('trip.estimated') }}</small>
                     </div>
                     <div class="carbon-bar"><span id="carbon-bar"></span></div>
                     <div class="carbon-breakdown" id="carbon-breakdown"></div>
                 </section>
 
                 <section class="quick-actions card-surface">
-                    <span class="eyebrow">Quick actions</span>
-                    <h2>Keep planning</h2>
+                    <span class="eyebrow">{{ __('trip.quick') }}</span>
+                    <h2>{{ __('trip.keep') }}</h2>
                     <ul>
-                        <li><span aria-hidden="true">✓</span> Every online edit is saved to your cloud itinerary.</li>
-                        <li><span aria-hidden="true">✓</span> Offline edits are kept on this device and synced when you reconnect.</li>
-                        <li><span aria-hidden="true">✓</span> High-emission transport gets a lower-carbon alternative.</li>
+                        <li><span aria-hidden="true">✓</span> {{ __('trip.cloud') }}</li>
+                        <li><span aria-hidden="true">✓</span> {{ __('trip.offline') }}</li>
+                        <li><span aria-hidden="true">✓</span> {{ __('trip.alternative') }}</li>
                     </ul>
                 </section>
             </aside>
@@ -119,51 +119,51 @@
         <input type="hidden" name="item_id" id="item-id">
         <div class="dialog-heading">
             <div>
-                <span class="eyebrow">Itinerary item</span>
-                <h2 id="item-dialog-title">Add an item</h2>
+                <span class="eyebrow">{{ __('trip.item') }}</span>
+                <h2 id="item-dialog-title">{{ __('itinerary.client.add_item') }}</h2>
             </div>
             <button type="button" class="icon-button" aria-label="Close" data-action="close-item-dialog">×</button>
         </div>
         <div class="form-grid">
             <label>
-                Type
+                {{ __('trip.type') }}
                 <select name="category" id="item-category" required>
-                    <option value="transport">Transport</option>
-                    <option value="lodging">Lodging</option>
-                    <option value="activity" selected>Activity</option>
-                    <option value="food">Food</option>
-                    <option value="sightseeing">Sightseeing</option>
+                    <option value="transport">{{ __('itinerary.client.transport') }}</option>
+                    <option value="lodging">{{ __('itinerary.client.lodging') }}</option>
+                    <option value="activity" selected>{{ __('itinerary.client.activity') }}</option>
+                    <option value="food">{{ __('itinerary.client.food') }}</option>
+                    <option value="sightseeing">{{ __('itinerary.client.sightseeing') }}</option>
                 </select>
             </label>
             <label>
-                Title
+                {{ __('trip.title') }}
                 <input name="title" id="item-title" required maxlength="160" placeholder="e.g. KL Sentral to Penang">
             </label>
         </div>
         <div class="form-grid form-grid-three">
             <label>
-                Date
+                {{ __('trip.date') }}
                 <input type="date" name="scheduled_date" id="item-date" value="{{ $trip->start_date?->toDateString() }}">
             </label>
             <label>
-                Start time
+                {{ __('trip.start') }}
                 <input type="time" name="start_time" id="item-start-time">
             </label>
             <label>
-                End time
+                {{ __('trip.end') }}
                 <input type="time" name="end_time" id="item-end-time">
             </label>
         </div>
         <label>
-            Location
+            {{ __('trip.location') }}
             <input name="location" id="item-location" maxlength="180" placeholder="e.g. George Town, Penang">
         </label>
         <div class="transport-fields" id="transport-fields">
             <div class="form-grid">
                 <label>
-                    Transport mode
+                    {{ __('trip.mode') }}
                     <select name="transport_mode" id="item-transport-mode">
-                        <option value="">Choose a mode</option>
+                        <option value="">{{ __('trip.choose') }}</option>
                         <option value="flight">Flight</option>
                         <option value="private_car">Private car</option>
                         <option value="taxi">Taxi</option>
@@ -176,26 +176,26 @@
                     </select>
                 </label>
                 <label>
-                    Distance (km)
+                    {{ __('trip.distance') }}
                     <input type="number" name="distance_km" id="item-distance" min="0" max="50000" step="0.1" placeholder="e.g. 355">
                 </label>
             </div>
-            <p class="field-help">Flights, private cars, and taxis will show a lower-carbon suggestion after saving.</p>
+            <p class="field-help">{{ __('trip.transport_help') }}</p>
         </div>
         <label>
-            Notes <span class="muted">(optional)</span>
+            {{ __('trip.notes') }} <span class="muted">({{ __('trip.optional') }})</span>
             <textarea name="notes" id="item-notes" rows="3" maxlength="3000" placeholder="Booking details, accessibility notes, or a reminder."></textarea>
         </label>
         <details class="coordinates-details">
-            <summary>Map coordinates <span class="muted">(optional)</span></summary>
+            <summary>{{ __('trip.coordinates') }} <span class="muted">({{ __('trip.optional') }})</span></summary>
             <div class="form-grid">
-                <label>Latitude <input type="number" name="latitude" id="item-latitude" min="-90" max="90" step="0.0000001" placeholder="5.4141"></label>
-                <label>Longitude <input type="number" name="longitude" id="item-longitude" min="-180" max="180" step="0.0000001" placeholder="100.3288"></label>
+                <label>{{ __('trip.latitude') }} <input type="number" name="latitude" id="item-latitude" min="-90" max="90" step="0.0000001" placeholder="5.4141"></label>
+                <label>{{ __('trip.longitude') }} <input type="number" name="longitude" id="item-longitude" min="-180" max="180" step="0.0000001" placeholder="100.3288"></label>
             </div>
         </details>
         <div class="dialog-actions">
-            <button type="button" class="button button-quiet" data-action="close-item-dialog">Cancel</button>
-            <button class="button button-primary" type="submit" id="item-submit">Save item</button>
+            <button type="button" class="button button-quiet" data-action="close-item-dialog">{{ __('trip.cancel') }}</button>
+            <button class="button button-primary" type="submit" id="item-submit">{{ __('trip.save') }}</button>
         </div>
     </form>
 </dialog>
@@ -206,30 +206,30 @@
     <form id="share-form" class="dialog-form">
         <div class="dialog-heading">
             <div>
-                <span class="eyebrow">Share itinerary</span>
-                <h2 id="share-dialog-title">Invite a collaborator</h2>
+                <span class="eyebrow">{{ __('trip.share') }}</span>
+                <h2 id="share-dialog-title">{{ __('trip.invite') }}</h2>
             </div>
             <button type="button" class="icon-button" aria-label="Close" data-action="close-share-dialog">×</button>
         </div>
         <label>
-            Permission
+            {{ __('trip.permission') }}
             <select name="permission" id="share-permission">
-                <option value="view">View-only (recommended)</option>
-                <option value="edit">Collaborative editing</option>
+                <option value="view">{{ __('trip.view_recommended') }}</option>
+                <option value="edit">{{ __('trip.edit') }}</option>
             </select>
         </label>
         <label>
-            Link expiry <span class="muted">(optional)</span>
+            {{ __('trip.expiry') }} <span class="muted">({{ __('trip.optional') }})</span>
             <input type="datetime-local" name="expires_at" id="share-expiry">
         </label>
-        <p class="field-help">Each link uses a unique secret token. You can create a separate link whenever access needs to change.</p>
+        <p class="field-help">{{ __('trip.share_help') }}</p>
         <div id="share-result" class="share-result" hidden>
-            <label>Secure link <input id="share-url" readonly></label>
-            <button type="button" class="button button-outline" data-action="copy-share">Copy link</button>
+            <label>{{ __('trip.secure') }} <input id="share-url" readonly></label>
+            <button type="button" class="button button-outline" data-action="copy-share">{{ __('trip.copy') }}</button>
         </div>
         <div class="dialog-actions">
-            <button type="button" class="button button-quiet" data-action="close-share-dialog">Close</button>
-            <button class="button button-primary" type="submit">Generate link</button>
+            <button type="button" class="button button-quiet" data-action="close-share-dialog">{{ __('trip.close') }}</button>
+            <button class="button button-primary" type="submit">{{ __('trip.generate') }}</button>
         </div>
     </form>
 </dialog>
@@ -239,7 +239,7 @@
 window.itineraryConfig = @json($clientConfig);
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{{ asset('js/itinerary.js') }}"></script>
+<script src="{{ asset('js/itinerary.js') }}?v={{ filemtime(public_path('js/itinerary.js')) }}"></script>
 
 @include('components.footer')
 
