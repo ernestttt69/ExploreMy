@@ -19,11 +19,15 @@ class GreenRewardController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $pendingRewards = session('pending_reward_activities', []);
+        unset($pendingRewards['generate_itinerary']);
+        session()->put('pending_reward_activities', $pendingRewards);
         $wallet = $this->rewards->wallet($user);
         $tree = GreenTree::firstOrCreate(
             ['user_id' => $user->user_id],
             ['level' => 0, 'experience' => 0, 'growth_stage' => 'Seed']
         );
+        $this->rewards->syncTreeMilestones($user, $tree);
         $achievements = GreenAchievement::orderBy('id')->get();
         $unlocked = DB::table('user_green_achievements')->where('user_id', $user->user_id)->pluck('achievement_id')->all();
         $claimable = DB::table('user_green_achievements')->where('user_id', $user->user_id)->whereNull('claimed_at')->pluck('achievement_id')->all();
@@ -96,7 +100,7 @@ class GreenRewardController extends Controller
     public function collectActivity(Request $request)
     {
         $validated = $request->validate([
-            'activity' => ['required', 'in:daily_login,save_attraction,generate_itinerary,export_itinerary,export_guidance,share_itinerary'],
+            'activity' => ['required', 'in:daily_login,save_attraction,save_itinerary,export_itinerary,export_guidance,share_itinerary,tree_milestone'],
         ]);
 
         $awarded = $this->rewards->collectQueuedActivity(auth()->user(), $validated['activity']);
@@ -105,17 +109,39 @@ class GreenRewardController extends Controller
 
         $remaining = (int) session('pending_reward_activities.' . $validated['activity'], 0);
 
-        return back()->with('success', __('messages.activity_reward_claimed', [
+        $message = __('messages.activity_reward_claimed', [
             'activity' => __('rewards.activity_names.' . $validated['activity']),
             'remaining' => trans_choice('rewards.rewards_remaining', $remaining, ['count' => $remaining]),
-        ]));
+        ]);
+
+        if ($request->expectsJson()) {
+            $pendingRewards = session('pending_reward_activities', []);
+
+            return response()->json([
+                'message' => $message,
+                'points' => $this->rewards->wallet(auth()->user())->points,
+                'remaining' => $remaining,
+                'remainingLabel' => $remaining > 0
+                    ? trans_choice('rewards.rewards_ready', $remaining, ['count' => $remaining])
+                    : __('rewards.none_ready'),
+                'buttonLabel' => $remaining > 0
+                    ? __('rewards.collect_one', ['count' => $remaining])
+                    : __('rewards.collect'),
+                'hasPendingRewards' => collect($pendingRewards)->sum() > 0,
+            ]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function collectAchievement(GreenAchievement $achievement)
     {
         abort_unless($this->rewards->collectAchievement(auth()->user(), $achievement), 422, __('messages.achievement_unavailable'));
         if (request()->expectsJson()) {
-            return response()->json(['message' => __('messages.achievement_collected', ['points' => $achievement->reward_points, 'achievement' => $achievement->name])]);
+            return response()->json([
+                'message' => __('messages.achievement_collected', ['points' => $achievement->reward_points, 'achievement' => $achievement->name]),
+                'points' => $this->rewards->wallet(auth()->user())->points,
+            ]);
         }
         return back()->with('success', __('messages.achievement_collected', ['points' => $achievement->reward_points, 'achievement' => $achievement->name]));
     }

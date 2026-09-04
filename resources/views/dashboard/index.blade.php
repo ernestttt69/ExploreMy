@@ -17,13 +17,21 @@
         <section class="welcome-panel" aria-labelledby="welcome-title">
             <div class="welcome-content">
                 <span class="eyebrow">{{ __('ui.dashboard.eyebrow') }}</span>
-                <h1 id="welcome-title">{{ __('ui.messages.welcome') }}</h1>
+                <h1 id="welcome-title">{{ __('ui.dashboard.welcome', ['name' => Str::before($user->name, ' ')]) }}</h1>
                 <p>{{ __('ui.dashboard.intro') }}</p>
                 <div class="welcome-actions">
                     <a href="{{ route('attractions.index') }}" class="btn-dashboard btn-dashboard-light">{{ __('ui.dashboard.explore_my') }} <span aria-hidden="true">&rarr;</span></a>
+                    <a href="{{ route('saved-places.index') }}" class="btn-dashboard btn-dashboard-ghost">{{ __('ui.dashboard.view_saved') }}</a>
                 </div>
             </div>
             <div class="welcome-visual" aria-hidden="true"><div class="route-line"></div><i class="pin pin-one"></i><i class="pin pin-two"></i><div class="destination-card"><span>MY</span><div><small>{{ __('ui.dashboard.next') }}</small><strong>{{ __('ui.dashboard.explore_my') }}</strong></div></div></div>
+        </section>
+
+        <section class="dashboard-metrics" aria-label="{{ __('ui.dashboard.glance') }}">
+            <a href="{{ route('saved-places.index') }}"><span>{{ __('ui.dashboard.saved') }}</span><strong>{{ number_format($savedCount) }}</strong><small>{{ __('ui.dashboard.collection') }}</small></a>
+            <a href="{{ route('itineraries.index') }}"><span>{{ __('pages.common.trips') }}</span><strong>{{ number_format($tripCount) }}</strong><small>{{ __('pages.shortcuts.trips') }}</small></a>
+            <a href="{{ route('rewards') }}"><span>{{ __('pages.common.rewards') }}</span><strong>{{ number_format($greenPoints) }}</strong><small>{{ __('rewards.green_points') }}</small></a>
+            <div class="dashboard-next-trip"><span>{{ __('ui.dashboard.next') }}</span>@if($recentTrip)<strong>{{ $recentTrip->title }}</strong><small>{{ optional($recentTrip->start_date)->translatedFormat('d M Y') }}</small><a href="{{ route('itineraries.show', $recentTrip) }}" aria-label="{{ __('itinerary.view') }} {{ $recentTrip->title }}">&rarr;</a>@else<strong>{{ __('ui.dashboard.explore_my') }}</strong><small>{{ __('ui.dashboard.intro') }}</small>@endif</div>
         </section>
 
         <section class="dashboard-section" aria-labelledby="overview-title">

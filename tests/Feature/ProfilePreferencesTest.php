@@ -43,4 +43,5 @@ class ProfilePreferencesTest extends TestCase
             $user->preferenceCategories()->pluck('preference_categories.preference_id')->all()
         );
     }
+
 }

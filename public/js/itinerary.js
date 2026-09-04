@@ -111,6 +111,10 @@
             shareForm.addEventListener('submit', createShareLink);
         }
 
+        document.querySelectorAll('[data-reward-export]').forEach((link) => {
+            link.addEventListener('click', showRewardDot);
+        });
+
         window.addEventListener('online', () => {
             showBanner(t('online'));
             syncOfflineEdits();
@@ -543,6 +547,9 @@
                 document.getElementById('share-url').value = payload.url;
                 result.hidden = false;
                 showBanner(payload.message);
+                if (payload.reward_queued) {
+                    showRewardDot();
+                }
             })
             .catch(handleRequestFailure);
     }
@@ -606,6 +613,10 @@
         }
 
         window.setTimeout(() => leafletMap.invalidateSize(), 10);
+    }
+
+    function showRewardDot() {
+        document.querySelector('[data-reward-dot]')?.removeAttribute('hidden');
     }
 
     /**

@@ -76,7 +76,7 @@
 </main>
 
 <dialog class="app-dialog" id="trip-dialog" aria-labelledby="trip-dialog-title">
-    <form method="POST" action="{{ route('itineraries.store') }}" class="dialog-form">
+    <form method="POST" action="{{ route('itineraries.store') }}" class="dialog-form" data-ajax-crud>
         @csrf
         <div class="dialog-heading">
             <div>

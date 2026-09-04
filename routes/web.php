@@ -36,7 +36,12 @@ Route::get('/dashboard', function () {
 	if ($user->personalisation_consent) {
 		$preferences = $user->preferenceCategories()->orderBy('category_name')->get();
 	}
-	return view('dashboard.index', compact('user', 'preferences'));
+	$savedCount = \App\Models\Wishlist::where('user_id', $user->user_id)->count();
+	$tripCount = \App\Models\Trip::where('user_id', $user->user_id)->count();
+	$greenPoints = (int) (\App\Models\GreenWallet::where('user_id', $user->user_id)->value('points') ?? 0);
+	$recentTrip = \App\Models\Trip::where('user_id', $user->user_id)->latest()->first();
+
+	return view('dashboard.index', compact('user', 'preferences', 'savedCount', 'tripCount', 'greenPoints', 'recentTrip'));
 })->middleware('auth')->name('dashboard');
 
 Route::get('/rewards', [GreenRewardController::class, 'index'])

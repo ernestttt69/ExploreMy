@@ -37,6 +37,13 @@ class AttractionController extends Controller
         $attraction = Attraction::create($data);
         $this->storeImages($request, $attraction);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('messages.admin_attraction_added'),
+                'redirect' => route('admin.attractions.index'),
+            ]);
+        }
+
         return redirect()->route('admin.attractions.index')->with('success', __('messages.admin_attraction_added'));
     }
 
@@ -54,14 +61,25 @@ class AttractionController extends Controller
         $attraction->update($data);
         $this->storeImages($request, $attraction);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('messages.admin_attraction_updated'),
+                'redirect' => route('admin.attractions.index'),
+            ]);
+        }
+
         return redirect()->route('admin.attractions.index')->with('success', __('messages.admin_attraction_updated'));
     }
 
-    public function destroy(Attraction $attraction)
+    public function destroy(Request $request, Attraction $attraction)
     {
         $images = $attraction->images()->pluck('image_path')->push($attraction->image_path)->filter()->unique();
         $attraction->delete();
         $images->each(fn (string $image) => $this->deleteLocalImage($image));
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => __('messages.admin_attraction_deleted')]);
+        }
 
         return back()->with('success', __('messages.admin_attraction_deleted'));
     }
@@ -76,6 +94,10 @@ class AttractionController extends Controller
 
         if ($attraction->image_path === $path) {
             $attraction->update(['image_path' => $attraction->images()->value('image_path')]);
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json(['message' => __('admin_images.deleted')]);
         }
 
         return back()->with('success', __('admin_images.deleted'));

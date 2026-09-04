@@ -76,7 +76,7 @@
             <div class="earn-grid">
                 <article class="earn-card earn-card-featured"><span class="earn-icon">♧</span><span class="earn-points">+50 pts</span><h3>{{ __('rewards.itinerary') }}</h3><p>{{ __('rewards.itinerary_desc') }}</p><a href="{{ route('route.index') }}">{{ __('rewards.plan_route') }} <span aria-hidden="true">&rarr;</span></a></article>
                 <article class="earn-card"><span class="earn-icon earn-icon-blue">♡</span><span class="earn-points">+20 pts</span><h3>{{ __('rewards.save_destination') }}</h3><p>{{ __('rewards.save_desc') }}</p><a href="{{ route('attractions.index') }}">{{ __('rewards.explore') }} <span aria-hidden="true">&rarr;</span></a></article>
-                <article class="earn-card"><span class="earn-icon earn-icon-amber">◎</span><span class="earn-points">+75 pts</span><h3>{{ __('rewards.complete_profile') }}</h3><p>{{ __('rewards.profile_desc') }}</p><a href="{{ route('profile') }}">{{ __('rewards.view_profile') }} <span aria-hidden="true">&rarr;</span></a></article>
+                <article class="earn-card"><span class="earn-icon earn-icon-amber">↗</span><span class="earn-points">+30 pts</span><h3>{{ __('rewards.share_trip') }}</h3><p>{{ __('rewards.share_trip_desc') }}</p><a href="{{ route('itineraries.index') }}">{{ __('rewards.view_trips') }} <span aria-hidden="true">&rarr;</span></a></article>
             </div>
         </section>
 
@@ -85,7 +85,7 @@
             @php($badgeActivities = [
                 ['key' => 'daily_login', 'points' => '+10', 'icon' => '◷'],
                 ['key' => 'save_attraction', 'points' => '+20', 'icon' => '♡'],
-                ['key' => 'generate_itinerary', 'points' => '+50', 'icon' => '⌖'],
+                ['key' => 'save_itinerary', 'points' => '+50', 'icon' => '⌖'],
                 ['key' => 'export_itinerary', 'points' => '+30', 'icon' => '↓'],
                 ['key' => 'export_guidance', 'points' => '+30', 'icon' => '≡'],
                 ['key' => 'share_itinerary', 'points' => '+30', 'icon' => '↗'],
@@ -100,7 +100,7 @@
                         <small>{{ $activity['points'] }} {{ __('rewards.green_points') }} · {{ __('rewards.activity_frequency.' . $activity['key']) }}</small>
                         @if($pendingCount > 0)
                             <span class="pending-reward-count">{{ trans_choice('rewards.rewards_ready', $pendingCount, ['count' => $pendingCount]) }}</span>
-                            <form method="POST" action="{{ route('rewards.activity.collect') }}">
+                            <form method="POST" action="{{ route('rewards.activity.collect') }}" data-async-reward data-reward-collection>
                                 @csrf
                                 <input type="hidden" name="activity" value="{{ $activity['key'] }}">
                                 <button type="submit" class="collect-button">{{ __('rewards.collect_one', ['count' => $pendingCount]) }}</button>
@@ -178,13 +178,32 @@
 
                     if (button && form.action.includes('/achievements/')) {
                         button.textContent = {{ Illuminate\Support\Js::from(__('rewards.collected')) }};
+                        button.disabled = true;
                     } else if (button) {
                         button.disabled = false;
                     }
 
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 800);
+                    if (form.dataset.rewardCollection !== undefined) {
+                        var badge = form.closest('.badge-activity');
+                        var pending = badge ? badge.querySelector('.pending-reward-count') : null;
+                        if (pending) {
+                            pending.textContent = data.remainingLabel;
+                            pending.classList.toggle('pending-reward-count-empty', Number(data.remaining) === 0);
+                        }
+                        if (button) {
+                            button.textContent = data.buttonLabel;
+                            button.disabled = Number(data.remaining) === 0;
+                        }
+                        if (!data.hasPendingRewards) {
+                            document.querySelectorAll('[data-reward-dot]').forEach(function (dot) {
+                                dot.hidden = true;
+                            });
+                        }
+                    } else if (!form.action.includes('/achievements/')) {
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 800);
+                    }
                 } catch (error) {
                     if (button) {
                         button.disabled = false;

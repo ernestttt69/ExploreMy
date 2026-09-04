@@ -45,7 +45,7 @@ class ItineraryController extends Controller
     /**
      * Create an itinerary shell that can be populated from the trip view.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:120'],
@@ -66,6 +66,14 @@ class ItineraryController extends Controller
             'co2_kg' => 0,
             'map_center' => [3.1390, 101.6869],
         ]));
+        $this->rewards->queueActivity(auth()->user(), 'save_itinerary');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('itinerary.new_trip_ready'),
+                'redirect' => route('itineraries.show', $trip),
+            ], 201);
+        }
 
         return redirect()->route('itineraries.show', $trip)
             ->with('status', __('itinerary.new_trip_ready'));
@@ -133,6 +141,7 @@ class ItineraryController extends Controller
                                 'duration_minutes' => $leg['duration_minutes'] ?? null,
                                 'fare' => $fare,
                                 'fare_currency' => $leg['fare_currency'] ?? ($route['fare_currency'] ?? null),
+                                'fare_is_estimated' => (bool) ($leg['fare_is_estimated'] ?? false),
                                 'navigation_url' => $leg['navigation_url'] ?? null,
                                 'steps' => $leg['steps'] ?? [],
                             ],
@@ -173,6 +182,7 @@ class ItineraryController extends Controller
         }
 
         $request->session()->forget(['routeResult', 'routeOptions']);
+        $this->rewards->queueActivity(auth()->user(), 'save_itinerary');
 
         return redirect()->route('itineraries.show', $trip)
             ->with('status', __('itinerary.saved_successfully'));
@@ -409,6 +419,7 @@ class ItineraryController extends Controller
     {
         $trip = $this->ownedTrip($trip);
         $filename = Str::slug($trip->title ?: 'itinerary').'-itinerary.ics';
+        $this->rewards->queueActivity(auth()->user(), 'export_itinerary');
 
         return response($this->calendarExporter->make($trip), 200, [
             'Content-Type' => 'text/calendar; charset=utf-8',

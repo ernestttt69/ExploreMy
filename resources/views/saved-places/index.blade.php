@@ -26,7 +26,7 @@
 <body>
 
 @include('components.navbar')
-<x-page-back :href="route('profile')" :label="__('saved.back')" />
+<x-page-back :href="route('attractions.index')" :label="__('attraction.back')" />
 
 <main class="container saved-places-page">
 
@@ -60,7 +60,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('saved-places.collections.store') }}" class="collection-form">
+            <form method="POST" action="{{ route('saved-places.collections.store') }}" class="collection-form" data-ajax-crud>
                 @csrf
                 <label for="collection-name">{{ __('saved.collection_name') }}</label>
                 <input id="collection-name" name="name" value="{{ old('name') }}" maxlength="80" placeholder="{{ __('saved.collection_placeholder') }}" required>
@@ -160,7 +160,7 @@
                                         @if($collection->items_count >= 2)
                                             <a href="{{ route('route.index', ['source' => 'saved', 'collection' => $collection->collection_id]) }}">{{ __('saved_extra.generate') }}</a>
                                         @endif
-                                        <form method="POST" action="{{ route('saved-places.collections.destroy', $collection->collection_id) }}" class="collection-delete-form" onsubmit='return confirm(@js(__("saved.delete_collection_confirm")));'>
+                                        <form method="POST" action="{{ route('saved-places.collections.destroy', $collection->collection_id) }}" class="collection-delete-form" data-ajax-crud data-ajax-remove=".collection-card" onsubmit='return confirm(@js(__("saved.delete_collection_confirm")));'>
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="collection-delete-btn" aria-label="{{ __('saved.delete_collection_aria') }}">{{ __('saved.delete_collection') }}</button>
@@ -172,7 +172,7 @@
                                     @foreach($collection->items as $item)
                                         @if($item->attraction)
                                             <div class="collection-attraction-item">
-                                                <a href="{{ route('attractions.show', $item->attraction->attraction_id) }}">
+                                                <a href="{{ route('attractions.show', ['id' => $item->attraction->attraction_id, 'source' => 'saved']) }}">
                                                     @if($item->attraction->images->isNotEmpty())
                                                         <img src="{{ asset($item->attraction->images->first()->image_path) }}" alt="">
                                                     @else
@@ -180,7 +180,7 @@
                                                     @endif
                                                     <span>{{ $item->attraction->attraction_name }}</span>
                                                 </a>
-                                                <form method="POST" action="{{ route('saved-places.collections.places.destroy', [$collection->collection_id, $item->collection_item_id]) }}" class="collection-remove-form" onsubmit='return confirm(@js(__("saved.remove_collection_confirm")));'>
+                                                <form method="POST" action="{{ route('saved-places.collections.places.destroy', [$collection->collection_id, $item->collection_item_id]) }}" class="collection-remove-form" data-ajax-crud data-ajax-remove=".collection-attraction-item" onsubmit='return confirm(@js(__("saved.remove_collection_confirm")));'>
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="collection-remove-btn" aria-label="{{ __('saved.remove_named', ['name' => $item->attraction->attraction_name]) }}">&times;</button>
@@ -194,7 +194,7 @@
                                 @if($savedPlaces->whereNotIn('attraction_id', $collectionAttractionIds)->isNotEmpty())
                                     <details class="add-to-collection">
                                         <summary>{{ __('saved.add_places') }}</summary>
-                                        <form method="POST" action="{{ route('saved-places.collections.places.store', $collection->collection_id) }}">
+                                        <form method="POST" action="{{ route('saved-places.collections.places.store', $collection->collection_id) }}" data-ajax-crud>
                                             @csrf
                                             <label for="add-places-{{ $collection->collection_id }}" id="add-places-label-{{ $collection->collection_id }}">{{ __('saved_extra.select_add') }}</label>
                                             <div class="ms-select" data-fill-target="#add-places-{{ $collection->collection_id }}">
@@ -296,7 +296,7 @@
                         {{-- Attraction Image --}}
 
                         <a
-                            href="{{ route('attractions.show', $attraction->attraction_id) }}"
+                            href="{{ route('attractions.show', ['id' => $attraction->attraction_id, 'source' => 'saved']) }}"
                             class="place-image-link"
                         >
 
@@ -398,7 +398,7 @@
                             <div class="place-actions">
 
                                 <a
-                                    href="{{ route('attractions.show', $attraction->attraction_id) }}"
+                                    href="{{ route('attractions.show', ['id' => $attraction->attraction_id, 'source' => 'saved']) }}"
                                     class="view-place-button"
                                 >
                                     {{ __('saved.view') }}
@@ -408,6 +408,8 @@
                                 <form
                                     method="POST"
                                     action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}"
+                                    data-ajax-crud
+                                    data-ajax-remove=".col-12"
                                     onsubmit='return confirm(@js(__('saved.remove_confirm')));'
                                 >
 

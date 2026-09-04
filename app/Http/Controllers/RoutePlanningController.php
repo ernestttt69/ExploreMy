@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Wishlist;
 use App\Models\SavedPlaceCollection;
+use App\Services\TransitFareEstimator;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,8 @@ use UnexpectedValueException;
 
 class RoutePlanningController extends Controller
 {
+    public function __construct(private TransitFareEstimator $fareEstimator) {}
+
     private const PLACES = [
         ['name' => 'KLCC', 'latitude' => 3.1579, 'longitude' => 101.7116],
         ['name' => 'KL Tower', 'latitude' => 3.1528, 'longitude' => 101.7037],
@@ -44,7 +47,6 @@ class RoutePlanningController extends Controller
 
             $initialSavedPlaces = (clone $savedPlacesQuery)
                 ->orderByDesc('wishlist_id')
-                ->limit(20)
                 ->get();
             $selectedWishlistIds = collect(old(
                 'destination_keys',
@@ -79,6 +81,24 @@ class RoutePlanningController extends Controller
                 array_keys(self::PLACES)
             );
 
+        $selectedDestinationKeys = old(
+            'destination_keys',
+            session('routeResult')
+                ? array_column(session('routeResult')['stops'], 'route_key')
+                : array_slice(array_column($availablePlaces, 'route_key'), 0, 2)
+        );
+        $selectedIds = collect($selectedDestinationKeys)
+            ->map(fn ($key) => preg_match('/^wishlist:(\d+)$/', (string) $key, $matches) ? (int) $matches[1] : null)
+            ->filter()
+            ->values();
+        $selectedPlacesForNotice = $usingSavedPlaces && $selectedIds->isNotEmpty()
+            ? (clone $savedPlacesQuery)->whereIn('wishlist_id', $selectedIds)->get()->map(fn ($wishlist): array => [
+                'name' => $wishlist->attraction->attraction_name,
+                'location' => $wishlist->attraction->location,
+                'state_name' => $wishlist->attraction->state?->state_name,
+            ])->all()
+            : [];
+
         return view('route-planning.route', [
             'googleMapsBrowserKey' => config('services.google_maps.browser_api_key'),
             'usingSavedPlaces' => $usingSavedPlaces,
@@ -86,11 +106,9 @@ class RoutePlanningController extends Controller
             'savedPlacesCount' => $savedPlacesCount,
             'collection' => $collection,
             'availablePlaces' => $availablePlaces,
-            'requiresFlight' => $this->placesRequireFlight(
-                $savedPlaces->map(fn ($wishlist): array => [
-                    'state_name' => $wishlist->attraction->state?->state_name,
-                ])->all()
-            ),
+            'selectedDestinationKeys' => $selectedDestinationKeys,
+            'requiresFlight' => $this->placesRequireFlight($selectedPlacesForNotice),
+            'requiresFerry' => $this->usesIslandFerry($selectedPlacesForNotice),
         ]);
     }
 
@@ -116,17 +134,17 @@ class RoutePlanningController extends Controller
             });
         }
 
-        $results = $query->orderByDesc('wishlist_id')->paginate(20);
+        $results = $query->orderByDesc('wishlist_id')->get();
 
         return response()->json([
-            'data' => $results->getCollection()->map(fn ($wishlist): array => [
+            'data' => $results->map(fn ($wishlist): array => [
                 'name' => $wishlist->attraction->attraction_name,
                 'route_key' => 'wishlist:' . $wishlist->wishlist_id,
                 'category' => $wishlist->attraction->category,
                 'state' => $wishlist->attraction->state?->state_name,
             ])->values(),
-            'current_page' => $results->currentPage(),
-            'has_more' => $results->hasMorePages(),
+            'current_page' => 1,
+            'has_more' => false,
         ]);
     }
 
@@ -143,7 +161,7 @@ class RoutePlanningController extends Controller
                 'between:0,3',
             ],
             'travel_mode' => ['nullable', 'in:TRANSIT,DRIVE,WALK,BICYCLE'],
-            'destination_keys' => ['required', 'array', 'min:2', 'max:8'],
+            'destination_keys' => ['required', 'array', 'min:2'],
             'destination_keys.*' => ['required', 'string'],
             'source' => ['nullable', 'in:saved'],
             'collection_id' => ['nullable', 'integer'],
@@ -215,6 +233,16 @@ class RoutePlanningController extends Controller
                     $validated['optimization_preference']
                 );
 
+            if ($routeOptions === [] && $this->usesIslandFerry($places)) {
+                $routeOptions = [$this->buildCrossRegionRoute(
+                    $places,
+                    $planningStartDate,
+                    $planningEndDate,
+                    $planningStartTime,
+                    true
+                )];
+            }
+
             if ($routeOptions === []) {
                 throw new UnexpectedValueException(__('route.connect_error'));
             }
@@ -228,7 +256,7 @@ class RoutePlanningController extends Controller
             $travelMode = $routeResult['travel_mode'];
             $routeResult['omitted_places'] = [];
             $routeResult['fallback_notice'] = null;
-            if (!$crossRegion) {
+            if (!$crossRegion && $travelMode !== 'MIXED') {
                 $routeResult['transit_legs'] = $this->getTransitLegs(
                     $routeResult['stops'],
                     $travelMode,
@@ -245,6 +273,18 @@ class RoutePlanningController extends Controller
                         $routeResult['stops'][$legIndex + 1]['latitude'] = $leg['destination_latitude'];
                         $routeResult['stops'][$legIndex + 1]['longitude'] = $leg['destination_longitude'];
                     }
+                }
+
+                $knownLegFares = collect($routeResult['transit_legs'])
+                    ->filter(fn (array $leg): bool => is_numeric($leg['fare'] ?? null));
+                if ($knownLegFares->isNotEmpty()) {
+                    $routeResult['total_fare'] = round($knownLegFares->sum('fare'), 2);
+                    $routeResult['fare_currency'] = 'MYR';
+                    $routeResult['fare_is_estimated'] = $knownLegFares
+                        ->contains(fn (array $leg): bool => !empty($leg['fare_is_estimated']));
+                    $routeOptions[$selectedOptionIndex]['total_fare'] = $routeResult['total_fare'];
+                    $routeOptions[$selectedOptionIndex]['fare_currency'] = 'MYR';
+                    $routeOptions[$selectedOptionIndex]['fare_is_estimated'] = $routeResult['fare_is_estimated'];
                 }
             }
             $routeResult['trip_start_date'] = $planningStartDate->toDateString();
@@ -285,10 +325,6 @@ class RoutePlanningController extends Controller
                 ]);
         }
 
-        $pendingRewards = session('pending_reward_activities', []);
-        $pendingRewards['generate_itinerary'] = ($pendingRewards['generate_itinerary'] ?? 0) + 1;
-        session()->put('pending_reward_activities', $pendingRewards);
-
         return back()
             ->withInput()
             ->with('success', __('messages.route_calculated', ['title' => $routeResult['title']]))
@@ -301,7 +337,8 @@ class RoutePlanningController extends Controller
         array $places,
         CarbonImmutable $planningStartDate,
         CarbonImmutable $planningEndDate,
-        string $planningStartTime
+        string $planningStartTime,
+        bool $forceFerryTransfer = false
     ): array {
         $legs = [];
         $planningTimezone = config('app.timezone', 'Asia/Kuala_Lumpur');
@@ -321,7 +358,7 @@ class RoutePlanningController extends Controller
             $legDate = $cursor->startOfDay();
             $visitMinutes = $this->suggestedVisitMinutes($from);
 
-            if ($this->placesRequireFlight([$from, $to])) {
+            if ($forceFerryTransfer || $this->placesRequireFlight([$from, $to])) {
                 $visitStart = $cursor;
                 $cursor = $cursor->addMinutes($visitMinutes);
                 $displayDate = $legDate->locale(app()->getLocale())->translatedFormat('D, d M Y');
@@ -349,8 +386,10 @@ class RoutePlanningController extends Controller
                         $transferBufferSeconds + ($visitMinutes * 60)
                     ),
                     'steps' => [[
-                        'mode' => 'FLIGHT_OR_FERRY',
-                        'label' => __('route_form.transfer_step'),
+                        'mode' => $forceFerryTransfer ? 'FERRY' : 'FLIGHT_OR_FERRY',
+                        'label' => $forceFerryTransfer
+                            ? __('route_form.ferry_step')
+                            : __('route_form.transfer_step'),
                         'from' => $from['name'],
                         'to' => $to['name'],
                         'departure_time' => $displayTime,
@@ -358,11 +397,14 @@ class RoutePlanningController extends Controller
                         'duration' => __('route_form.confirm_duration', ['duration' => $this->formatDuration($transferBufferSeconds)]),
                         'distance' => __('route_form.not_estimated'),
                     ]],
-                    'transport_summary' => __('route_form.flight_required'),
+                    'transport_summary' => $forceFerryTransfer
+                        ? __('route_form.ferry_required')
+                        : __('route_form.flight_required'),
                     'fare' => null,
                     'fare_currency' => null,
                     'encoded_polylines' => [],
                     'is_cross_region_transfer' => true,
+                    'transfer_type' => $forceFerryTransfer ? 'FERRY' : 'FLIGHT_OR_FERRY',
                 ];
                 $cursor = $transferArrival;
                 continue;
@@ -408,9 +450,13 @@ class RoutePlanningController extends Controller
         return [
             'preference' => 'fastest',
             'option_index' => 0,
-            'option_label' => 'Mixed transport',
-            'title' => 'Cross-region Malaysia itinerary',
-            'description' => 'Local routes are combined with a flight or ferry transfer while preserving your stop order.',
+            'option_label' => __('route_form.mixed_transport'),
+            'title' => $forceFerryTransfer
+                ? __('route_form.ferry_itinerary_title')
+                : __('route_form.cross_region_itinerary_title'),
+            'description' => $forceFerryTransfer
+                ? __('route_form.ferry_itinerary_description')
+                : __('route_form.cross_region_itinerary_description'),
             'stops' => $stops,
             'total_distance' => array_sum(array_column($legs, 'distance')),
             'total_duration_minutes' => (int) ceil(array_sum(array_column($legs, 'duration_seconds')) / 60),
@@ -497,6 +543,30 @@ class RoutePlanningController extends Controller
         }
 
         return $hasEastMalaysia && $hasPeninsularMalaysia;
+    }
+
+    private function usesIslandFerry(array $places): bool
+    {
+        $islandKeywords = [
+            'island', 'pulau', 'perhentian', 'rainforest beach', 'langkawi',
+            'tioman', 'redang', 'pangkor', 'kapas', 'lang tengah', 'tenggol',
+            'mabul', 'sipadan', 'rawa',
+        ];
+
+        foreach ($places as $place) {
+            $searchable = strtolower(implode(' ', [
+                $place['name'] ?? '',
+                $place['location'] ?? '',
+            ]));
+
+            foreach ($islandKeywords as $keyword) {
+                if (str_contains($searchable, $keyword)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function buildRouteResult(
@@ -795,6 +865,8 @@ class RoutePlanningController extends Controller
             $currentLocation = $from['name'];
 
             $apiSteps = [];
+            $estimatedFareTotal = 0.0;
+            $hasEstimatedFare = false;
             foreach ($response['legs'] ?? [] as $routeLeg) {
                 $apiSteps = [...$apiSteps, ...($routeLeg['steps'] ?? [])];
             }
@@ -835,6 +907,15 @@ class RoutePlanningController extends Controller
                     $arrivalStop = $stopDetails['arrivalStop']['name'] ?? $to['name'];
                     $line = $transitDetails['transitLine'] ?? [];
                     $transport = $this->transitLabel($line);
+                    $estimatedStepFare = $this->fareEstimator->estimate(
+                        $line['nameShort'] ?? $line['name'] ?? $transport,
+                        $line['vehicle']['type'] ?? '',
+                        (int) ($step['distanceMeters'] ?? 0)
+                    );
+                    if ($estimatedStepFare !== null) {
+                        $estimatedFareTotal += $estimatedStepFare;
+                        $hasEstimatedFare = true;
+                    }
 
                     $tripSteps[] = array_merge(
                         $this->makeTimelineStep(
@@ -849,6 +930,9 @@ class RoutePlanningController extends Controller
                         [
                             'headsign' => $transitDetails['headsign'] ?? null,
                             'stop_count' => $transitDetails['stopCount'] ?? null,
+                            'fare' => $estimatedStepFare,
+                            'fare_currency' => $estimatedStepFare !== null ? 'MYR' : null,
+                            'fare_is_estimated' => $estimatedStepFare !== null,
                         ]
                     );
                     $cursor = $stepArrival;
@@ -891,7 +975,12 @@ class RoutePlanningController extends Controller
             $durationSeconds = $this->durationToSeconds($response['duration'] ?? '0s');
             $arrivalTime = $departureTime->addSeconds($durationSeconds);
             $fare = $response['travelAdvisory']['transitFare'] ?? null;
-            $fareValue = $fare !== null ? $this->moneyToFloat($fare) : null;
+            $officialFareValue = $fare !== null ? $this->moneyToFloat($fare) : null;
+            $usesEstimatedFare = !($officialFareValue > 0) && $hasEstimatedFare;
+            $fareValue = $officialFareValue > 0
+                ? $officialFareValue
+                : ($usesEstimatedFare ? $estimatedFareTotal : null);
+            $tripSteps = $this->combineSimilarSteps($tripSteps);
             $transportParts = [];
 
             foreach ($tripSteps as $tripStep) {
@@ -956,8 +1045,9 @@ class RoutePlanningController extends Controller
                     ? round($fareValue, 2)
                     : null,
                 'fare_currency' => $fareValue !== null && $fareValue > 0
-                    ? ($fare['currencyCode'] ?? 'MYR')
+                    ? ($usesEstimatedFare ? 'MYR' : ($fare['currencyCode'] ?? 'MYR'))
                     : null,
+                'fare_is_estimated' => $usesEstimatedFare,
                 'encoded_polylines' => $encodedPolylines,
             ];
 
@@ -965,6 +1055,39 @@ class RoutePlanningController extends Controller
         }
 
         return $legs;
+    }
+
+    /** Combine consecutive API fragments that describe the same movement. */
+    private function combineSimilarSteps(array $steps): array
+    {
+        $combined = [];
+
+        foreach ($steps as $step) {
+            $lastIndex = array_key_last($combined);
+            $last = $lastIndex !== null ? $combined[$lastIndex] : null;
+            $sameMovement = $last
+                && ($last['mode'] ?? null) === ($step['mode'] ?? null)
+                && mb_strtolower(trim((string) ($last['label'] ?? ''))) === mb_strtolower(trim((string) ($step['label'] ?? '')))
+                && mb_strtolower(trim((string) ($last['from'] ?? ''))) === mb_strtolower(trim((string) ($step['from'] ?? '')))
+                && mb_strtolower(trim((string) ($last['to'] ?? ''))) === mb_strtolower(trim((string) ($step['to'] ?? '')));
+
+            if (!$sameMovement) {
+                $combined[] = $step;
+                continue;
+            }
+
+            $distanceMeters = (int) ($last['distance_meters'] ?? 0) + (int) ($step['distance_meters'] ?? 0);
+            $durationSeconds = (int) ($last['duration_seconds'] ?? 0) + (int) ($step['duration_seconds'] ?? 0);
+            $combined[$lastIndex]['arrival_time'] = $step['arrival_time'];
+            $combined[$lastIndex]['distance_meters'] = $distanceMeters;
+            $combined[$lastIndex]['duration_seconds'] = $durationSeconds;
+            $combined[$lastIndex]['distance'] = $distanceMeters >= 1000
+                ? __('route_form.distance_km', ['distance' => number_format($distanceMeters / 1000, 1)])
+                : __('route_form.distance_m', ['distance' => $distanceMeters]);
+            $combined[$lastIndex]['duration'] = $this->formatDuration($durationSeconds);
+        }
+
+        return $combined;
     }
 
     private function googleMapsNavigationUrl(array $destination, string $travelMode): string
@@ -1061,6 +1184,7 @@ class RoutePlanningController extends Controller
             $places[] = [
                 'name' => $wishlist->attraction->attraction_name,
                 'place_id' => $wishlist->attraction->place_id,
+                'location' => $wishlist->attraction->location,
                 'route_key' => $destinationKey,
                 'category' => $wishlist->attraction->category,
                 'state_name' => $wishlist->attraction->state?->state_name,
@@ -1108,6 +1232,8 @@ class RoutePlanningController extends Controller
             'departure_time' => $this->formatTime($departure),
             'arrival_time' => $this->formatTime($arrival),
             'duration' => $this->formatDuration($arrival->diffInSeconds($departure)),
+            'duration_seconds' => $arrival->diffInSeconds($departure),
+            'distance_meters' => $distanceMeters,
             'distance' => $distanceMeters >= 1000
                 ? __('route_form.distance_km', ['distance' => number_format($distanceMeters / 1000, 1)])
                 : __('route_form.distance_m', ['distance' => $distanceMeters]),

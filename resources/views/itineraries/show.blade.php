@@ -36,8 +36,8 @@
                     <div class="export-menu">
                         <button type="button" class="button button-outline" data-action="toggle-export">{{ __('itinerary.export') }} ▾</button>
                         <div class="export-popover" id="export-popover" hidden>
-                            <a href="{{ route('itineraries.export.pdf', $trip) }}">{{ __('itinerary.download_pdf') }}</a>
-                            <a href="{{ route('itineraries.export.calendar', $trip) }}">{{ __('itinerary.download_calendar') }}</a>
+                            <a href="{{ route('itineraries.export.pdf', $trip) }}" data-reward-export>{{ __('itinerary.download_pdf') }}</a>
+                            <a href="{{ route('itineraries.export.calendar', $trip) }}" data-reward-export>{{ __('itinerary.download_calendar') }}</a>
                         </div>
                     </div>
                     <button type="button" class="button button-outline" data-action="open-share-dialog">{{ __('itinerary.share') }}</button>

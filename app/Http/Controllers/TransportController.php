@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\TransitFareEstimator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class TransportController extends Controller
 {
+    public function __construct(private TransitFareEstimator $fareEstimator) {}
+
     public function index()
     {
         return view('transport');
@@ -110,21 +113,11 @@ public function search(Request $request)
                 $isTransfer = ($previousTransitLine !== null && $previousTransitLine !== $lineName);
                 $previousTransitLine = $lineName;
 
-                if ($isBus) {
-                    $segmentFare = ($distanceMeters > 10000) ? 2.50 : 1.00;
-                } elseif (str_contains($lineName, 'KTM')) {
-                    $km = $distanceMeters / 1000;
-                    if ($km <= 5) $segmentFare = 1.60;
-                    elseif ($km <= 15) $segmentFare = 2.70;
-                    elseif ($km <= 30) $segmentFare = 4.30;
-                    else $segmentFare = 6.00;
-                } else {
-                    $km = $distanceMeters / 1000;
-                    if ($km <= 4) $segmentFare = 1.30;
-                    elseif ($km <= 9) $segmentFare = 2.10;
-                    elseif ($km <= 15) $segmentFare = 3.20;
-                    else $segmentFare = 4.50;
-                }
+                $segmentFare = $this->fareEstimator->estimate(
+                    $lineName,
+                    $vehicleType,
+                    $distanceMeters
+                ) ?? 0.0;
 
                 $totalCalculatedFare += $segmentFare;
 

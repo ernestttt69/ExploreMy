@@ -486,7 +486,7 @@
 
                                 @if(in_array((int) $attraction->attraction_id, $wishlistedAttractionIds, true))
 
-                                    <form method="POST" action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}">
+                                    <form method="POST" action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}" data-ajax-crud data-ajax-wishlist>
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="card-wishlist-button is-saved" aria-label="{{ __('explore.remove_wishlist', ['name' => $attraction->attraction_name]) }}">♥ {{ __('explore.saved') }}</button>
@@ -494,7 +494,7 @@
 
                                 @else
 
-                                    <form method="POST" action="{{ route('attractions.wishlist.add', $attraction->attraction_id) }}">
+                                    <form method="POST" action="{{ route('attractions.wishlist.add', $attraction->attraction_id) }}" data-ajax-crud data-ajax-wishlist>
                                         @csrf
                                         <button type="submit" class="card-wishlist-button" aria-label="{{ __('explore.add_wishlist', ['name' => $attraction->attraction_name]) }}">♡ {{ __('explore.save') }}</button>
                                     </form>

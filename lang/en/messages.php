@@ -45,4 +45,6 @@ return [
     'route_api_missing' => 'Google Maps Routes API key is not configured.',
     'route_calculation_failed' => 'Google Maps could not calculate the route. Please try again.',
     'route_calculated' => ':title calculated successfully.',
+    'collection_deleted' => 'Collection deleted.',
+    'collection_place_removed' => 'Place removed from collection.',
 ];

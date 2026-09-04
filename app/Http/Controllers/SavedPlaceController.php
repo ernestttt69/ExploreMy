@@ -89,6 +89,13 @@ class SavedPlaceController extends Controller
             }
         });
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('messages.collection_created'),
+                'redirect' => route('saved-places.index'),
+            ]);
+        }
+
         return redirect()->route('saved-places.index')->with('success', __('messages.collection_created'));
     }
 
@@ -127,6 +134,13 @@ class SavedPlaceController extends Controller
             ]);
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('messages.collection_added'),
+                'redirect' => route('saved-places.index'),
+            ]);
+        }
+
         return redirect()->route('saved-places.index')->with('success', __('messages.collection_added'));
     }
 
@@ -139,6 +153,10 @@ class SavedPlaceController extends Controller
         // Deleting the collection cascades to its items via the DB foreign key.
         $collection->delete();
 
+        if ($request->expectsJson()) {
+            return response()->json(['message' => __('messages.collection_deleted')]);
+        }
+
         return redirect()->route('saved-places.index')->with('success', 'Collection deleted.');
     }
 
@@ -148,9 +166,15 @@ class SavedPlaceController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        SavedPlaceCollectionItem::where('collection_id', $collectionId)
+        $deleted = SavedPlaceCollectionItem::where('collection_id', $collectionId)
             ->where('collection_item_id', $collectionItemId)
             ->delete();
+
+        abort_unless($deleted, 404);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => __('messages.collection_place_removed')]);
+        }
 
         return redirect()->route('saved-places.index')->with('success', 'Place removed from collection.');
     }

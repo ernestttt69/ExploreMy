@@ -28,14 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const addButton = editor.querySelector('[data-add-stop]');
     const savedPlaceSearch = editor.querySelector('[data-saved-place-search]');
     const savedPlaceSearchStatus = editor.querySelector('[data-saved-search-status]');
-    const savedPlaceLoadMore = editor.querySelector('[data-saved-place-load-more]');
+    const savedPlaceCheckboxes = editor.querySelector('[data-saved-place-checkboxes]');
     const countLabel = editor.querySelector('[data-destination-count]');
     const hint = editor.querySelector('[data-itinerary-hint]');
     const form = editor.closest('form');
     const minimumDestinations = 2;
-    const maximumDestinations = 8;
-    let savedPlaceSearchPage = 1;
-    let savedPlaceSearchHasMore = true;
     let savedPlaceSearchTimer = null;
     let savedPlaceSearchController = null;
 
@@ -51,12 +48,17 @@ document.addEventListener('DOMContentLoaded', () => {
         [...destinationSelect.options].forEach(option => {
             option.disabled = selectedKeys.has(option.value);
         });
+        savedPlaceCheckboxes?.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            const alreadyAdded = selectedKeys.has(checkbox.value);
+            checkbox.disabled = alreadyAdded;
+            if (alreadyAdded) checkbox.checked = false;
+        });
 
         countLabel.textContent = (translations.stops || ':count stops').replace(':count', items.length);
         const isValid = items.length >= minimumDestinations;
         hint.hidden = isValid;
         form.querySelector('.continue-button').disabled = !isValid;
-        addButton.disabled = items.length >= maximumDestinations;
+        addButton.disabled = false;
     };
 
     const makeItem = (key, name) => {
@@ -84,12 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = new URL(savedPlaceSearch.dataset.searchUrl, window.location.origin);
         const query = savedPlaceSearch.value.trim();
         const collectionId = savedPlaceSearch.dataset.collectionId;
-        url.searchParams.set('page', String(page));
         if (query) url.searchParams.set('q', query);
         if (collectionId) url.searchParams.set('collection_id', collectionId);
 
         savedPlaceSearchStatus.textContent = translations.searching || 'Searching...';
-        savedPlaceLoadMore.disabled = true;
 
         try {
             const response = await fetch(url, {
@@ -100,10 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (!append) {
-                destinationSelect.replaceChildren(new Option(
-                    translations.choosePlace || 'Choose a place',
-                    ''
-                ));
+                destinationSelect.replaceChildren();
+                savedPlaceCheckboxes?.replaceChildren();
+                if (!destinationSelect.multiple) {
+                    destinationSelect.add(new Option(
+                        translations.choosePlace || 'Choose a place',
+                        ''
+                    ));
+                }
             }
 
             result.data.forEach(place => {
@@ -112,22 +116,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 const option = new Option(details ? `${place.name} — ${details}` : place.name, place.route_key);
                 option.dataset.name = place.name;
                 destinationSelect.add(option);
+
+                if (savedPlaceCheckboxes) {
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    const text = document.createElement('span');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = place.route_key;
+                    checkbox.dataset.name = place.name;
+                    text.textContent = details ? `${place.name} — ${details}` : place.name;
+                    label.append(checkbox, text);
+                    savedPlaceCheckboxes.appendChild(label);
+                }
             });
 
-            savedPlaceSearchPage = result.current_page;
-            savedPlaceSearchHasMore = result.has_more;
-            savedPlaceLoadMore.hidden = !savedPlaceSearchHasMore;
-            savedPlaceLoadMore.disabled = false;
             savedPlaceSearchStatus.textContent = result.data.length
                 ? (translations.matchingLoaded || ':count matching places loaded')
-                    .replace(':count', destinationSelect.options.length - 1)
+                    .replace(':count', destinationSelect.options.length - (destinationSelect.multiple ? 0 : 1))
                 : (translations.noSavedPlaces || 'No saved places found');
             updateEditor();
         } catch (error) {
             if (error.name === 'AbortError') return;
             savedPlaceSearchStatus.textContent = translations.loadFailed
                 || 'Could not load saved places. Please try again.';
-            savedPlaceLoadMore.disabled = false;
         }
     };
 
@@ -136,23 +147,21 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(savedPlaceSearchTimer);
             savedPlaceSearchTimer = setTimeout(() => loadSavedPlaces(1, false), 300);
         });
-        savedPlaceLoadMore.addEventListener('click', () => {
-            if (savedPlaceSearchHasMore) loadSavedPlaces(savedPlaceSearchPage + 1, true);
-        });
     }
 
     addButton.addEventListener('click', () => {
-        if (list.querySelectorAll('.itinerary-item').length >= maximumDestinations) {
+        const checkedPlaces = savedPlaceCheckboxes
+            ? [...savedPlaceCheckboxes.querySelectorAll('input[type="checkbox"]:checked')]
+            : [...destinationSelect.selectedOptions].filter(option => option.value);
+        if (!checkedPlaces.length) {
             return;
         }
 
-        const option = destinationSelect.selectedOptions[0];
-        if (!option || !option.value) {
-            return;
-        }
-
-        list.append(makeItem(option.value, option.dataset.name));
-        destinationSelect.value = '';
+        checkedPlaces.forEach(place => {
+            list.append(makeItem(place.value, place.dataset.name));
+            place.checked = false;
+            place.selected = false;
+        });
         updateEditor();
     });
 
@@ -187,6 +196,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Accept': 'application/json',
             },
             body: JSON.stringify({activity: button.dataset.rewardActivity}),
+        }).then(async response => {
+            if (!response.ok) throw new Error('Unable to queue reward.');
+            const payload = await response.json();
+            if (payload.queued) {
+                document.querySelector('[data-reward-dot]')?.removeAttribute('hidden');
+            }
+            return payload;
         });
     };
 

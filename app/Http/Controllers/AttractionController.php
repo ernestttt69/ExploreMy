@@ -172,7 +172,7 @@ class AttractionController extends Controller
         );
     }
 
-    public function addToWishlist($id)
+    public function addToWishlist(Request $request, $id)
     {
         $attraction = Attraction::findOrFail($id);
 
@@ -198,6 +198,16 @@ class AttractionController extends Controller
             app(GreenRewardService::class)->queueActivity(Auth::user(), 'save_attraction');
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('messages.wishlist_added'),
+                'wishlisted' => true,
+                'action' => route('attractions.wishlist.remove', $id),
+                'label' => '♥ '.__('explore.saved'),
+                'ariaLabel' => __('explore.remove_wishlist', ['name' => $attraction->attraction_name]),
+            ]);
+        }
+
         return redirect()
             ->back()
             ->with(
@@ -206,8 +216,9 @@ class AttractionController extends Controller
             );
     }
 
-    public function removeFromWishlist($id)
+    public function removeFromWishlist(Request $request, $id)
     {
+        $attraction = Attraction::findOrFail($id);
         Wishlist::where(
             'user_id',
             Auth::id()
@@ -217,6 +228,16 @@ class AttractionController extends Controller
                 $id
             )
             ->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => __('messages.wishlist_removed'),
+                'wishlisted' => false,
+                'action' => route('attractions.wishlist.add', $id),
+                'label' => '♡ '.__('explore.save'),
+                'ariaLabel' => __('explore.add_wishlist', ['name' => $attraction->attraction_name]),
+            ]);
+        }
 
         return redirect()
             ->back()

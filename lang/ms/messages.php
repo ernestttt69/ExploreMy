@@ -45,4 +45,6 @@ return [
     'route_api_missing' => 'Kunci API Google Maps Routes belum dikonfigurasi.',
     'route_calculation_failed' => 'Google Maps tidak dapat mengira laluan. Sila cuba lagi.',
     'route_calculated' => ':title berjaya dikira.',
+    'collection_deleted' => 'Koleksi telah dipadam.',
+    'collection_place_removed' => 'Tempat telah dikeluarkan daripada koleksi.',
 ];

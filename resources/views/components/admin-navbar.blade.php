@@ -1,1 +1,2 @@
 <header class="admin-topbar"><div class="container admin-topbar-inner"><a href="{{ route('admin.attractions.index') }}" class="admin-brand"><span><img src="{{ asset('images/ExploreMy_icon.jpeg') }}" alt=""></span><div><strong>ExploreMY</strong><small>{{ __('admin.portal') }}</small></div></a><div class="admin-account"><form method="POST" action="{{ route('admin.logout') }}">@csrf<button type="submit">{{ __('admin.sign_out') }}</button></form></div></div></header>
+<script src="{{ asset('js/ajax-crud.js') }}?v={{ filemtime(public_path('js/ajax-crud.js')) }}" defer></script>

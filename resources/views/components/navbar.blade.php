@@ -106,9 +106,12 @@
 				<li>
 					<a href="{{ route('rewards') }}" class="nav-link-custom rewards-nav-link {{ request()->routeIs('rewards') ? 'active' : '' }}">
 						{{ __('pages.common.rewards') }}
-						@if($hasPendingRewards)
-							<span class="nav-reward-dot" aria-label="{{ __('rewards.collect') }}"></span>
-						@endif
+						<span
+							class="nav-reward-dot"
+							data-reward-dot
+							aria-label="{{ __('rewards.collect') }}"
+							@if(!$hasPendingRewards) hidden @endif
+						></span>
 					</a>
 				</li>
 
@@ -129,3 +132,4 @@
 	@include('components.chatbot')
 @endauth
 <script src="{{ asset('js/site-interactions.js') }}" defer></script>
+<script src="{{ asset('js/ajax-crud.js') }}?v={{ filemtime(public_path('js/ajax-crud.js')) }}" defer></script>

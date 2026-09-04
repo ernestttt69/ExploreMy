@@ -45,4 +45,6 @@ return [
     'route_calculation_failed' => 'Google Maps 无法计算路线，请重试。',
     'route_calculated' => ':title 已成功计算。',
     'activity_reward_claimed' => '已领取:activity奖励。:remaining。',
+    'collection_deleted' => '收藏集已删除。',
+    'collection_place_removed' => '地点已从收藏集中移除。',
 ];

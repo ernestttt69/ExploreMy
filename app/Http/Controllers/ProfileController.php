@@ -29,6 +29,7 @@ class ProfileController extends Controller
 	{
 		/** @var User $user */
 		$user = Auth::user();
+		$previousLanguage = $user->preferred_language;
 
 		$validated = $request->validate([
 			'name' => 'required|string|max:255',
@@ -90,6 +91,16 @@ class ProfileController extends Controller
 			File::delete(public_path(ltrim($oldProfilePicture, '/')));
 		}
 
+		if ($request->expectsJson()) {
+			return response()->json([
+				'message' => __('ui.messages.profile_updated'),
+				'name' => $user->name,
+				'profilePicture' => $user->profile_picture,
+				'redirect' => $previousLanguage !== $user->preferred_language
+					? route('profile')
+					: null,
+			]);
+		}
 
 		return back()->with(
 			'success',

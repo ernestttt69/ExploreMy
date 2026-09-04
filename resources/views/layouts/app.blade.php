@@ -27,7 +27,11 @@
 
 <body>
     @include('components.navbar')
-    <x-page-back :href="route('dashboard')" :label="__('ui.profile.back')" />
+    @if(request()->routeIs('route.*'))
+        <x-page-back :href="route('saved-places.index')" :label="__('route_form.back_to_saved_places')" />
+    @else
+        <x-page-back :href="route('dashboard')" :label="__('ui.profile.back')" />
+    @endif
 
     <main>
         @yield('content')

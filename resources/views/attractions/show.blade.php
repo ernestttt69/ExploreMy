@@ -25,23 +25,15 @@
 <body>
 
 @include('components.navbar')
-<x-page-back :href="route('attractions.index')" :label="__('attraction.back')" />
+@php($fromSavedPlaces = request('source') === 'saved')
+<x-page-back
+    :href="$fromSavedPlaces ? route('saved-places.index') : route('attractions.index')"
+    :label="$fromSavedPlaces ? __('route_form.back_to_saved_places') : __('attraction.back')"
+/>
 
 <main class="attraction-show-page">
 
     <div class="container">
-
-        <div class="back-row">
-
-            <a
-                href="{{ route('saved-places.index') }}"
-                class="details-nav-button details-nav-saved"
-            aria-label="{{ __('explore.saved_places') }}"
-            >
-            ♥ {{ __('attraction.saved_places') }}
-            </a>
-
-        </div>
 
         @if(session('success'))
 
@@ -189,6 +181,8 @@
                         <form
                             method="POST"
                             action="{{ route('attractions.wishlist.remove', $attraction->attraction_id) }}"
+                            data-ajax-crud
+                            data-ajax-wishlist
                         >
 
                             @csrf
@@ -208,6 +202,8 @@
                         <form
                             method="POST"
                             action="{{ route('attractions.wishlist.add', $attraction->attraction_id) }}"
+                            data-ajax-crud
+                            data-ajax-wishlist
                         >
 
                             @csrf
@@ -498,13 +494,6 @@
                 class="back-button"
             >
             ← {{ __('attraction.explore_more') }}
-            </a>
-
-            <a
-                href="{{ route('saved-places.index') }}"
-                class="back-button secondary-back-button"
-            >
-            ♡ {{ __('attraction.saved_places') }}
             </a>
 
         </div>

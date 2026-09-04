@@ -607,7 +607,17 @@ function exportRoute(index, button) {
                 'Accept': 'application/json',
             },
             body: JSON.stringify({ activity: 'export_guidance' }),
-        }).catch(error => console.error('Unable to queue guidance reward.', error));
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Unable to queue guidance reward.');
+                return response.json();
+            })
+            .then(payload => {
+                if (payload.queued) {
+                    document.querySelector('[data-reward-dot]')?.removeAttribute('hidden');
+                }
+            })
+            .catch(error => console.error('Unable to queue guidance reward.', error));
     }
 
     // 4. Allow the expanded route and print styles to render before preview opens.

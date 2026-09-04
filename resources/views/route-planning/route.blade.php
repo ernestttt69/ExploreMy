@@ -28,16 +28,21 @@
                 @endforeach
             </div>
             @if($savedPlacesCount > 8)
-                <small>{{ __('route_form.up_to_eight') }}</small>
+                <small>{{ __('route_form.more_places_available', ['count' => $savedPlacesCount - 8]) }}</small>
             @elseif($savedPlacesCount < 2)
                 <small>{{ __('route.need_two') }}</small>
             @endif
         </section>
 
-        @if($requiresFlight || session('flightRequired'))
+        @if($requiresFlight)
             <aside class="flight-recommendation" role="note">
                 <strong>{{ __('route_form.flight_required') }}</strong>
                 <span>{{ __('route_form.flight_required_description') }}</span>
+            </aside>
+        @elseif($requiresFerry)
+            <aside class="flight-recommendation" role="note">
+                <strong>{{ __('route_form.ferry_required') }}</strong>
+                <span>{{ __('route_form.ferry_required_description') }}</span>
             </aside>
         @endif
     @endif
@@ -118,7 +123,12 @@
                                 @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE' && $option['total_fare'] !== null)
                                     <div>
                                         <span>{{ __('route.total_fare') }}</span>
-                                        <strong>{{ $option['fare_currency'] }} {{ number_format($option['total_fare'], 2) }}</strong>
+                                        <strong>
+                                            {{ $option['fare_currency'] }} {{ number_format($option['total_fare'], 2) }}
+                                            @if(!empty($option['fare_is_estimated']))
+                                                ({{ __('route_form.fare_estimated') }})
+                                            @endif
+                                        </strong>
                                     </div>
                                 @endif
                                 <div>
@@ -176,20 +186,21 @@
 
             @if (($routeResult['travel_mode'] ?? null) === 'MIXED')
                 @php($transferLeg = collect($routeResult['transit_legs'])->firstWhere('is_cross_region_transfer', true))
+                @php($isFerryTransfer = ($transferLeg['transfer_type'] ?? null) === 'FERRY')
                 <section class="cross-region-transfer-card">
-                    <div class="transfer-icon" aria-hidden="true">&#9992;</div>
+                    <div class="transfer-icon" aria-hidden="true">{!! $isFerryTransfer ? '&#9972;' : '&#9992;' !!}</div>
                     <div class="transfer-copy">
-                        <span class="transfer-kicker">{{ __('route_form.cross_region_transfer') }}</span>
+                        <span class="transfer-kicker">{{ __($isFerryTransfer ? 'route_form.ferry_transfer' : 'route_form.cross_region_transfer') }}</span>
                         <div class="transfer-route">
                             <strong>{{ $transferLeg['from'] }}</strong>
-                            <span class="transfer-line"><i></i><b>&#9992;</b><i></i></span>
+                            <span class="transfer-line"><i></i><b>{!! $isFerryTransfer ? '&#9972;' : '&#9992;' !!}</b><i></i></span>
                             <strong>{{ $transferLeg['to'] }}</strong>
                         </div>
-                        <p>{{ __('route_form.transfer_description') }}</p>
-                        <small>{{ __('route_form.transfer_warning') }}</small>
+                        <p>{{ __($isFerryTransfer ? 'route_form.ferry_transfer_description' : 'route_form.transfer_description') }}</p>
+                        <small>{{ __($isFerryTransfer ? 'route_form.ferry_transfer_warning' : 'route_form.transfer_warning') }}</small>
                     </div>
-                    <a href="https://www.google.com/travel/flights" target="_blank" rel="noopener noreferrer">
-                        {{ __('route_form.check_flights') }}
+                    <a href="{{ $isFerryTransfer ? 'https://www.malaysiaferry.com/ferry' : 'https://www.google.com/travel/flights' }}" target="_blank" rel="noopener noreferrer">
+                        {{ __($isFerryTransfer ? 'route_form.check_ferries' : 'route_form.check_flights') }}
                     </a>
                 </section>
             @endif
@@ -262,6 +273,9 @@
                                         @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE' && $leg['fare'] !== null)
                                             &middot;
                                             {{ $leg['fare_currency'] }} {{ number_format($leg['fare'], 2) }}
+                                            @if(!empty($leg['fare_is_estimated']))
+                                                ({{ __('route_form.fare_estimated') }})
+                                            @endif
                                         @endif
                                     @endif
                                 </small>
@@ -281,13 +295,6 @@
                             </div>
                         </div>
                         <div class="transit-leg-actions">
-                            <button
-                                type="button"
-                                class="guidance-button"
-                                data-guidance-open="guidance-{{ $loop->index }}"
-                            >
-                                {{ __('route.view_guidance') }}
-                            </button>
                             @if(empty($leg['is_cross_region_transfer']))
                                 <a
                                     class="guidance-button navigation-button"
@@ -301,30 +308,29 @@
                         </div>
                     </section>
                 @endforeach
+                <div class="journey-guidance-action">
+                    <button type="button" class="guidance-button" data-guidance-open="journey-guidance">
+                        {{ __('route.view_guidance') }}
+                    </button>
+                </div>
             </div>
 
-            @foreach ($routeResult['transit_legs'] as $leg)
-                <div
-                    id="guidance-{{ $loop->index }}"
-                    class="guidance-modal"
-                    data-guidance-modal
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="guidance-title-{{ $loop->index }}"
-                    hidden
-                >
-                    <div class="guidance-dialog">
-                        <div class="guidance-dialog-heading">
-                            <div>
-                                <span>{{ __('route.guidance') }}</span>
-                                <h3 id="guidance-title-{{ $loop->index }}">{{ $leg['from'] }} &rarr; {{ $leg['to'] }}</h3>
-                            </div>
-                            <button type="button" class="guidance-close" data-guidance-close aria-label="{{ __('route.close_guidance') }}"></button>
+            <div id="journey-guidance" class="guidance-modal" data-guidance-modal role="dialog" aria-modal="true" aria-labelledby="journey-guidance-title" hidden>
+                <div class="guidance-dialog">
+                    <div class="guidance-dialog-heading">
+                        <div>
+                            <span>{{ __('route.guidance') }}</span>
+                            <h3 id="journey-guidance-title">{{ $routeResult['stops'][0]['name'] }} &rarr; {{ last($routeResult['stops'])['name'] }}</h3>
                         </div>
-                        <ol class="guidance-list">
+                        <button type="button" class="guidance-close" data-guidance-close aria-label="{{ __('route.close_guidance') }}"></button>
+                    </div>
+                    <ol class="guidance-list journey-guidance-list">
+                        @php($guidanceStepNumber = 0)
+                        @foreach ($routeResult['transit_legs'] as $leg)
                             @foreach ($leg['steps'] as $step)
+                                @php($guidanceStepNumber++)
                                 <li>
-                                    <span class="guidance-step-number">{{ $loop->iteration }}</span>
+                                    <span class="guidance-step-number">{{ $guidanceStepNumber }}</span>
                                     <div>
                                         <strong>{{ $step['label'] }}</strong>
                                         <span>{{ $step['from'] }} &rarr; {{ $step['to'] }}</span>
@@ -339,10 +345,10 @@
                                     </div>
                                 </li>
                             @endforeach
-                        </ol>
-                    </div>
+                        @endforeach
+                    </ol>
                 </div>
-            @endforeach
+            </div>
 
             <div class="route-total">
                 @if (($routeResult['travel_mode'] ?? null) !== 'MIXED')
@@ -353,7 +359,12 @@
                 <strong>{{ $routeResult['total_duration_display'] }}</strong>
                 @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE' && $routeResult['total_fare'] !== null)
                     <span>{{ __('route.estimated_fare') }}</span>
-                    <strong>{{ $routeResult['fare_currency'] }} {{ number_format($routeResult['total_fare'], 2) }}</strong>
+                    <strong>
+                        {{ $routeResult['fare_currency'] }} {{ number_format($routeResult['total_fare'], 2) }}
+                        @if(!empty($routeResult['fare_is_estimated']))
+                            ({{ __('route_form.fare_estimated') }})
+                        @endif
+                    </strong>
                 @endif
             </div>
             <div class="save-itinerary-panel">
@@ -412,12 +423,6 @@
             @endif
 
             @php($selectedPreference = old('optimization_preference', 'fastest'))
-            @php($selectedDestinationKeys = old(
-                'destination_keys',
-                session('routeResult')
-                    ? array_column(session('routeResult')['stops'], 'route_key')
-                    : array_slice(array_column($availablePlaces, 'route_key'), 0, 2)
-            ))
             <div class="itinerary-editor" data-itinerary-editor>
                 <div class="itinerary-editor-heading">
                     <div>
@@ -448,7 +453,7 @@
                 <div class="itinerary-add">
                     <label for="add-destination">{{ __('route.add_destination') }}</label>
                     @if($usingSavedPlaces)
-                        <div class="saved-place-search">
+                        <div class="saved-place-batch-picker">
                             <input
                                 type="search"
                                 data-saved-place-search
@@ -458,25 +463,33 @@
                                 autocomplete="off"
                             >
                             <small data-saved-search-status>{{ __('route_form.showing_saved_places') }}</small>
+                            <select id="add-destination" data-add-destination multiple hidden aria-hidden="true">
+                                @foreach ($availablePlaces as $destination)
+                                    <option value="{{ $destination['route_key'] }}" data-name="{{ $destination['name'] }}">
+                                        {{ $destination['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="saved-place-checkboxes" data-saved-place-checkboxes role="group" aria-label="{{ __('route.add_destination') }}">
+                                @foreach ($availablePlaces as $destination)
+                                    <label>
+                                        <input type="checkbox" value="{{ $destination['route_key'] }}" data-name="{{ $destination['name'] }}">
+                                        <span>{{ $destination['name'] }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
                         </div>
+                    @else
+                        <select id="add-destination" data-add-destination>
+                            <option value="">{{ __('route.choose_place') }}</option>
+                            @foreach ($availablePlaces as $destination)
+                                <option value="{{ $destination['route_key'] }}" data-name="{{ $destination['name'] }}">
+                                    {{ $destination['name'] }}
+                                </option>
+                            @endforeach
+                        </select>
                     @endif
-                    <select id="add-destination" data-add-destination>
-                        <option value="">{{ __('route.choose_place') }}</option>
-                        @foreach ($availablePlaces as $destination)
-                            <option value="{{ $destination['route_key'] }}" data-name="{{ $destination['name'] }}">
-                                {{ $destination['name'] }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <button type="button" data-add-stop>{{ __('route.add_stop') }}</button>
-                    @if($usingSavedPlaces)
-                        <button
-                            type="button"
-                            class="saved-place-load-more"
-                            data-saved-place-load-more
-                            @if($savedPlacesCount <= 20) hidden @endif
-                        >{{ __('route_form.load_more') }}</button>
-                    @endif
+                    <button type="button" data-add-stop>{{ $usingSavedPlaces ? __('route_form.add_selected_stops') : __('route.add_stop') }}</button>
                 </div>
                 <p class="itinerary-hint" data-itinerary-hint>{{ __('route.choose_two') }}</p>
             </div>
