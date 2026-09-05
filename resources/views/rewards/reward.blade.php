@@ -120,9 +120,9 @@
         </section>
         </section>
 
-        <section class="rewards-section rewards-shop" aria-labelledby="shop-title"><div class="section-heading"><div><span class="section-kicker">{{ __('rewards.spend') }}</span><h2 id="shop-title">{{ __('rewards.shop') }}</h2></div><span class="section-note">{{ __('rewards.available', ['points' => number_format($wallet->points)]) }}</span></div><div class="shop-grid">@foreach($items as $item)@php($itemKey = \Illuminate\Support\Str::snake($item->name))<article class="shop-item"><span class="shop-exp">+{{ $item->exp_value }} EXP</span><h3>{{ __("rewards.shop_items.$itemKey.name") }}</h3><p>{{ __("rewards.shop_items.$itemKey.description") }}</p><form method="POST" action="{{ route('rewards.purchase', $item) }}" data-purchase-form>@csrf<button type="submit" class="shop-button" data-price="{{ $item->price }}" {{ $wallet->points < $item->price ? 'disabled' : '' }}>{{ __('rewards.buy', ['points' => $item->price]) }}</button></form></article>@endforeach</div></section>
+        <section class="rewards-section rewards-shop" aria-labelledby="shop-title"><div class="section-heading"><div><span class="section-kicker">{{ __('rewards.spend') }}</span><h2 id="shop-title">{{ __('rewards.shop') }}</h2></div><span class="section-note" data-shop-balance>{{ __('rewards.available', ['points' => number_format($wallet->points)]) }}</span></div><div class="shop-grid">@foreach($items as $item)@php($itemKey = \Illuminate\Support\Str::snake($item->name))<article class="shop-item"><span class="shop-exp">+{{ $item->exp_value }} EXP</span><h3>{{ __("rewards.shop_items.$itemKey.name") }}</h3><p>{{ __("rewards.shop_items.$itemKey.description") }}</p><form method="POST" action="{{ route('rewards.purchase', $item) }}" data-purchase-form>@csrf<button type="submit" class="shop-button" data-price="{{ $item->price }}" {{ $wallet->points < $item->price ? 'disabled' : '' }}>{{ __('rewards.buy', ['points' => $item->price]) }}</button></form></article>@endforeach</div></section>
 
-        <section class="rewards-section rewards-history" aria-labelledby="history-title"><div class="section-heading"><div><span class="section-kicker">{{ __('rewards.activity') }}</span><h2 id="history-title">{{ __('rewards.history') }}</h2></div></div><div class="history-list">@forelse($transactions as $transaction)<div class="history-row"><span class="history-type {{ $transaction->transaction_type }}">{{ $transaction->transaction_type === 'earning' ? '+' : '-' }}{{ $transaction->amount }}</span><span>{{ __('rewards.transaction_activities.' . $transaction->activity) !== 'rewards.transaction_activities.' . $transaction->activity ? __('rewards.transaction_activities.' . $transaction->activity) : str_replace('_', ' ', $transaction->activity) }}</span><small>{{ $transaction->created_at->timezone(config('app.timezone'))->format('d M Y, H:i') }}</small></div>@empty<p class="empty-copy">{{ __('rewards.history_empty') }}</p>@endforelse</div></section>
+        <section class="rewards-section rewards-history" aria-labelledby="history-title"><div class="section-heading"><div><span class="section-kicker">{{ __('rewards.activity') }}</span><h2 id="history-title">{{ __('rewards.history') }}</h2></div></div><div class="history-list">@include('rewards.history')</div></section>
     </div>
 </main>
 @endsection
@@ -132,6 +132,23 @@
         document.querySelectorAll('.progress-fill').forEach(function (fill) {
             fill.style.width = fill.dataset.progress + '%';
         });
+
+        function updateRewardSummary(data) {
+            if (data.points !== undefined) {
+                document.querySelectorAll('.wallet-points, .hero-points').forEach(function (points) {
+                    points.textContent = Number(data.points).toLocaleString();
+                });
+                document.querySelectorAll('.shop-button[data-price]').forEach(function (button) {
+                    button.disabled = Number(data.points) < Number(button.dataset.price);
+                });
+            }
+            if (data.availableLabel !== undefined) {
+                document.querySelector('[data-shop-balance]').textContent = data.availableLabel;
+            }
+            if (data.historyHtml !== undefined) {
+                document.querySelector('.history-list').innerHTML = data.historyHtml;
+            }
+        }
 
         function showRewardToast(message, isError) {
             var toast = document.querySelector('.rewards-toast') || document.createElement('div');
@@ -167,14 +184,7 @@
 
                     showRewardToast(data.message, false);
 
-                    if (data.points !== undefined) {
-                        document.querySelectorAll('.wallet-points').forEach(function (points) {
-                            points.textContent = Number(data.points).toLocaleString();
-                        });
-                        document.querySelectorAll('.shop-button[data-price]').forEach(function (shopButton) {
-                            shopButton.disabled = Number(data.points) < Number(shopButton.dataset.price);
-                        });
-                    }
+                    updateRewardSummary(data);
 
                     if (button && form.action.includes('/achievements/')) {
                         button.textContent = {{ Illuminate\Support\Js::from(__('rewards.collected')) }};
@@ -267,14 +277,7 @@
                         heroButton.replaceWith(heroForm);
                     }
 
-                    if (data.points !== undefined) {
-                        document.querySelectorAll('.wallet-points').forEach(function (points) {
-                            points.textContent = Number(data.points).toLocaleString();
-                        });
-                        document.querySelectorAll('.shop-button[data-price]').forEach(function (shopButton) {
-                            shopButton.disabled = Number(data.points) < Number(shopButton.dataset.price);
-                        });
-                    }
+                    updateRewardSummary(data);
                     showRewardToast(data.message, false);
                 } catch (error) {
                     if (button) button.disabled = false;

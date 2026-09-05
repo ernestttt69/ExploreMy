@@ -148,13 +148,16 @@ class ItineraryController extends Controller
                         ]);
                     }
 
-                    $leg = $index === 0 ? null : ($legs[$index - 1] ?? null);
+                    $leg = $legs[$index] ?? null;
+                    $incomingLeg = $index > 0 ? ($legs[$index - 1] ?? null) : null;
+                    $visitStart = isset($stop['visit_start_at']) ? Carbon::parse($stop['visit_start_at']) : null;
+                    $visitEnd = isset($stop['visit_end_at']) ? Carbon::parse($stop['visit_end_at']) : null;
                     $trip->items()->create([
                         'category' => 'sightseeing',
                         'title' => Str::limit((string) $stop['name'], 160, ''),
-                        'scheduled_date' => $leg['trip_date'] ?? $startDate->toDateString(),
-                        'start_time' => $this->databaseTime($leg['visit_start_time'] ?? ($index === 0 ? ($route['departure_time'] ?? null) : null)),
-                        'end_time' => $this->databaseTime($leg['visit_end_time'] ?? null),
+                        'scheduled_date' => $visitStart?->toDateString() ?? ($leg['trip_date'] ?? (isset($incomingLeg['arrival_at']) ? Carbon::parse($incomingLeg['arrival_at'])->toDateString() : $startDate->toDateString())),
+                        'start_time' => $visitStart?->format('H:i:s') ?? $this->databaseTime($leg['visit_start_time'] ?? $incomingLeg['arrival_time'] ?? $route['departure_time'] ?? null),
+                        'end_time' => $visitEnd?->format('H:i:s') ?? $this->databaseTime($leg['visit_end_time'] ?? $route['final_visit_end_time'] ?? null),
                         'location' => Str::limit((string) $stop['name'], 180, ''),
                         'latitude' => $stop['latitude'] ?? null,
                         'longitude' => $stop['longitude'] ?? null,

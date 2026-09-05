@@ -33,7 +33,7 @@ class GreenRewardController extends Controller
         $claimable = DB::table('user_green_achievements')->where('user_id', $user->user_id)->whereNull('claimed_at')->pluck('achievement_id')->all();
         $items = GreenShopItem::where('is_available', true)->get();
         $inventory = GreenInventory::with('item')->where('user_id', $user->user_id)->where('quantity', '>', 0)->get();
-        $transactions = GreenRewardTransaction::where('user_id', $user->user_id)->latest()->limit(10)->get();
+        $transactions = GreenRewardTransaction::where('user_id', $user->user_id)->latest()->orderByDesc('id')->limit(10)->get();
         $experiencePerLevel = 100;
         $nextThreshold = ($tree->level + 1) * $experiencePerLevel;
         $currentLevelExperience = $tree->experience % $experiencePerLevel;
@@ -46,6 +46,18 @@ class GreenRewardController extends Controller
         $treeProgress = ($currentLevelExperience / $experiencePerLevel) * 100;
         $progressSteps = (int) floor($currentLevelExperience / 20);
         return view('rewards.reward', compact('wallet', 'tree', 'achievements', 'unlocked', 'claimable', 'items', 'inventory', 'transactions', 'nextThreshold', 'treeProgress', 'progressSteps', 'treeStage', 'treeLabel', 'treeHeight'));
+    }
+
+    private function rewardSummary(): array
+    {
+        $points = $this->rewards->wallet(auth()->user())->points;
+        $transactions = GreenRewardTransaction::where('user_id', auth()->id())
+            ->latest()->orderByDesc('id')->limit(10)->get();
+        return [
+            'points' => $points,
+            'availableLabel' => __('rewards.available', ['points' => number_format($points)]),
+            'historyHtml' => view('rewards.history', compact('transactions'))->render(),
+        ];
     }
 
     public function dailyLogin()
@@ -62,7 +74,7 @@ class GreenRewardController extends Controller
             $itemKey = Str::snake($item->name);
             return response()->json([
                 'message' => __('messages.inventory_added', ['item' => $item->name]),
-                'points' => $this->rewards->wallet(auth()->user())->points,
+                ...$this->rewardSummary(),
                 'inventory' => [
                     'id' => $inventory->id,
                     'name' => __("rewards.shop_items.$itemKey.name"),
@@ -119,7 +131,7 @@ class GreenRewardController extends Controller
 
             return response()->json([
                 'message' => $message,
-                'points' => $this->rewards->wallet(auth()->user())->points,
+                ...$this->rewardSummary(),
                 'remaining' => $remaining,
                 'remainingLabel' => $remaining > 0
                     ? trans_choice('rewards.rewards_ready', $remaining, ['count' => $remaining])
@@ -140,7 +152,7 @@ class GreenRewardController extends Controller
         if (request()->expectsJson()) {
             return response()->json([
                 'message' => __('messages.achievement_collected', ['points' => $achievement->reward_points, 'achievement' => $achievement->name]),
-                'points' => $this->rewards->wallet(auth()->user())->points,
+                ...$this->rewardSummary(),
             ]);
         }
         return back()->with('success', __('messages.achievement_collected', ['points' => $achievement->reward_points, 'achievement' => $achievement->name]));

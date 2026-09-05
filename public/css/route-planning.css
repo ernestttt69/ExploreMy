@@ -496,6 +496,10 @@
     font-size: 13px;
 }
 
+.flight-recommendation[hidden] {
+    display: none;
+}
+
 
 .save-itinerary-panel {
     display: flex;
@@ -721,6 +725,16 @@
     padding: 12px;
     background: #f8faf9;
     border-bottom: 1px solid #edf0ee;
+}
+
+.daily-itinerary > .transit-leg-heading {
+    background: #edf6f1;
+    border-left: 4px solid #24624f;
+}
+
+.daily-itinerary .simple-trip-transport .navigation-button {
+    display: inline-block;
+    margin-top: 8px;
 }
 
 .guidance-button {

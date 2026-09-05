@@ -78,9 +78,14 @@
                         @error('end_date')<p class="collection-error">{{ $message }}</p>@enderror
                     </div>
                     <div class="collection-date-field">
-                        <label for="collection-start-time">{{ __('saved_extra.starts_at') }}</label>
-                        <input type="time" id="collection-start-time" name="start_time" value="{{ old('start_time', '09:00') }}" class="{{ $errors->has('start_time') ? 'input-error' : '' }}" required>
+                        <label for="collection-start-time">{{ __('route_form.daily_starting_time') }} ({{ __('route_form.optional') }})</label>
+                        <input type="time" id="collection-start-time" name="start_time" value="{{ old('start_time') }}" class="{{ $errors->has('start_time') ? 'input-error' : '' }}">
                         @error('start_time')<p class="collection-error">{{ $message }}</p>@enderror
+                    </div>
+                    <div class="collection-date-field">
+                        <label for="collection-end-time">{{ __('schedule.end_time') }} ({{ __('route_form.optional') }})</label>
+                        <input type="time" id="collection-end-time" name="end_time" value="{{ old('end_time') }}">
+                        @error('end_time')<p class="collection-error">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
@@ -153,6 +158,7 @@
                                             <p class="collection-dates">
                                                 📅 {{ \Carbon\Carbon::parse($collection->start_date)->format('M d') }} - {{ \Carbon\Carbon::parse($collection->end_date)->format('M d, Y') }}
                                                 @if($collection->start_time) &middot; {{ \Carbon\Carbon::parse($collection->start_time)->format('g:i A') }} @endif
+                                                @if($collection->end_time) &ndash; {{ \Carbon\Carbon::parse($collection->end_time)->format('g:i A') }} @endif
                                             </p>
                                         @endif
                                     </div>

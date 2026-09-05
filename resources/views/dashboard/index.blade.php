@@ -17,7 +17,7 @@
         <section class="welcome-panel" aria-labelledby="welcome-title">
             <div class="welcome-content">
                 <span class="eyebrow">{{ __('ui.dashboard.eyebrow') }}</span>
-                <h1 id="welcome-title">{{ __('ui.dashboard.welcome', ['name' => Str::before($user->name, ' ')]) }}</h1>
+                <h1 id="welcome-title">{{ __('ui.dashboard.welcome') }}</h1>
                 <p>{{ __('ui.dashboard.intro') }}</p>
                 <div class="welcome-actions">
                     <a href="{{ route('attractions.index') }}" class="btn-dashboard btn-dashboard-light">{{ __('ui.dashboard.explore_my') }} <span aria-hidden="true">&rarr;</span></a>

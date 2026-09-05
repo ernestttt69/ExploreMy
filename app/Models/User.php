@@ -53,10 +53,10 @@ class User extends Authenticatable
 	{
 		return $this->belongsToMany(
 			Attraction::class,
-			'saved_attractions',
+			'wishlists',
 			'user_id',
 			'attraction_id'
-		)->withTimestamps();
+		);
 	}
 
 	public function greenAchievements()

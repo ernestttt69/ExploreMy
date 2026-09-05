@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const translations = window.routeTranslations || {};
+    const placeFlags = window.routePlaceFlags || {};
     const options = document.querySelectorAll(
         '.preference-option'
     );
@@ -19,9 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const editor = document.querySelector('[data-itinerary-editor]');
-    if (!editor) {
-        return;
-    }
+    if (editor) {
 
     const list = editor.querySelector('[data-itinerary-list]');
     const destinationSelect = editor.querySelector('[data-add-destination]');
@@ -32,6 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const countLabel = editor.querySelector('[data-destination-count]');
     const hint = editor.querySelector('[data-itinerary-hint]');
     const form = editor.closest('form');
+    const orderMode = form.querySelector('[data-order-mode]');
+    const setOrderMode = mode => {
+        orderMode.value = mode;
+    };
     const minimumDestinations = 2;
     let savedPlaceSearchTimer = null;
     let savedPlaceSearchController = null;
@@ -48,6 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
         [...destinationSelect.options].forEach(option => {
             option.disabled = selectedKeys.has(option.value);
         });
+        const selectedPlaces = [...selectedKeys].map(key => placeFlags[key] || {});
+        const flightNotice = document.querySelector('[data-flight-notice]');
+        const ferryNotice = document.querySelector('[data-ferry-notice]');
+        if (flightNotice) flightNotice.hidden = !(selectedPlaces.some(place => place.is_east)
+            && selectedPlaces.some(place => place.is_west));
+        if (ferryNotice) ferryNotice.hidden = !selectedPlaces.some(place => place.is_island);
         savedPlaceCheckboxes?.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             const alreadyAdded = selectedKeys.has(checkbox.value);
             checkbox.disabled = alreadyAdded;
@@ -111,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             result.data.forEach(place => {
+                placeFlags[place.route_key] = place;
                 if ([...destinationSelect.options].some(option => option.value === place.route_key)) return;
                 const details = [place.category, place.state].filter(Boolean).join(' · ');
                 const option = new Option(details ? `${place.name} — ${details}` : place.name, place.route_key);
@@ -176,14 +186,18 @@ document.addEventListener('DOMContentLoaded', () => {
             item.remove();
         } else if (button.dataset.move === 'up' && item.previousElementSibling) {
             list.insertBefore(item, item.previousElementSibling);
+            setOrderMode('manual');
         } else if (button.dataset.move === 'down' && item.nextElementSibling) {
             list.insertBefore(item.nextElementSibling, item);
+            setOrderMode('manual');
         }
 
         updateEditor();
     });
 
     updateEditor();
+
+    }
 
     const guidanceModals = document.querySelectorAll('[data-guidance-modal]');
     const rewardEvent = button => {

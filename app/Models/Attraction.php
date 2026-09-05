@@ -61,10 +61,10 @@ class Attraction extends Model
     {
         return $this->belongsToMany(
             User::class,
-            'saved_attractions',
+            'wishlists',
             'attraction_id',
             'user_id'
-        )->withTimestamps();
+        );
     }
 
     public function getCategoriesAttribute(): array

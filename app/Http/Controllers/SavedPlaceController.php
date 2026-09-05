@@ -50,7 +50,8 @@ class SavedPlaceController extends Controller
             ],
             'start_date' => ['required', 'date', 'after_or_equal:today'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'start_time' => ['required', 'date_format:H:i'],
+            'start_time' => ['nullable', 'date_format:H:i'],
+            'end_time' => ['nullable', 'date_format:H:i', ...($request->filled('start_time') ? ['after:start_time'] : [])],
             'attraction_ids' => ['required', 'array', 'min:1'],
             'attraction_ids.*' => ['integer'],
         ], [
@@ -60,7 +61,6 @@ class SavedPlaceController extends Controller
             'start_date.after_or_equal' => 'The start date cannot be before today.',
             'end_date.required' => 'Please select an end date.',
             'end_date.after_or_equal' => 'The end date cannot be before the start date.',
-            'start_time.required' => 'Please select the time your trip starts.',
             'attraction_ids.required' => __('messages.collection_place_required'),
         ]);
 
@@ -78,7 +78,8 @@ class SavedPlaceController extends Controller
                 'name' => trim($validated['name']),
                 'start_date' => $validated['start_date'],
                 'end_date' => $validated['end_date'],
-                'start_time' => $validated['start_time'],
+                'start_time' => $validated['start_time'] ?? null,
+                'end_time' => $validated['end_time'] ?? null,
             ]);
 
             foreach ($attractionIds as $attractionId) {

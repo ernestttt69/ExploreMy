@@ -3,7 +3,7 @@
 return [
     'google_attribution' => 'Powered by Google, © :year Google',
     'back_to_saved_places' => 'Back to saved places',
-    'daily_starting_time' => 'Daily starting time',
+    'daily_starting_time' => 'Daily start time',
     'trip_starting_time' => 'Trip starting time',
     'optional' => 'optional',
     'start_time_help' => 'Leave blank to start now. If the selected time has passed today, the trip starts tomorrow.',
