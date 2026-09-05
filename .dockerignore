@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+auth.json
+vendor
+vendor.zip
+node_modules
+public/hot
+public/build
+bootstrap/cache/*.php
+storage/logs/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/cache/data/*
