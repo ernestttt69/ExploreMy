@@ -12,10 +12,59 @@ class AiChatServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['services.ai.provider' => 'ollama']);
 
         $context = $this->createMock(AttractionContextService::class);
         $context->method('retrieve')->willReturn([]);
         $this->app->instance(AttractionContextService::class, $context);
+    }
+
+    public function test_cloud_chat_sends_authenticated_history_and_cleans_reply(): void
+    {
+        config([
+            'services.ai.provider' => 'chat_completions',
+            'services.ai.endpoint' => 'https://ai.example.test/v1/chat/completions',
+            'services.ai.api_key' => 'test-secret',
+            'services.ai.model' => 'test-model',
+        ]);
+        Http::fake(['*' => Http::response([
+            'choices' => [['message' => ['content' => '**Visit Melaka.**']]],
+        ])]);
+
+        $this->assertSame('Visit Melaka.', app(AiChatService::class)->reply([
+            ['role' => 'user', 'content' => 'Where should I go?'],
+        ], 'en'));
+        Http::assertSent(fn ($request) => $request->url() === 'https://ai.example.test/v1/chat/completions'
+            && $request->hasHeader('Authorization', 'Bearer test-secret')
+            && $request['model'] === 'test-model'
+            && $request['messages'][0]['role'] === 'system'
+            && $request['messages'][1]['content'] === 'Where should I go?');
+    }
+
+    public function test_cloud_chat_rejects_missing_configuration_without_a_request(): void
+    {
+        config(['services.ai.provider' => 'chat_completions', 'services.ai.api_key' => '']);
+        Http::fake();
+        try {
+            app(AiChatService::class)->reply([['role' => 'user', 'content' => 'Hello']], 'en');
+            $this->fail('Missing configuration should fail.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('AI_CONFIGURATION_MISSING_OR_INVALID', $exception->getMessage());
+        }
+        Http::assertNothingSent();
+    }
+
+    public function test_cloud_chat_does_not_expose_provider_error_body(): void
+    {
+        config([
+            'services.ai.provider' => 'chat_completions',
+            'services.ai.endpoint' => 'https://ai.example.test/v1/chat/completions',
+            'services.ai.api_key' => 'test-secret',
+            'services.ai.model' => 'test-model',
+        ]);
+        Http::fake(['*' => Http::response(['error' => 'sensitive provider details'], 401)]);
+        $this->expectExceptionMessage('AI_HTTP_401');
+        app(AiChatService::class)->reply([['role' => 'user', 'content' => 'Hello']], 'en');
     }
 
     public function test_it_sends_chat_history_to_ollama_and_returns_the_reply(): void

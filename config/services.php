@@ -53,6 +53,14 @@ return [
         'timeout' => (int) env('PLACES_TIMEOUT', 3),
     ],
 
+    'ai' => [
+        'provider' => env('AI_PROVIDER', 'ollama'),
+        'endpoint' => env('AI_API_ENDPOINT'),
+        'api_key' => env('AI_API_KEY'),
+        'model' => env('AI_MODEL'),
+        'timeout' => (int) env('AI_TIMEOUT', 45),
+    ],
+
     'ollama' => [
         'endpoint' => env('OLLAMA_ENDPOINT', 'http://127.0.0.1:11434'),
         'model' => env('OLLAMA_MODEL', 'qwen3:4b-instruct'),

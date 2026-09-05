@@ -40,6 +40,14 @@ class AiChatService
             ],
         ], $messages);
 
+        $provider = config('services.ai.provider', 'ollama');
+        if ($provider === 'chat_completions') {
+            return $this->cloudReply($conversation);
+        }
+        if ($provider !== 'ollama') {
+            throw new RuntimeException('AI_PROVIDER_INVALID');
+        }
+
         try {
             $response = Http::acceptJson()
                 ->timeout(config('services.ollama.timeout'))
@@ -64,6 +72,43 @@ class AiChatService
         $content = $this->cleanReply((string) $response->json('message.content'));
         if ($content === '') {
             throw new RuntimeException('OLLAMA_EMPTY_RESPONSE');
+        }
+
+        return $content;
+    }
+
+    private function cloudReply(array $conversation): string
+    {
+        $endpoint = trim((string) config('services.ai.endpoint'));
+        $key = trim((string) config('services.ai.api_key'));
+        $model = trim((string) config('services.ai.model'));
+        if ($key === '' || $model === '' || ! filter_var($endpoint, FILTER_VALIDATE_URL)
+            || parse_url($endpoint, PHP_URL_SCHEME) !== 'https') {
+            throw new RuntimeException('AI_CONFIGURATION_MISSING_OR_INVALID');
+        }
+
+        try {
+            $response = Http::acceptJson()->withToken($key)
+                ->connectTimeout(10)
+                ->timeout((int) config('services.ai.timeout', 45))
+                ->withOptions(['allow_redirects' => false])
+                ->post($endpoint, [
+                    'model' => $model,
+                    'messages' => $conversation,
+                    'stream' => false,
+                ]);
+        } catch (ConnectionException $exception) {
+            // Do not report provider request details, credentials or chat text.
+            throw new RuntimeException('AI_UNAVAILABLE');
+        }
+
+        if (! $response->successful()) {
+            throw new RuntimeException('AI_HTTP_'.$response->status());
+        }
+
+        $content = $response->json('choices.0.message.content');
+        if (! is_string($content) || ($content = $this->cleanReply($content)) === '') {
+            throw new RuntimeException('AI_EMPTY_RESPONSE');
         }
 
         return $content;
