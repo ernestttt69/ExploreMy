@@ -26,6 +26,9 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions \
     && composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction \
     && chown -R www-data:www-data storage bootstrap/cache
 
+# Keep the startup script compatible with Windows checkouts.
+RUN sed -i 's/\r$//' docker-start.sh
+
 RUN printf '%s\n' \
     '<VirtualHost *:80>' \
     '    DocumentRoot /var/www/html/public' \
@@ -38,4 +41,4 @@ RUN printf '%s\n' \
 
 EXPOSE 80
 
-CMD ["sh", "-c", "php artisan config:cache && php artisan migrate --force && apache2-foreground"]
+CMD ["sh", "/var/www/html/docker-start.sh"]
