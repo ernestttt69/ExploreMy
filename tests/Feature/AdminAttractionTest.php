@@ -13,12 +13,43 @@ class AdminAttractionTest extends TestCase
     {
         parent::setUp();
         config(['admin.access_code' => 'test-admin-code']);
+        config(['services.cloudinary.cloud_name' => null]);
     }
 
     public function test_guest_is_redirected_to_admin_login(): void
     {
         $this->get(route('admin.attractions.index'))
             ->assertRedirect(route('admin.login'));
+    }
+
+    public function test_cloud_photos_are_saved_as_urls_and_failed_edits_are_rolled_back(): void
+    {
+        config(['services.cloudinary.cloud_name' => 'test-cloud']);
+        $cloud = $this->createMock(\App\Services\CloudinaryImageService::class);
+        $calls = 0;
+        $url = 'https://res.cloudinary.com/test-cloud/image/upload/photo.png';
+        $cloud->expects($this->exactly(2))->method('upload')->willReturnCallback(function () use (&$calls, $url) {
+            if (++$calls === 2) {
+                throw new \RuntimeException('Cloudinary upload failed');
+            }
+            return $url;
+        });
+        $this->app->instance(\App\Services\CloudinaryImageService::class, $cloud);
+        $state = State::create(['state_name' => 'Johor']);
+        $photo = fn () => UploadedFile::fake()->createWithContent('photo.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
+        $data = ['place_id' => 'cloud-place', 'state_id' => $state->state_id,
+            'attraction_name' => 'Cloud Place', 'location' => 'Johor',
+            'entrance_fee' => 'Free', 'budget_level' => 'Free'];
+        $this->withSession(['admin_authenticated' => true])->postJson(route('admin.attractions.store'),
+            $data + ['images' => [$photo()]])->assertOk();
+        $place = Attraction::where('place_id', 'cloud-place')->firstOrFail();
+        $this->assertSame($url, $place->image_path);
+        $this->assertSame($url, $place->images()->firstOrFail()->image_path);
+        $data['attraction_name'] = 'Failed Edit';
+        $this->putJson(route('admin.attractions.update', $place), $data + ['images' => [$photo()]])
+            ->assertUnprocessable()->assertJsonValidationErrors('images');
+        $this->assertSame('Cloud Place', $place->fresh()->attraction_name);
+        $this->assertSame(1, $place->images()->count());
     }
 
     public function test_admin_can_login_with_access_code(): void

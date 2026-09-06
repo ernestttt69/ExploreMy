@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Attraction;
 use App\Models\AttractionImage;
 use App\Models\State;
+use App\Services\CloudinaryImageService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -34,8 +37,10 @@ class AttractionController extends Controller
     {
         $data = $this->validated($request);
         unset($data['images']);
-        $attraction = Attraction::create($data);
-        $this->storeImages($request, $attraction);
+        DB::transaction(function () use ($data, $request): void {
+            $attraction = Attraction::create($data);
+            $this->storeImages($request, $attraction);
+        });
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -58,8 +63,10 @@ class AttractionController extends Controller
     {
         $data = $this->validated($request, $attraction);
         unset($data['images']);
-        $attraction->update($data);
-        $this->storeImages($request, $attraction);
+        DB::transaction(function () use ($data, $request, $attraction): void {
+            $attraction->update($data);
+            $this->storeImages($request, $attraction);
+        });
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -136,6 +143,17 @@ class AttractionController extends Controller
 
     private function storeImage(UploadedFile $file): string
     {
+        if (app()->environment('production') || config('services.cloudinary.cloud_name')) {
+            try {
+                return app(CloudinaryImageService::class)->upload($file->getPathname());
+            } catch (\RuntimeException $exception) {
+                report($exception);
+                throw ValidationException::withMessages([
+                    'images' => 'Photo upload failed. Please try again later. Your place changes were not saved.',
+                ]);
+            }
+        }
+
         $name = Str::uuid().'.'.$file->extension();
         $file->move(public_path('attraction_images'), $name);
 

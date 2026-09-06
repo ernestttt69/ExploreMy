@@ -64,7 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': form.querySelector('[name="_token"]').value,
                 },
-                body: JSON.stringify({ messages: history.slice(-10) }),
+                body: JSON.stringify({ messages: history.slice(-10).map(message => ({
+                    ...message,
+                    // Keep full replies visible, but bound AI history to the API's limit.
+                    content: message.role === 'assistant'
+                        ? Array.from(message.content).slice(0, 1500).join('')
+                        : message.content,
+                })) }),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || root.dataset.error);

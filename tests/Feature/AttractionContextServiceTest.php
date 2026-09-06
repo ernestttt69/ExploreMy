@@ -54,6 +54,31 @@ class AttractionContextServiceTest extends TestCase
         ]));
     }
 
+    public function test_partial_names_stay_unchanged_and_typos_use_location_scoped_suggestions(): void
+    {
+        $johor = State::query()->create(['state_name' => 'Johor']);
+        $penang = State::query()->create(['state_name' => 'Penang']);
+        foreach ([$johor, $penang] as $state) {
+            Attraction::query()->create([
+                'place_id' => 'alibaba-'.$state->state_id,
+                'state_id' => $state->state_id,
+                'attraction_name' => 'Alibaba Cafe',
+                'location' => $state->state_name,
+            ]);
+        }
+        $service = app(AttractionContextService::class);
+        $partial = $service->retrieve([['role' => 'user', 'content' => 'Where is ali in Johor?']]);
+        $this->assertCount(1, $partial);
+        $this->assertSame('Alibaba Cafe', $partial[0]['name']);
+        $this->assertArrayNotHasKey('match_type', $partial[0]);
+
+        $fuzzy = $service->retrieve([['role' => 'user', 'content' => 'Where is alibba in Johor?']]);
+        $this->assertCount(1, $fuzzy);
+        $this->assertSame('Johor', $fuzzy[0]['state']);
+        $this->assertSame('possible_name_match', $fuzzy[0]['match_type']);
+        $this->assertSame([], $service->retrieve([['role' => 'user', 'content' => 'zzzzzzzz']]));
+    }
+
     public function test_it_treats_kuala_lumpur_as_a_location_filter(): void
     {
         $kualaLumpur = State::query()->create(['state_name' => 'Kuala Lumpur']);

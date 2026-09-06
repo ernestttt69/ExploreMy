@@ -166,6 +166,36 @@ class AiChatServiceTest extends TestCase
         $this->assertStringNotContainsString('think', $reply);
     }
 
+    public function test_it_rejects_unfinished_thinking_instead_of_exposing_it(): void
+    {
+        Http::fake(['*' => Http::response([
+            'message' => ['content' => '<think>Unfinished internal notes'],
+        ])]);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('OLLAMA_EMPTY_RESPONSE');
+        app(AiChatService::class)->reply([['role' => 'user', 'content' => 'Hi']], 'en');
+    }
+
+    public function test_it_filters_encoded_thinking_before_returning_answer(): void
+    {
+        Http::fake(['*' => Http::response([
+            'message' => ['content' => '&lt;think&gt;Internal notes&lt;/think&gt;Hello!'],
+        ])]);
+        $this->assertSame('Hello!', app(AiChatService::class)->reply([
+            ['role' => 'user', 'content' => 'Hi'],
+        ], 'en'));
+    }
+
+    public function test_it_rejects_malformed_unclosed_thinking(): void
+    {
+        Http::fake(['*' => Http::response([
+            'message' => ['content' => "think>\nHere's a thinking process:\nInternal draft"],
+        ])]);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('OLLAMA_EMPTY_RESPONSE');
+        app(AiChatService::class)->reply([['role' => 'user', 'content' => 'Penang']], 'en');
+    }
+
     public function test_it_removes_markdown_bold_symbols_from_plain_text_replies(): void
     {
         Http::fake(['*' => Http::response([
@@ -180,5 +210,16 @@ class AiChatServiceTest extends TestCase
         ], 'en');
 
         $this->assertSame('Johor Zoo has a rating of 4.1 and is in Johor Bahru.', $reply);
+    }
+
+    public function test_it_removes_italic_labels_without_removing_literal_asterisks(): void
+    {
+        Http::fake(['*' => Http::response([
+            'message' => ['content' => "*Address:* Penang\n*Hours:* 9 AM\n*Rating:* 4.3 stars\n2 * 3 = 6"],
+        ])]);
+        $reply = app(AiChatService::class)->reply([
+            ['role' => 'user', 'content' => 'Penang'],
+        ], 'en');
+        $this->assertSame("Address: Penang\nHours: 9 AM\nRating: 4.3 stars\n2 * 3 = 6", $reply);
     }
 }

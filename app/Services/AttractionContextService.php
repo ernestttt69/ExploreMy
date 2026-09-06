@@ -29,7 +29,7 @@ class AttractionContextService
                 return [];
             }
 
-            $candidates = Attraction::query()
+            $baseQuery = Attraction::query()
                 ->with(['state:state_id,state_name', 'preferences:preference_categories.preference_id,category_name'])
                 ->when($location !== null, function ($query) use ($location): void {
                     $like = '%'.$location.'%';
@@ -37,7 +37,8 @@ class AttractionContextService
                         $locationQuery->where('location', 'like', $like)
                             ->orWhereHas('state', fn ($state) => $state->where('state_name', 'like', $like));
                     });
-                })
+                });
+            $candidates = (clone $baseQuery)
                 ->when($terms !== [], function ($query) use ($terms): void {
                     $query->where(function ($termQuery) use ($terms): void {
                         foreach ($terms as $term) {
@@ -51,6 +52,27 @@ class AttractionContextService
                 })
                 ->limit(100)
                 ->get();
+
+            // Preserve existing results; use spelling suggestions only on a miss.
+            if ($candidates->isEmpty() && $terms !== []) {
+                $matches = [];
+                foreach ((clone $baseQuery)->withoutEagerLoads()->select(['attraction_id', 'attraction_name'])->lazy(500) as $candidate) {
+                    $score = $this->fuzzyNameScore($candidate->attraction_name, $terms);
+                    if ($score > 0) {
+                        $matches[$candidate->getKey()] = $score;
+                        arsort($matches);
+                        $matches = array_slice($matches, 0, self::MAX_RESULTS, true);
+                    }
+                }
+                if ($matches !== []) {
+                    return (clone $baseQuery)->whereKey(array_keys($matches))->get()
+                        ->sortByDesc(fn (Attraction $item) => $matches[$item->getKey()])
+                        ->map(fn (Attraction $item) => array_merge($this->toContextRecord($item), [
+                            'match_type' => 'possible_name_match',
+                            'match_note' => 'Spelling suggestion only. Ask the user to confirm this place before treating it as their intended destination.',
+                        ]))->values()->all();
+                }
+            }
         } catch (QueryException $exception) {
             report($exception);
 
@@ -74,6 +96,29 @@ class AttractionContextService
         }
 
         return '';
+    }
+
+    private function fuzzyNameScore(string $name, array $terms): int
+    {
+        $words = preg_split('/[^a-z0-9]+/', strtolower($name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $best = 0;
+        foreach ($terms as $term) {
+            // Avoid guessing from short fragments or byte-based edits on Unicode.
+            if (! preg_match('/^[a-z]{4,40}$/', $term)) {
+                continue;
+            }
+            $limit = strlen($term) >= 8 ? 2 : 1;
+            foreach ($words as $word) {
+                if (abs(strlen($word) - strlen($term)) > $limit) {
+                    continue;
+                }
+                $distance = levenshtein($term, $word);
+                if ($distance <= $limit) {
+                    $best = max($best, 100 - $distance * 10);
+                }
+            }
+        }
+        return $best;
     }
 
     private function searchTerms(string $question): array
