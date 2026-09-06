@@ -16,6 +16,15 @@ class AttractionContextService
     public function retrieve(array $messages): array
     {
         $question = $this->latestUserMessage($messages);
+        // Normalize place aliases only for retrieval; the original chat message
+        // remains unchanged so the assistant still replies in the user's language.
+        $question = strtr($question, [
+            '马六甲' => ' Melaka ', '馬六甲' => ' Melaka ',
+            '槟城' => ' Penang ', '檳城' => ' Penang ',
+            '吉隆坡' => ' Kuala Lumpur ',
+            '柔佛' => ' Johor ', '柔福' => ' Johor ',
+            '雪兰莪' => ' Selangor ', '雪蘭莪' => ' Selangor ',
+        ]);
         $terms = $this->searchTerms($question);
 
         try {

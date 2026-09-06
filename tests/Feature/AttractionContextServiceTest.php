@@ -54,6 +54,20 @@ class AttractionContextServiceTest extends TestCase
         ]));
     }
 
+    public function test_chinese_melaka_aliases_retrieve_melaka_places(): void
+    {
+        $state = State::create(['state_name' => 'Melaka']);
+        Attraction::create(['place_id' => 'melaka-alias', 'state_id' => $state->state_id,
+            'attraction_name' => 'Melaka River Cruise', 'location' => 'Melaka']);
+        foreach (['马六甲', '馬六甲'] as $question) {
+            $results = app(AttractionContextService::class)->retrieve([
+                ['role' => 'user', 'content' => $question],
+            ]);
+            $this->assertCount(1, $results);
+            $this->assertSame('Melaka River Cruise', $results[0]['name']);
+        }
+    }
+
     public function test_partial_names_stay_unchanged_and_typos_use_location_scoped_suggestions(): void
     {
         $johor = State::query()->create(['state_name' => 'Johor']);
