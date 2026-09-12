@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attraction;
 use App\Models\PreferenceCategory;
 use App\Models\State;
+use App\Models\User;
 use App\Models\UserPreference;
 use App\Models\Wishlist;
 use App\Services\GreenRewardService;
@@ -19,6 +20,38 @@ class AttractionController extends Controller
 
         $categories = PreferenceCategory::orderBy('category_name')->get();
 
+        $userPreferences = collect();
+
+        if (Auth::check()) {
+            /** @var \App\Models\User|null $authenticatedUser */
+            $authenticatedUser = Auth::user();
+
+            if ($authenticatedUser instanceof User) {
+                $userPreferences = $authenticatedUser->preferenceCategories()->orderBy('category_name')->get();
+            }
+        }
+
+        if ($request->input('clear') === '1') {
+            $hasActiveFilters =
+                $request->filled('search') ||
+                $request->filled('state_id') ||
+                $request->filled('budget_level') ||
+                $request->filled('rating') ||
+                ! empty($request->input('categories', [])) ||
+                $request->input('has_selection') === '1';
+
+            if (! $hasActiveFilters) {
+                return redirect()
+                    ->route('attractions.index')
+                    ->withErrors([
+                        'filters' => __('explore.no_filters_to_clear'),
+                    ]);
+            }
+
+            // Filters existed – redirect to a clean index to clear everything
+            return redirect()->route('attractions.index')->with('success', __('explore.filters_cleared'));
+        }
+
         $searchSubmitted = $request->input('search_submitted') === '1';
 
         if ($searchSubmitted) {
@@ -31,11 +64,10 @@ class AttractionController extends Controller
 
             if (! $hasCriteria) {
                 return redirect()
-                    ->back()
+                    ->route('attractions.index')
                     ->withErrors([
-                        'search' => 'Please enter a place to search or select at least one filter.',
-                    ])
-                    ->withInput($request->except('search_submitted'));
+                        'search' => __('explore.search_required'),
+                    ]);
             }
         }
 
@@ -117,6 +149,13 @@ class AttractionController extends Controller
                         );
                     }
                 );
+
+                $userPreferences = PreferenceCategory::whereIn(
+                    'preference_id',
+                    $userPreferenceIds
+                )
+                    ->orderBy('category_name')
+                    ->get();
             }
 
             $query->orderByDesc('rating');
@@ -133,6 +172,17 @@ class AttractionController extends Controller
             ->map(fn ($id) => (int) $id)
             ->all();
 
+        $searchSuccessMessage = null;
+
+        if ($searchSubmitted && $attractions->total() > 0) {
+            $searchSuccessMessage = __('explore.search_success', [
+                'count' => $attractions->total(),
+                'place_label' => $attractions->total() === 1
+                    ? __('explore.place')
+                    : __('explore.places'),
+            ]);
+        }
+
         return view(
             'attractions.index',
             compact(
@@ -140,7 +190,9 @@ class AttractionController extends Controller
                 'states',
                 'categories',
                 'searchSubmitted',
-                'wishlistedAttractionIds'
+                'wishlistedAttractionIds',
+                'userPreferences',
+                'searchSuccessMessage'
             )
         );
     }

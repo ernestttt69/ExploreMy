@@ -343,6 +343,10 @@
     padding: 5px 9px;
 }
 
+.preference-tags {
+    margin-bottom: 12px;
+    margin-top: 10px;
+}
 .budget-badge {
     color: #64748b;
     font-size: 11px;

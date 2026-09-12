@@ -49,6 +49,22 @@
 
     <section class="search-panel">
 
+        @if(!empty($searchSuccessMessage ?? null))
+
+            <div class="alert-success" id="searchSuccessPopup" role="status">
+                {{ $searchSuccessMessage }}
+            </div>
+
+        @endif
+
+        @if(session('success'))
+
+            <div class="alert-success" id="filterSuccessPopup">
+                {{ session('success') }}
+            </div>
+
+        @endif
+
         @if($errors->any())
 
             <div class="validation-errors">
@@ -118,6 +134,7 @@
 
             @php
                 $hasFilters =
+                    request()->filled('search') ||
                     request()->filled('state_id') ||
                     request()->filled('budget_level') ||
                     request()->filled('rating') ||
@@ -140,19 +157,13 @@
 
                 </div>
 
-                @if($hasFilters)
-
-                    <a
-                        href="{{ route('attractions.index', [
-                            'search_submitted' => request('search_submitted'),
-                            'search' => request('search'),
-                        ]) }}"
-                        class="clear-filter"
-                    >
-                        {{ __('explore.clear') }}
-                    </a>
-
-                @endif
+                <a
+                    href="{{ route('attractions.index', array_merge(request()->query(), ['clear' => '1'])) }}"
+                    class="clear-filter"
+                    id="clearFiltersLink"
+                >
+                    {{ __('explore.clear') }}
+                </a>
 
             </div>
 
@@ -316,6 +327,97 @@
 
         </form>
 
+        <script>
+            (function () {
+                function showPopupById(id) {
+                    var popup = document.getElementById(id);
+                    if (!popup || popup.dataset.popupShown === '1') {
+                        return;
+                    }
+                    popup.dataset.popupShown = '1';
+                    popup.classList.add('global-message-popup');
+                    popup.setAttribute('role', 'status');
+                    setTimeout(function () {
+                        popup.classList.add('is-leaving');
+                        setTimeout(function () { if (popup.parentNode) popup.remove(); }, 250);
+                    }, 4000);
+                }
+
+                function showFilterSuccessPopup() {
+                    showPopupById('searchSuccessPopup');
+                    showPopupById('filterSuccessPopup');
+                }
+
+                function initClearFilters() {
+                    var clearLink = document.getElementById('clearFiltersLink');
+                    if (!clearLink) {
+                        return;
+                    }
+
+                    clearLink.addEventListener('click', function (event) {
+                        event.preventDefault();
+
+                        var form = document.querySelector('.search-panel form') || clearLink.closest('form');
+                        var liveSelected = false;
+
+                        if (form) {
+                            var searchInput = form.querySelector('input[name="search"]');
+                            if (searchInput && String(searchInput.value).trim() !== '') {
+                                liveSelected = true;
+                            }
+
+                            ['state_id', 'budget_level', 'rating'].forEach(function (name) {
+                                var el = form.querySelector('[name="' + name + '"]');
+                                if (el && String(el.value).trim() !== '') {
+                                    liveSelected = true;
+                                }
+                            });
+
+                            if (form.querySelectorAll('input[name="categories[]"]:checked').length > 0) {
+                                liveSelected = true;
+                            }
+                        }
+
+                        var submittedSelected = false;
+                        try {
+                            var params = new URLSearchParams(window.location.search);
+                            ['search', 'state_id', 'budget_level', 'rating'].forEach(function (name) {
+                                var v = params.get(name);
+                                if (v !== null && String(v).trim() !== '') {
+                                    submittedSelected = true;
+                                }
+                            });
+                            params.forEach(function (value, key) {
+                                if (key === 'categories' || key.indexOf('categories[') === 0) {
+                                    if (String(value).trim() !== '') {
+                                        submittedSelected = true;
+                                    }
+                                }
+                            });
+                        } catch (e) {
+                            submittedSelected = false;
+                        }
+
+                        if (liveSelected || submittedSelected) {
+                            window.location.href = "{!! route('attractions.index', ['clear' => '1', 'has_selection' => '1']) !!}";
+                        } else {
+                            window.location.href = "{!! route('attractions.index', ['clear' => '1']) !!}";
+                        }
+                    });
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function () {
+                        showFilterSuccessPopup();
+                        initClearFilters();
+                    });
+                } else {
+                    showFilterSuccessPopup();
+                    initClearFilters();
+                }
+            })();
+        </script>
+
     </section>
 
     <section class="results-section">
@@ -336,12 +438,7 @@
 
                 @elseif(!$searchSubmitted)
 
-                    @if(
-                        \App\Models\UserPreference::where(
-                            'user_id',
-                            Auth::id()
-                        )->exists()
-                    )
+                    @if(isset($userPreferences) && $userPreferences->isNotEmpty())
 
                         <p class="results-kicker">
                             {{ __('explore.recommended') }}
@@ -350,6 +447,18 @@
                         <h2>
                             {{ __('explore.preferences') }}
                         </h2>
+
+                        <div class="attraction-categories preference-tags">
+
+                            @foreach($userPreferences as $preference)
+
+                                <span class="attraction-category">
+                                    {{ $preference->localized_name }}
+                                </span>
+
+                            @endforeach
+
+                        </div>
 
                     @else
 
