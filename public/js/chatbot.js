@@ -32,6 +32,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     addMessage('assistant', root.dataset.welcome);
+    try {
+        const cached = JSON.parse(root.dataset.history || '[]');
+        if (Array.isArray(cached)) {
+            cached.slice(-10).forEach(message => {
+                if (['user', 'assistant'].includes(message.role) && typeof message.content === 'string') {
+                    history.push(message);
+                    addMessage(message.role, message.content);
+                }
+            });
+        }
+    } catch (_) { /* Start a fresh conversation if cached data is invalid. */ }
+    root.querySelectorAll('[data-chat-question]').forEach(button => {
+        button.addEventListener('click', () => {
+            if (submit.disabled) return;
+            input.value = button.textContent.trim();
+            root.querySelector('.ai-chat__faq').open = false;
+            form.requestSubmit();
+        });
+    });
     toggle.addEventListener('click', () => panel.hidden ? openPanel() : closePanel());
     close.addEventListener('click', closePanel);
 

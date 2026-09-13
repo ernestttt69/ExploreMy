@@ -2,7 +2,7 @@
 .nav-ai-chatbot { display: flex; align-items: center; gap: 6px; min-height: 38px; border: 1px solid #b9d7ca; border-radius: 999px; padding: 6px 12px; color: #126b49; background: #eef8f3; font-weight: 700; transition: background .2s ease, transform .2s ease; }
 .nav-ai-chatbot:hover, .nav-ai-chatbot[aria-expanded="true"] { color: #fff; background: #167d55; transform: translateY(-1px); }
 .nav-ai-chatbot:focus-visible { outline: 3px solid rgba(70,120,102,.28); outline-offset: 2px; }
-.ai-chat__panel { position: absolute; right: 0; bottom: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; width: min(460px, calc(100vw - 28px)); height: min(620px, calc(100vh - 90px)); background: #fff; border: 1px solid #dce7e1; border-radius: 18px; box-shadow: 0 14px 44px rgba(0,0,0,.22); overflow: hidden; }
+.ai-chat__panel { position: absolute; right: 0; bottom: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto auto; width: min(460px, calc(100vw - 28px)); height: min(620px, calc(100vh - 90px)); background: #fff; border: 1px solid #dce7e1; border-radius: 18px; box-shadow: 0 14px 44px rgba(0,0,0,.22); overflow: hidden; }
 .ai-chat__header { display: flex; align-items: center; justify-content: space-between; padding: 15px 17px; color: #fff; background: #126b49; }
 .ai-chat__header small { display: block; opacity: .85; }
 .ai-chat__close { border: 0; background: transparent; color: #fff; font-size: 28px; line-height: 1; }
@@ -23,3 +23,8 @@
 .ai-chat__notice { display: block; padding: 2px 13px 10px; color: #64736b; font-size: 11px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
 @media (max-width: 760px) { .nav-ai-chatbot__label { display: none; } .nav-ai-chatbot { width: 38px; justify-content: center; padding: 6px; } }
 @media (max-width: 520px) { .ai-chat { right: 14px; bottom: 14px; } .ai-chat__panel { position: fixed; inset: 12px; width: auto; height: auto; } }
+
+.ai-chat__faq { padding: 8px 13px; border-top: 1px solid #dce7e1; font-size: 12px; color: #126b49; }
+.ai-chat__faq summary { cursor: pointer; font-weight: 700; }
+.ai-chat__faq-options { display: grid; gap: 6px; padding-top: 8px; max-height: 140px; overflow-y: auto; }
+.ai-chat__faq-options button { text-align: left; border: 1px solid #b9d7ca; border-radius: 8px; padding: 7px 9px; background: #eef8f3; color: #126b49; }

@@ -23,8 +23,13 @@ class ChatbotController extends Controller
         }
 
         try {
+            $reply = $chat->reply($validated['messages'], app()->getLocale());
+            $request->session()->put('chatbot.history', array_slice([
+                ...$validated['messages'],
+                ['role' => 'assistant', 'content' => $reply],
+            ], -10));
             return response()->json([
-                'reply' => $chat->reply($validated['messages'], app()->getLocale()),
+                'reply' => $reply,
             ]);
         } catch (RuntimeException $exception) {
             report($exception);

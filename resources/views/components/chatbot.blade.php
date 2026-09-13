@@ -8,6 +8,7 @@
     data-url="{{ route('chatbot.message') }}"
     data-welcome="{{ __('chatbot.welcome') }}"
     data-error="{{ __('chatbot.error') }}"
+    data-history="{{ json_encode(auth()->check() ? session('chatbot.history', []) : []) }}"
     aria-label="{{ __('chatbot.title') }}"
 >
     <div class="ai-chat__panel" id="ai-chat-panel" hidden>
@@ -20,6 +21,15 @@
         </header>
 
         <div class="ai-chat__messages" role="log" aria-live="polite"></div>
+
+        <details class="ai-chat__faq">
+            <summary>{{ __('chatbot.faq_title') }}</summary>
+            <div class="ai-chat__faq-options">
+                @foreach(__('chatbot.faq_questions') as $question)
+                    <button type="button" data-chat-question>{{ $question }}</button>
+                @endforeach
+            </div>
+        </details>
 
         <form class="ai-chat__form">
             @csrf
