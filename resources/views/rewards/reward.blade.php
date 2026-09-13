@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-<main class="rewards-page">
+<main class="rewards-page" data-action-failed="{{ __('rewards.action_failed') }}" data-collected-label="{{ __('rewards.collected') }}">
     <div class="container rewards-container">
         @if(session('success') || session('info'))
             <div class="rewards-toast" role="status">{{ session('success') ?? session('info') }}</div>
@@ -161,6 +161,16 @@
             toast.style.animation = '';
         }
 
+        function getRewardLabel(key, fallback) {
+            var page = document.querySelector('.rewards-page');
+            if (page && page.dataset[key]) return page.dataset[key];
+            return fallback;
+        }
+
+        function getActionFailedMessage(fallbackMessage) {
+            return fallbackMessage || getRewardLabel('actionFailed', 'Action failed. Please try again.');
+        }
+
         document.querySelectorAll('[data-async-reward]').forEach(function (form) {
             form.addEventListener('submit', async function (event) {
                 event.preventDefault();
@@ -180,14 +190,14 @@
                         body: new FormData(form)
                     });
                     var data = await response.json();
-                    if (!response.ok) throw new Error(data.message || {{ Illuminate\Support\Js::from(__('rewards.action_failed')) }});
+                    if (!response.ok) throw new Error(getActionFailedMessage(data.message));
 
                     showRewardToast(data.message, false);
 
                     updateRewardSummary(data);
 
                     if (button && form.action.includes('/achievements/')) {
-                        button.textContent = {{ Illuminate\Support\Js::from(__('rewards.collected')) }};
+                        button.textContent = getRewardLabel('collectedLabel', 'Collected');
                         button.disabled = true;
                     } else if (button) {
                         button.disabled = false;
@@ -241,7 +251,7 @@
                         body: new FormData(form)
                     });
                     var data = await response.json();
-                    if (!response.ok) throw new Error(data.message || {{ Illuminate\Support\Js::from(__('rewards.action_failed')) }});
+                    if (!response.ok) throw new Error(getActionFailedMessage(data.message));
 
                     var inventory = data.inventory;
                     var emptyState = document.querySelector('.fertilizer-empty');

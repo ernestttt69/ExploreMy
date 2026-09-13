@@ -584,8 +584,8 @@
 @endsection
 
 @push('scripts')
-<script>
-@php($routeTranslations = [
+@php
+$routeTranslations = [
     'stops' => __('route.stops', ['count' => ':count']),
     'moveUp' => __('route.move_destination_up'),
     'moveDown' => __('route.move_destination_down'),
@@ -596,14 +596,18 @@
     'matchingLoaded' => __('route_form.matching_loaded'),
     'noSavedPlaces' => __('route_form.no_saved_places'),
     'loadFailed' => __('route_form.load_failed'),
-])
-window.routeTranslations = {{ Illuminate\Support\Js::from($routeTranslations) }};
-window.routePlaceFlags = {{ Illuminate\Support\Js::from(collect($availablePlaces)->keyBy('route_key')->all()) }};
+];
+@endphp
+<script type="application/json" id="route-translations-data">{!! json_encode($routeTranslations, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
+<script type="application/json" id="route-place-flags-data">{!! json_encode(collect($availablePlaces)->keyBy('route_key')->all(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
+<script>
+window.routeTranslations = JSON.parse(document.getElementById('route-translations-data').textContent);
+window.routePlaceFlags = JSON.parse(document.getElementById('route-place-flags-data').textContent);
 </script>
 <script src="{{ asset('js/route-planning.js') }}?v={{ filemtime(public_path('js/route-planning.js')) }}"></script>
 @if (session('routeResult') && $googleMapsBrowserKey && !($isFlightOnlyRoute ?? false))
     <script type="application/json" id="route-map-data">
-        @json(session('routeResult'))
+        {!! json_encode(session('routeResult'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}
     </script>
     <script
         async

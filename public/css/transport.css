@@ -206,6 +206,34 @@ body.transport-page {
     margin-top: 6px;
 }
 
+.line-status-card {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 16px;
+}
+
+.line-status-name {
+    color: #1b4332;
+    margin-bottom: 8px;
+}
+
+.line-status-grid {
+    font-size: 13px;
+    display: grid;
+    gap: 6px;
+}
+
+.status-tag-normal {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-tag-alert {
+    background: #fef3c7;
+    color: #92400e;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }

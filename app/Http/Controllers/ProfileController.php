@@ -14,6 +14,7 @@ class ProfileController extends Controller
 {
 	public function show()
 	{
+		/** @var User $user */
 		$user = Auth::user();
 		$fields = ['name', 'email', 'profile_picture', 'phone', 'date_of_birth'];
 		$completed = collect($fields)->filter(fn ($field) => filled($user->{$field}))->count();

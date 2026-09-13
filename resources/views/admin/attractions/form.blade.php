@@ -7,4 +7,29 @@
 <section><div class="form-section-title"><span>02</span><div><h2>{{ __('admin.visitor') }}</h2><p>{{ __('admin.visitor_intro') }}</p></div></div><div class="admin-form-grid"><label class="wide"><span>{{ __('admin.hours') }}</span><textarea name="operating_hours" rows="7" placeholder="{{ __('admin.hours_placeholder') }}">{{ old('operating_hours',$attraction->operating_hours) }}</textarea></label><label><span>{{ __('admin.fee') }} *</span><input name="entrance_fee" value="{{ old('entrance_fee',$attraction->entrance_fee ?: __('admin.price_unavailable')) }}" required maxlength="100"></label><label><span>{{ __('admin.budget') }} *</span><select name="budget_level" required>@foreach(['Price unavailable','Free','Low','Moderate','High'] as $level)<option value="{{ $level }}" @selected(old('budget_level',$attraction->budget_level)===$level)>{{ __('admin.' . ['Price unavailable'=>'price_unavailable','Free'=>'free','Low'=>'low','Moderate'=>'moderate','High'=>'high'][$level]) }}</option>@endforeach</select></label><label><span>{{ __('admin.transport') }}</span><input name="nearby_transport" value="{{ old('nearby_transport',$attraction->nearby_transport) }}" maxlength="100"></label><label><span>{{ __('admin.rating') }}</span><input type="number" name="rating" value="{{ old('rating',$attraction->rating) }}" min="0" max="5" step="0.1" placeholder="0.0 – 5.0"></label></div></section>
 <section><div class="form-section-title"><span>03</span><div><h2>{{ __('admin_images.title') }}</h2><p>{{ __('admin_images.intro') }}</p></div></div>@if($attraction->exists && $attraction->images->isNotEmpty())<div class="admin-image-gallery">@foreach($attraction->images as $image)<article><img src="{{ asset($image->image_path) }}" alt="{{ $attraction->attraction_name }}"><button type="button" data-delete-image-url="{{ route('admin.attractions.images.destroy', [$attraction, $image]) }}" data-delete-image-message="{{ __('admin_images.confirm') }}">{{ __('admin_images.delete') }}</button></article>@endforeach</div>@endif<label class="image-upload"><input type="file" name="images[]" accept="image/jpeg,image/png,image/webp" id="imageInput" multiple><span id="imagePreview"><b>+</b><strong>{{ __('admin_images.add') }}</strong><small>{{ __('admin_images.limit') }}</small></span></label></section>
 <div class="admin-save-bar"><a href="{{ route('admin.attractions.index') }}">{{ __('admin.cancel') }}</a><button type="submit">{{ $attraction->exists ? __('admin.save') : __('admin.create') }}</button></div></form></main>
-<script>const imagePreviewAlt={{ Illuminate\Support\Js::from(__('admin.preview')) }},csrf={{ Illuminate\Support\Js::from(csrf_token()) }};document.getElementById('imageInput').addEventListener('change',e=>{const files=[...e.target.files];if(!files.length)return;document.getElementById('imagePreview').innerHTML=files.map((file,index)=>`<img src="${URL.createObjectURL(file)}" alt="${imagePreviewAlt} ${index+1}">`).join('')});document.querySelectorAll('[data-delete-image-url]').forEach(button=>button.addEventListener('click',()=>{if(!confirm(button.dataset.deleteImageMessage))return;const form=document.createElement('form');form.method='POST';form.action=button.dataset.deleteImageUrl;form.innerHTML=`<input type="hidden" name="_token" value="${csrf}"><input type="hidden" name="_method" value="DELETE">`;document.body.appendChild(form);form.submit()}));</script></body></html>
+<div id="attraction-form-config" data-preview="{{ __('admin.preview') }}" data-csrf="{{ csrf_token() }}" hidden></div>
+<script>
+const formConfig = document.getElementById('attraction-form-config');
+const imagePreviewAlt = formConfig.dataset.preview;
+const csrf = formConfig.dataset.csrf;
+document.getElementById('imageInput').addEventListener('change', (e) => {
+  const files = [...e.target.files];
+  if (!files.length) {
+    return;
+  }
+  document.getElementById('imagePreview').innerHTML = files.map((file, index) => `<img src="${URL.createObjectURL(file)}" alt="${imagePreviewAlt} ${index + 1}">`).join('');
+});
+document.querySelectorAll('[data-delete-image-url]').forEach((button) => {
+  button.addEventListener('click', () => {
+    if (!confirm(button.dataset.deleteImageMessage)) {
+      return;
+    }
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = button.dataset.deleteImageUrl;
+    form.innerHTML = `<input type="hidden" name="_token" value="${csrf}"><input type="hidden" name="_method" value="DELETE">`;
+    document.body.appendChild(form);
+    form.submit();
+  });
+});
+</script></body></html>

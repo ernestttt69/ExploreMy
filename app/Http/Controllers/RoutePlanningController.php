@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
 use Throwable;
 use UnexpectedValueException;
 
@@ -28,7 +29,7 @@ class RoutePlanningController extends Controller
     public function index(Request $request)
     {
         if ($request->session()->has('routeResult')) {
-            $request->session()->keep(['routeResult', 'routeOptions']);
+            Session::keep(['routeResult', 'routeOptions']);
         }
 
         $usingSavedPlaces = $request->query('source') === 'saved';

@@ -53,9 +53,15 @@
 
         <section class="attraction-hero">
 
-            <div class="hero-image-section">
+            <div class="hero-image-section" data-gallery-root>
 
                 @if($attraction->images->isNotEmpty())
+
+                    <div class="gallery-image-data" hidden aria-hidden="true">
+                        @foreach($attraction->images as $galleryImage)
+                            <span class="js-gallery-image" data-src="{{ asset($galleryImage->image_path) }}"></span>
+                        @endforeach
+                    </div>
 
                     <div class="main-image-wrapper">
 
@@ -64,7 +70,6 @@
                             src="{{ asset($attraction->images->first()->image_path) }}"
                             alt="{{ $attraction->attraction_name }}"
                             class="main-attraction-image"
-                            onerror="this.style.display='none'; document.getElementById('mainImagePlaceholder').style.display='flex';"
                         >
 
                         <div
@@ -91,11 +96,14 @@
 
                                 @foreach($attraction->images as $image)
 
+                                    @php($dotIndex = $loop->index)
+                                    @php($dotActive = $loop->first ? 'active' : '')
+                                    @php($galleryLabel = __('explore.show_image', ['current' => $loop->iteration, 'total' => $loop->count]))
                                     <button
                                         type="button"
-                                        class="image-dot {{ $loop->first ? 'active' : '' }}"
-                                        onclick="showImage({{ $loop->index }})"
-                        aria-label="{{ __('explore.show_image', ['current' => $loop->iteration, 'total' => $loop->count]) }}"
+                                        class="image-dot js-image-dot {{ $dotActive }}"
+                                        data-image-index="{{ $dotIndex }}"
+                                        aria-label="{{ $galleryLabel }}"
                                     ></button>
 
                                 @endforeach
@@ -110,15 +118,18 @@
 
                         <div class="gallery-controls">
 
-                            <button type="button" onclick="showPreviousImage()">
+                            <button type="button" id="galleryPrevButton">
                     &larr; {{ __('attraction.previous') }}
                             </button>
 
-                            <span id="imagePosition">
-                    {{ __('attraction.photo', ['current' => 1, 'total' => $attraction->images->count()]) }}
+                            @php($galleryTotal = $attraction->images->count())
+                            @php($photoTemplate = __('attraction.photo', ['current' => ':current', 'total' => $galleryTotal]))
+                            @php($photoInitial = __('attraction.photo', ['current' => 1, 'total' => $galleryTotal]))
+                            <span id="imagePosition" data-photo-template="{{ $photoTemplate }}">
+                    {{ $photoInitial }}
                             </span>
 
-                            <button type="button" onclick="showNextImage()">
+                            <button type="button" id="galleryNextButton">
                     {{ __('attraction.next') }} &rarr;
                             </button>
 
@@ -473,7 +484,7 @@
 
                         <a
                             href="#"
-                            onclick="document.querySelector('.wishlist-button').click(); return false;"
+                            id="saveAttractionLink"
                             class="save-link"
                         >
                     {{ __('attraction.save') }} →
@@ -503,46 +514,94 @@
 </main>
 
 <script>
-const attractionImages = @json($attraction->images->map(fn ($image) => asset($image->image_path))->values());
-const photoLabel = {{ Illuminate\Support\Js::from(__('attraction.photo', ['current' => ':current', 'total' => ':total'])) }};
-    let activeImageIndex = 0;
+    (function () {
+        var galleryItems = document.querySelectorAll('.js-gallery-image');
+        var attractionImages = [];
+        var index = 0;
+        for (index = 0; index < galleryItems.length; index += 1) {
+            attractionImages.push(galleryItems[index].getAttribute('data-src'));
+        }
+        var activeImageIndex = 0;
+        var mainImage = document.getElementById('mainAttractionImage');
+        var placeholder = document.getElementById('mainImagePlaceholder');
+        var imagePosition = document.getElementById('imagePosition');
+        var photoTemplate = imagePosition ? imagePosition.getAttribute('data-photo-template') : '';
 
-    function showImage(imageIndex) {
-        const mainImage = document.getElementById('mainAttractionImage');
-        const placeholder = document.getElementById('mainImagePlaceholder');
-
-        if (!mainImage || attractionImages.length === 0) {
-            return;
+        function renderPosition() {
+            if (!imagePosition || !photoTemplate) {
+                return;
+            }
+            imagePosition.textContent = photoTemplate
+                .replace(':current', String(activeImageIndex + 1))
+                .replace(':total', String(attractionImages.length));
         }
 
-        activeImageIndex = (imageIndex + attractionImages.length) % attractionImages.length;
-        mainImage.src = attractionImages[activeImageIndex];
-        mainImage.style.display = 'block';
+        function showImage(imageIndex) {
+            if (!mainImage || attractionImages.length === 0) {
+                return;
+            }
 
-        if (placeholder) {
-            placeholder.style.display = 'none';
+            activeImageIndex = (imageIndex + attractionImages.length) % attractionImages.length;
+            mainImage.src = attractionImages[activeImageIndex];
+            mainImage.style.display = 'block';
+
+            if (placeholder) {
+                placeholder.style.display = 'none';
+            }
+
+            document
+                .querySelectorAll('.js-image-dot')
+                .forEach(function (dot, index) {
+                    dot.classList.toggle('active', index === activeImageIndex);
+                });
+
+            renderPosition();
         }
 
         document
-            .querySelectorAll('.image-dot')
-            .forEach(function(dot, index) {
-                dot.classList.toggle('active', index === activeImageIndex);
+            .querySelectorAll('.js-image-dot')
+            .forEach(function (dot) {
+                dot.addEventListener('click', function () {
+                    showImage(Number(dot.getAttribute('data-image-index') || '0'));
+                });
             });
 
-        const imagePosition = document.getElementById('imagePosition');
+        var prevButton = document.getElementById('galleryPrevButton');
+        var nextButton = document.getElementById('galleryNextButton');
 
-        if (imagePosition) {
-        imagePosition.textContent = photoLabel.replace(':current', activeImageIndex + 1).replace(':total', attractionImages.length);
+        if (prevButton) {
+            prevButton.addEventListener('click', function () {
+                showImage(activeImageIndex - 1);
+            });
         }
-    }
 
-    function showNextImage() {
-        showImage(activeImageIndex + 1);
-    }
+        if (nextButton) {
+            nextButton.addEventListener('click', function () {
+                showImage(activeImageIndex + 1);
+            });
+        }
 
-    function showPreviousImage() {
-        showImage(activeImageIndex - 1);
-    }
+        if (mainImage) {
+            mainImage.addEventListener('error', function () {
+                mainImage.style.display = 'none';
+                if (placeholder) {
+                    placeholder.style.display = 'flex';
+                }
+            });
+        }
+
+        var saveLink = document.getElementById('saveAttractionLink');
+
+        if (saveLink) {
+            saveLink.addEventListener('click', function (event) {
+                event.preventDefault();
+                var wishlistButton = document.querySelector('.wishlist-button');
+                if (wishlistButton) {
+                    wishlistButton.click();
+                }
+            });
+        }
+    })();
 </script>
 
 </body>

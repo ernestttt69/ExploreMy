@@ -235,8 +235,9 @@
 </dialog>
 @endif
 
+<script id="itinerary-config" type="application/json">{!! json_encode($clientConfig, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
 <script>
-window.itineraryConfig = @json($clientConfig);
+window.itineraryConfig = JSON.parse(document.getElementById('itinerary-config').textContent);
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('js/itinerary.js') }}?v={{ filemtime(public_path('js/itinerary.js')) }}"></script>

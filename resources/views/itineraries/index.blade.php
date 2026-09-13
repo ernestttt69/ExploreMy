@@ -75,7 +75,7 @@
     </div>
 </main>
 
-<dialog class="app-dialog" id="trip-dialog" aria-labelledby="trip-dialog-title">
+<dialog class="app-dialog" id="trip-dialog" aria-labelledby="trip-dialog-title" data-reopen-trip="{{ $errors->any() ? 'true' : 'false' }}">
     <form method="POST" action="{{ route('itineraries.store') }}" class="dialog-form" data-ajax-crud>
         @csrf
         <div class="dialog-heading">
@@ -133,9 +133,11 @@ function updateTripEndDateLimit() {
 tripStartDate?.addEventListener('change', updateTripEndDateLimit);
 updateTripEndDateLimit();
 
-@if($errors->any())
-document.getElementById('trip-dialog').showModal();
-@endif
+const tripDialog = document.getElementById('trip-dialog');
+const shouldReopenTripDialog = tripDialog?.dataset.reopenTrip === 'true';
+if (shouldReopenTripDialog) {
+    tripDialog?.showModal();
+}
 </script>
 
 </body>

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Throwable;
 
 class ItineraryController extends Controller
 {
@@ -179,8 +180,6 @@ class ItineraryController extends Controller
             });
         } catch (Throwable $exception) {
             report($exception);
-            $request->session()->keep(['routeResult', 'routeOptions']);
-
             return back()->withErrors(['save_itinerary' => 'We could not save this itinerary. Please try again.']);
         }
 

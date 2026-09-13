@@ -1,6 +1,7 @@
 @php
 	$pendingRewardActivities = session('pending_reward_activities', []);
 	$hasPendingRewards = collect($pendingRewardActivities)->sum() > 0;
+	$defaultAvatar = asset('images/default-avatar.svg');
 @endphp
 
 <header class="header-wrapper fixed-top">
@@ -49,7 +50,7 @@
 
 					<a href="{{ route('profile') }}" class="nav-user-pill text-decoration-none text-dark">
 
-						<img src="{{ Auth::user()->profile_picture ?: asset('images/default-avatar.svg') }}" class="nav-avatar" alt="{{ Auth::user()->name }}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='{{ asset('images/default-avatar.svg') }}'">
+						<img src="{{ Auth::user()->profile_picture ?: $defaultAvatar }}" class="nav-avatar" alt="{{ Auth::user()->name }}" referrerpolicy="no-referrer" data-fallback-src="{{ $defaultAvatar }}" onerror="this.onerror=null;this.src=this.dataset.fallbackSrc;">
 						<span>
 							{{ Auth::user()->name }}
 						</span>

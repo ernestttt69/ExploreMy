@@ -143,16 +143,20 @@
 
             <!-- Display Line Info Result -->
             @if(session('selected_info'))
-                @php $info = session('selected_info'); @endphp
-                <div class="line-status-card" style="border-left: 5px solid {{ $info['color'] }}; background: #f8fafc; padding: 16px; border-radius: 12px; margin-top: 16px;">
-                    <h3 style="color: #1b4332; margin-bottom: 8px;">{{ $info['name'] }}</h3>
-                    <div style="font-size: 13px; display: grid; gap: 6px;">
+                @php
+                    $info = session('selected_info');
+                    $lineColor = $info['color'] ?? '#1b4332';
+                    $isNormalStatus = $info['status'] === __('messages.transport_status_normal');
+                @endphp
+                <div class="line-status-card" @style(['border-left: 5px solid ' . $lineColor])>
+                    <h3 class="line-status-name">{{ $info['name'] }}</h3>
+                    <div class="line-status-grid">
                         <div>🏢 <strong>{{ __('transport.operator') }}</strong> {{ $info['operator'] }}</div>
                         <div>🕒 <strong>{{ __('transport.hours') }}</strong> {{ $info['hours'] }}</div>
                         <div>⚡ <strong>{{ __('transport.frequency') }}</strong> {{ $info['frequency'] }}</div>
                         <div>
                             🟢 <strong>{{ __('transport.status') }}</strong>
-                            <span class="fare-tag" style="background: {{ $info['status'] === __('messages.transport_status_normal') ? '#dcfce7' : '#fef3c7' }}; color: {{ $info['status'] === __('messages.transport_status_normal') ? '#166534' : '#92400e' }};">
+                            <span class="fare-tag {{ $isNormalStatus ? 'status-tag-normal' : 'status-tag-alert' }}">
                                 {{ $info['status'] }}
                             </span>
                         </div>
@@ -193,7 +197,7 @@
                         <div class="station-name">{{ $station['name'] }}</div>
                         <div class="step-desc">📍 {{ $station['address'] }}</div>
                         <div class="station-distance">📏 {{ __('transport.distance') }} <strong>{{ $station['distance'] }}</strong></div>
-                        <button onclick="viewStationDetails('{{ $station['place_id'] }}')" class="btn-toggle-route" style="margin-top:8px;">
+                        <button data-place-id="{{ $station['place_id'] }}" onclick="viewStationDetails(this.dataset.placeId)" class="btn-toggle-route" style="margin-top:8px;">
                             {{ __('transport.details') }}
                         </button>
                     </div>
@@ -270,7 +274,7 @@
         </div>
 
         <!-- Container holding the route option cards -->
-        <div id="routes-container">
+        <div id="routes-container" data-reward-url="{{ route('rewards.activity') }}">
             @foreach($routes as $index => $route)
                 <div class="station-item route-card" 
                      style="margin-bottom: 16px;" 
@@ -298,12 +302,12 @@
 
 <div style="display: flex; gap: 8px; margin-top: 10px;">
     <!-- Toggle Step-by-Step Directions -->
-    <button class="btn-toggle-route" onclick="showRouteDetails({{ $index }})" style="flex: 1;">
+    <button type="button" class="btn-toggle-route btn-show-route" data-route-index="{{ $index }}" style="flex: 1;">
         {{ __('transport.select_route') }} 👇
     </button>
 
     <!-- Export / Print PDF Button -->
-    <button type="button" class="btn-toggle-route" onclick="exportRoute({{ $index }}, this)" data-reward-url="{{ route('rewards.activity') }}" style="background-color: #2d6a4f; color: white; width: auto; padding: 0 16px;">
+    <button type="button" class="btn-toggle-route btn-export-route" data-route-index="{{ $index }}" style="background-color: #2d6a4f; color: white; width: auto; padding: 0 16px;">
         📄 {{ __('transport.export') }}
     </button>
 </div>
@@ -345,13 +349,21 @@
 
 </div>
 
-<script>
-@php($transportTranslations = [
+<script id="transport-translations" type="application/json">
+@json([
     'gpsFailed' => __('misc.transport.gps_failed'),
     'gpsUnsupported' => __('misc.transport.gps_unsupported'),
     'option' => __('misc.transport.option', ['number' => ':number']),
+    'enterOrigin' => __('transport.enter_origin'),
+    'loadFailed' => __('transport.load_failed'),
+    'ratingReviews' => __('messages.transport_rating_reviews', ['count' => '__COUNT__']),
+    'openNow' => __('transport.open_now'),
+    'closed' => __('transport.closed'),
+    'noReviews' => __('transport.no_reviews'),
 ])
-const transportTranslations = {{ Illuminate\Support\Js::from($transportTranslations) }};
+</script>
+<script>
+const transportTranslations = JSON.parse(document.getElementById('transport-translations').textContent);
 function selectMode(element) {
     document.querySelectorAll('.mode-btn-option').forEach(el => el.classList.remove('active'));
     element.classList.add('active');
@@ -380,7 +392,7 @@ function findNearbyStations() {
     const originInput = document.getElementById('origin-input');
     
     if (!originInput || originInput.value.trim() === '') {
-        alert({{ Illuminate\Support\Js::from(__('transport.enter_origin')) }});
+        alert(transportTranslations.enterOrigin);
         setTimeout(() => {
             originInput.focus();
             originInput.style.border = "2px solid #e63946";
@@ -416,7 +428,7 @@ function viewStationDetails(placeId) {
         .then(response => response.json())
         .then(res => {
             if (!res.success) {
-                alert({{ Illuminate\Support\Js::from(__('transport.load_failed')) }});
+                alert(transportTranslations.loadFailed);
                 return;
             }
 
@@ -428,7 +440,7 @@ function viewStationDetails(placeId) {
             document.getElementById('detail-station-address').innerText = data.address;
             document.getElementById('detail-wheelchair').innerText = data.wheelchair;
             document.getElementById('detail-phone').innerText = data.phone;
-            const ratingReviews = {{ Illuminate\Support\Js::from(__('messages.transport_rating_reviews', ['count' => '__COUNT__'])) }}
+            const ratingReviews = transportTranslations.ratingReviews
                 .replace('__COUNT__', data.user_ratings_total);
             document.getElementById('detail-rating').innerText = `${data.rating} ★ (${ratingReviews})`;
             document.getElementById('detail-maps-link').href = data.google_maps_url;
@@ -436,10 +448,10 @@ function viewStationDetails(placeId) {
             // Open/Closed Status
             const statusEl = document.getElementById('detail-status');
             if (data.is_open_now === true) {
-                statusEl.innerText = {{ Illuminate\Support\Js::from(__('transport.open_now')) }};
+                statusEl.innerText = transportTranslations.openNow;
                 statusEl.style.color = '#2d6a4f';
             } else if (data.is_open_now === false) {
-                statusEl.innerText = {{ Illuminate\Support\Js::from(__('transport.closed')) }};
+                statusEl.innerText = transportTranslations.closed;
                 statusEl.style.color = '#d90429';
             } else {
                 statusEl.innerText = 'N/A';
@@ -469,7 +481,7 @@ function viewStationDetails(placeId) {
                     reviewsContainer.appendChild(div);
                 });
             } else {
-                reviewsContainer.innerHTML = '<p>' + {{ Illuminate\Support\Js::from(__('transport.no_reviews')) }} + '</p>';
+                reviewsContainer.innerHTML = '<p>' + transportTranslations.noReviews + '</p>';
             }
 
             // Display Modal
@@ -579,8 +591,9 @@ function sortRoutes(criterion) {
 }
 
 function exportRoute(index, button) {
+    const targetIndex = Number(index);
     // 1. Expand step-by-step directions for this card
-    const detailPanel = document.getElementById('route-details-' + index);
+    const detailPanel = document.getElementById('route-details-' + targetIndex);
     if (detailPanel) {
         detailPanel.classList.remove('timeline-hidden');
     }
@@ -588,7 +601,7 @@ function exportRoute(index, button) {
     // 2. Add 'print-active' class exclusively to the selected option
     const cards = document.querySelectorAll('.route-card');
     cards.forEach((card, i) => {
-        if (i === index) {
+        if (i === targetIndex) {
             card.classList.add('print-active');
         } else {
             card.classList.remove('print-active');
@@ -596,7 +609,7 @@ function exportRoute(index, button) {
     });
 
     // 3. Queue the guidance reward from the transportation export only.
-    const rewardUrl = button?.dataset.rewardUrl;
+    const rewardUrl = document.getElementById('routes-container')?.dataset.rewardUrl;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     if (rewardUrl && csrfToken) {
         fetch(rewardUrl, {
@@ -630,6 +643,21 @@ function exportRoute(index, button) {
         cards.forEach(card => card.classList.remove('print-active'));
     };
 }
+
+// Route card actions are bound with event delegation so Blade values stay in
+// data attributes instead of inline JavaScript handlers.
+document.addEventListener('click', (event) => {
+    const showButton = event.target.closest('.btn-show-route');
+    if (showButton) {
+        showRouteDetails(showButton.dataset.routeIndex);
+        return;
+    }
+
+    const exportButton = event.target.closest('.btn-export-route');
+    if (exportButton) {
+        exportRoute(exportButton.dataset.routeIndex, exportButton);
+    }
+});
 
 </script>
 
