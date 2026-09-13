@@ -58,9 +58,9 @@
 
     <div class="route-workspace {{ session('routeResult') ? 'has-route-result' : '' }}">
     @if (session('routeResult'))
-        @php($routeResult = session('routeResult'))
-        @php($routeLegs = collect($routeResult['transit_legs'] ?? []))
-        @php($isFlightOnlyRoute = $routeLegs->isNotEmpty() && $routeLegs->every(fn ($leg) => !empty($leg['is_cross_region_transfer'])))
+        @php $routeResult = session('routeResult'); @endphp
+        @php $routeLegs = collect($routeResult['transit_legs'] ?? []); @endphp
+        @php $isFlightOnlyRoute = $routeLegs->isNotEmpty() && $routeLegs->every(fn ($leg) => !empty($leg['is_cross_region_transfer'])); @endphp
         <section class="route-result">
             <div class="card-heading">
                 <h2>{{ $routeResult['title'] }}</h2>
@@ -200,8 +200,8 @@
             @endif
 
             @if (($routeResult['travel_mode'] ?? null) === 'MIXED')
-                @php($transferLeg = collect($routeResult['transit_legs'])->firstWhere('is_cross_region_transfer', true))
-                @php($isFerryTransfer = ($transferLeg['transfer_type'] ?? null) === 'FERRY')
+                @php $transferLeg = collect($routeResult['transit_legs'])->firstWhere('is_cross_region_transfer', true); @endphp
+                @php $isFerryTransfer = ($transferLeg['transfer_type'] ?? null) === 'FERRY'; @endphp
                 <section class="cross-region-transfer-card">
                     <div class="transfer-icon" aria-hidden="true">{!! $isFerryTransfer ? '&#9972;' : '&#9992;' !!}</div>
                     <div class="transfer-copy">
@@ -355,10 +355,10 @@
                         <button type="button" class="guidance-close" data-guidance-close aria-label="{{ __('route.close_guidance') }}"></button>
                     </div>
                     <ol class="guidance-list journey-guidance-list">
-                        @php($guidanceStepNumber = 0)
+                        @php $guidanceStepNumber = 0; @endphp
                         @foreach ($routeResult['transit_legs'] as $leg)
                             @foreach ($leg['steps'] as $step)
-                                @php($guidanceStepNumber++)
+                                @php $guidanceStepNumber++; @endphp
                                 <li>
                                     <span class="guidance-step-number">{{ $guidanceStepNumber }}</span>
                                     <div>
@@ -445,7 +445,7 @@
                 @error('end_time')<span class="route-field-error">{{ $message }}</span>@enderror
             </div>
 
-            @php($selectedPreference = old('optimization_preference', 'fastest'))
+            @php $selectedPreference = old('optimization_preference', 'fastest'); @endphp
             <input type="hidden" name="order_mode" value="{{ old('order_mode', session('routeResult.order_mode', 'auto')) }}" data-order-mode>
             <div class="itinerary-editor" data-itinerary-editor>
                 <div class="itinerary-editor-heading">
@@ -458,7 +458,7 @@
 
                 <ol class="itinerary-list" data-itinerary-list>
                     @foreach ($selectedDestinationKeys as $destinationKey)
-                        @php($destination = collect($availablePlaces)->firstWhere('route_key', $destinationKey))
+                        @php $destination = collect($availablePlaces)->firstWhere('route_key', $destinationKey); @endphp
                         @if ($destination)
                             <li class="itinerary-item" data-destination-key="{{ $destination['route_key'] }}">
                                 <input type="hidden" name="destination_keys[]" value="{{ $destination['route_key'] }}">

@@ -22,9 +22,9 @@ COPY --from=frontend /app/public/build ./public/build
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions \
-    storage/framework/views storage/logs bootstrap/cache public/attraction_images \
+    storage/framework/views storage/logs bootstrap/cache public/attraction_images public/profile_images \
     && composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction \
-    && chown -R www-data:www-data storage bootstrap/cache public/attraction_images
+    && chown -R www-data:www-data storage bootstrap/cache public/attraction_images public/profile_images
 
 # Keep the startup script compatible with Windows checkouts.
 RUN sed -i 's/\r$//' docker-start.sh

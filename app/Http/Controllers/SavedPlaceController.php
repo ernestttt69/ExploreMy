@@ -69,10 +69,12 @@ class SavedPlaceController extends Controller
             ->pluck('attraction_id');
 
         if ($attractionIds->count() !== count(array_unique($validated['attraction_ids']))) {
-            return back()->withErrors(['attraction_ids' => __('messages.saved_places_only')])->withInput();
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'attraction_ids' => __('messages.saved_places_only'),
+            ]);
         }
 
-        DB::transaction(function () use ($validated, $attractionIds): void {
+        $collection = DB::transaction(function () use ($validated, $attractionIds) {
             $collection = SavedPlaceCollection::create([
                 'user_id' => Auth::id(),
                 'name' => trim($validated['name']),
@@ -88,13 +90,17 @@ class SavedPlaceController extends Controller
                     'attraction_id' => $attractionId,
                 ]);
             }
+            return $collection;
         });
 
         if ($request->expectsJson()) {
+            $collection->load('items.attraction.images')->loadCount('items');
+            $savedPlaces = Wishlist::with('attraction')->where('user_id', Auth::id())->get();
+
             return response()->json([
                 'message' => __('messages.collection_created'),
-                'redirect' => route('saved-places.index'),
-            ]);
+                'html' => view('saved-places.collection-card', compact('collection', 'savedPlaces'))->render(),
+            ], 201);
         }
 
         return redirect()->route('saved-places.index')->with('success', __('messages.collection_created'));

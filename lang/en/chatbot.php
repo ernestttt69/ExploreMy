@@ -9,7 +9,7 @@ return [
     'placeholder' => 'Ask about Malaysia travel…',
     'send' => 'Send',
     'notice' => 'AI can make mistakes. Verify important travel information.',
-    'error' => 'Something went wrong. Please try again.',
+    'error' => 'Currently busy. Please try again later.',
     'invalid_message' => 'Please send a valid message.',
-    'unavailable' => 'The AI assistant is temporarily unavailable. Please try again later.',
+    'unavailable' => 'Currently busy. Please try again later.',
 ];

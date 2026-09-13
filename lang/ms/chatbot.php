@@ -9,7 +9,7 @@ return [
     'placeholder' => 'Tanya tentang pelancongan Malaysia…',
     'send' => 'Hantar',
     'notice' => 'AI mungkin tersilap. Sahkan maklumat perjalanan yang penting.',
-    'error' => 'Sesuatu telah berlaku. Sila cuba lagi.',
+    'error' => 'Sedang sibuk. Sila cuba lagi kemudian.',
     'invalid_message' => 'Sila hantar mesej yang sah.',
-    'unavailable' => 'Pembantu AI tidak tersedia buat sementara waktu. Sila cuba lagi kemudian.',
+    'unavailable' => 'Sedang sibuk. Sila cuba lagi kemudian.',
 ];

@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })) }),
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.message || root.dataset.error);
+            if (!response.ok) throw new Error(root.dataset.error);
 
             loading.classList.remove('ai-chat__message--loading');
             loading.removeAttribute('aria-label');
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             loading.classList.remove('ai-chat__message--loading');
             loading.removeAttribute('aria-label');
-            loading.textContent = error.message || root.dataset.error;
+            loading.textContent = root.dataset.error;
         } finally {
             submit.disabled = false;
             input.focus();

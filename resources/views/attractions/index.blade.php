@@ -49,7 +49,7 @@
 
     <section class="search-panel">
 
-        @if(!empty($searchSuccessMessage ?? null))
+        @if(!session('success') && !empty($searchSuccessMessage ?? null))
 
             <div class="alert-success" id="searchSuccessPopup" role="status">
                 {{ $searchSuccessMessage }}

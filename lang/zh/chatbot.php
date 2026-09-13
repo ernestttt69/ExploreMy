@@ -9,7 +9,7 @@ return [
     'placeholder' => '询问马来西亚旅游信息…',
     'send' => '发送',
     'notice' => 'AI 可能会出错，重要旅游信息请再次确认。',
-    'error' => '发生错误，请重试。',
+    'error' => '目前繁忙，请稍后再试。',
     'invalid_message' => '请输入有效的消息。',
-    'unavailable' => 'AI 助手暂时无法连接，请稍后重试。',
+    'unavailable' => '目前繁忙，请稍后再试。',
 ];

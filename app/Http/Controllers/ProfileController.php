@@ -16,14 +16,11 @@ class ProfileController extends Controller
 	{
 		/** @var User $user */
 		$user = Auth::user();
-		$fields = ['name', 'email', 'profile_picture', 'phone', 'date_of_birth'];
-		$completed = collect($fields)->filter(fn ($field) => filled($user->{$field}))->count();
-		$completion = (int) round(($completed / count($fields)) * 100);
 		$activities = LoginActivity::where('user_id', $user->user_id)->latest('logged_in_at')->limit(5)->get();
 		$categories = PreferenceCategory::orderBy('preference_id')->get();
 		$selectedPreferences = $user->preferenceCategories()->pluck('preference_categories.preference_id')->all();
 
-		return view('profile', compact('user', 'completion', 'activities', 'categories', 'selectedPreferences'));
+		return view('profile', compact('user', 'activities', 'categories', 'selectedPreferences'));
 	}
 
 	public function update(Request $request)
