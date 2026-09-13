@@ -20,11 +20,23 @@ class AttractionSearchValidationTest extends TestCase
         ]))->assertOk()->assertSessionDoesntHaveErrors();
     }
 
-    public function test_completely_empty_search_is_rejected(): void
+    public function test_clearing_all_filters_without_a_name_is_allowed(): void
     {
         $this->from(route('attractions.index'))
             ->get(route('attractions.index', ['search_submitted' => '1']))
-            ->assertRedirect(route('attractions.index'))
-            ->assertSessionHasErrors('search');
+            ->assertOk()
+            ->assertSessionDoesntHaveErrors();
+    }
+
+    public function test_unchecking_last_category_and_resetting_dropdowns_is_allowed(): void
+    {
+        $this->get(route('attractions.index', [
+            'search_submitted' => '1',
+            'search' => '',
+            'state_id' => '',
+            'budget_level' => '',
+            'rating' => '',
+            'categories' => [],
+        ]))->assertOk()->assertSessionDoesntHaveErrors();
     }
 }

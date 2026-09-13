@@ -3,7 +3,7 @@
 @section('title', __('rewards.page_title'))
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/rewards.css') }}?v={{ filemtime(public_path('css/rewards.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/rewards.css') }}?v={{ hash_file('sha256', public_path('css/rewards.css')) }}">
 @endpush
 
 @section('content')
@@ -13,7 +13,8 @@
             <div class="rewards-toast" role="status">{{ session('success') ?? session('info') }}</div>
         @endif
         <section class="tree-growth-container" aria-label="{{ __('rewards.growing_tree_aria') }}">
-        <section class="rewards-hero" aria-labelledby="rewards-title">
+        <div class="rewards-tree-stage">
+        <section class="rewards-hero" aria-label="{{ __('rewards.growing_tree_aria') }}">
             <div class="rewards-hero-copy">
                 <span class="rewards-eyebrow">{{ __('rewards.green_points') }}</span>
                 <strong class="hero-points">{{ number_format($wallet->points) }}</strong>
@@ -54,6 +55,8 @@
                 <div class="level-steps">@for($step = 1; $step <= 5; $step++)<span class="{{ $progressSteps >= $step ? 'complete' : '' }}"></span>@endfor</div>
                 <small>{{ __('rewards.level_unlock', ['level' => $tree->level + 1, 'exp' => number_format($nextThreshold)]) }}</small>
             </div>
+        </section>
+        </div>
         </section>
 
         <section class="rewards-section fertilizer-section" aria-labelledby="fertilizer-title">
@@ -118,7 +121,6 @@
             <div class="section-heading"><div><span class="section-kicker">{{ __('rewards.living_reward') }}</span><h2 id="tree-title">{{ $treeLabel }}</h2></div><span class="section-note">{{ __('rewards.level_exp', ['level' => $tree->level, 'exp' => $tree->experience]) }}</span></div>
                         <div class="tools-grid"><div class="tree-panel"><div class="tree-illustration tree-stage-{{ $treeStage }}" aria-label="{{ __('rewards.tree_aria', ['tree' => $treeLabel, 'height' => $treeHeight]) }}" role="img"><span class="tree-ground"></span><span class="tree-trunk"></span><span class="tree-crown tree-crown-one"></span><span class="tree-crown tree-crown-two"></span><span class="tree-crown tree-crown-three"></span><span class="tree-leaf tree-leaf-one"></span><span class="tree-leaf tree-leaf-two"></span><span class="tree-leaf tree-leaf-three"></span></div><div><h3>{{ __('rewards.grow_virtual') }}</h3><p>{{ __('rewards.grow_virtual_desc') }}</p><div class="tree-height"><strong>{{ $treeHeight }} {{ __('rewards.height_unit') }}</strong><span>{{ __('rewards.height') }}</span></div></div></div><div class="inventory-panel"><h3>{{ __('rewards.inventory') }}</h3>@forelse($inventory as $owned)@php($ownedItemKey = \Illuminate\Support\Str::snake($owned->item->name))<div class="inventory-row"><span>{{ __("rewards.shop_items.$ownedItemKey.name") }} <b>x{{ $owned->quantity }}</b></span><form method="POST" action="{{ route('rewards.fertilize', $owned) }}" data-async-reward>@csrf<button type="submit" class="text-action">{{ __('rewards.use_fertilizer') }} &rarr;</button></form></div>@empty<p class="empty-copy">{{ __('rewards.inventory_empty') }}</p>@endforelse</div></div>
         </section>
-        </section>
 
         <section class="rewards-section rewards-shop" aria-labelledby="shop-title"><div class="section-heading"><div><span class="section-kicker">{{ __('rewards.spend') }}</span><h2 id="shop-title">{{ __('rewards.shop') }}</h2></div><span class="section-note" data-shop-balance>{{ __('rewards.available', ['points' => number_format($wallet->points)]) }}</span></div><div class="shop-grid">@foreach($items as $item)@php($itemKey = \Illuminate\Support\Str::snake($item->name))<article class="shop-item"><span class="shop-exp">+{{ $item->exp_value }} EXP</span><h3>{{ __("rewards.shop_items.$itemKey.name") }}</h3><p>{{ __("rewards.shop_items.$itemKey.description") }}</p><form method="POST" action="{{ route('rewards.purchase', $item) }}" data-purchase-form>@csrf<button type="submit" class="shop-button" data-price="{{ $item->price }}" {{ $wallet->points < $item->price ? 'disabled' : '' }}>{{ __('rewards.buy', ['points' => $item->price]) }}</button></form></article>@endforeach</div></section>
 
@@ -129,6 +131,26 @@
 
 @push('scripts')
     <script>
+        // Scale one composition, including its text and controls, to the card width.
+        const treeCard = document.querySelector('.tree-growth-container');
+        const treeStage = treeCard.querySelector('.rewards-tree-stage');
+        function resizeTreeCard() {
+            const stageWidth = treeStage.offsetWidth;
+            const scale = Math.min(1, treeCard.clientWidth / stageWidth);
+            treeStage.style.transform = 'scale(' + scale + ')';
+            treeStage.style.left = Math.max(0, (treeCard.clientWidth - stageWidth) / 2) + 'px';
+            treeCard.style.height = Math.ceil(treeStage.offsetHeight * scale) + 'px';
+        }
+        resizeTreeCard();
+        if ('ResizeObserver' in window) {
+            const treeResizeObserver = new ResizeObserver(resizeTreeCard);
+            treeResizeObserver.observe(treeCard);
+            treeResizeObserver.observe(treeStage);
+        } else {
+            window.addEventListener('resize', resizeTreeCard);
+        }
+        if (document.fonts) document.fonts.ready.then(resizeTreeCard);
+
         document.querySelectorAll('.progress-fill').forEach(function (fill) {
             fill.style.width = fill.dataset.progress + '%';
         });

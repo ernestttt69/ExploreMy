@@ -10,6 +10,10 @@ class AttractionSeeder extends Seeder
     public function run(): void
     {
         $rows = json_decode(file_get_contents(database_path('seeders/data/attractions.json')), true, 512, JSON_THROW_ON_ERROR);
+        $rows = array_map(function (array $row): array {
+            unset($row['category']);
+            return $row;
+        }, $rows);
         $updateColumns = array_values(array_diff(array_keys($rows[0] ?? []), ['attraction_id']));
 
         foreach (array_chunk($rows, 250) as $chunk) {

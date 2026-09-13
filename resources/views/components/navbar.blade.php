@@ -51,7 +51,7 @@
 					<a href="{{ route('profile') }}" class="nav-user-pill text-decoration-none text-dark">
 
 						<img src="{{ Auth::user()->profile_picture ?: $defaultAvatar }}" class="nav-avatar" alt="{{ Auth::user()->name }}" referrerpolicy="no-referrer" data-fallback-src="{{ $defaultAvatar }}" onerror="this.onerror=null;this.src=this.dataset.fallbackSrc;">
-						<span>
+						<span data-profile-name>
 							{{ Auth::user()->name }}
 						</span>
 

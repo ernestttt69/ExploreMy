@@ -3,7 +3,8 @@
 
 .rewards-page{min-height:calc(100vh - 130px);padding:148px 0 70px;background:radial-gradient(circle at 9% 12%,#e5f3e9 0,transparent 28%),linear-gradient(135deg,#f8fbf7 0%,#edf5f0 100%);font-family:'Plus Jakarta Sans',sans-serif;color:#173b30}
 .rewards-container{max-width:1100px}.rewards-toast{position:fixed;z-index:9999;top:112px;left:50%;padding:14px 18px;border:1px solid #cde4d2;border-radius:12px;background:#e7f5ea;color:#24643a;font-size:12px;font-weight:700;box-shadow:0 12px 30px rgba(18,60,49,.16);transform:translateX(-50%);animation:toast-in .3s ease both,toast-out .4s ease 3.6s forwards}.rewards-toast-error{border-color:#efc8b8;background:#fff0eb;color:#9d452d}
-.rewards-container{display:flex;flex-direction:column}.rewards-container>section{order:6}.tree-growth-container{position:relative;order:1;min-height:440px}.rewards-container>.rewards-shop{order:3}.rewards-container>.rewards-section[id="ways-to-earn"]{order:4}.rewards-container>.rewards-history{order:7}.rewards-tools{display:none}.tree-growth-container>.rewards-hero{position:relative;order:2;min-height:440px}.tree-growth-container>.rewards-overview{position:absolute;z-index:5;top:0;left:0;display:grid;width:100%;margin:0;pointer-events:none}.tree-growth-container .points-panel,.tree-growth-container .level-panel{border:0;background:transparent;box-shadow:none;color:#fff}.tree-growth-container .panel-label{color:#c5ead9}.tree-growth-container .points-caption,.tree-growth-container .level-row p,.tree-growth-container .level-panel small{color:#d2eee2}.tree-growth-container .points-panel strong,.tree-growth-container .level-row h2{color:#fff}.tree-growth-container .points-panel p{color:#c5ead9}.tree-growth-container .points-panel p b{color:#e0f6a5}.tree-growth-container .progress-track{background:rgba(255,255,255,.3)}.tree-growth-container .progress-fill{background:#b4e36f}.tree-growth-container .level-badge{background:rgba(210,241,216,.25);color:#d9f5aa}.tree-growth-container .level-steps span{background:rgba(255,255,255,.65)}.tree-growth-container .level-steps .complete{background:#b4e36f}.tree-growth-container .hero-points,.tree-growth-container .hero-level{display:none}.hero-points{display:block;margin-top:5px;font-size:34px;line-height:1;font-weight:800;letter-spacing:-1px}.hero-points-label{display:block;margin-top:5px;color:#a6d6c2;font-size:10px;font-weight:700}.hero-tree-scene{right:0;width:100%}.hero-tree{right:auto;left:50%;transform:translateX(-50%)}.hero-level{position:absolute;z-index:4;top:36px;right:30px;display:flex;align-items:flex-end;flex-direction:column;color:#d6f2d3}.hero-level span{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}.hero-level strong{margin-top:4px;font-size:18px}.hero-fertilizer{position:absolute;z-index:4;right:10%;bottom:91px;padding:9px 12px;border:1px solid rgba(201,235,222,.35);border-radius:9px;background:rgba(8,63,46,.5);color:#fff;font-size:10px;font-weight:800;text-decoration:none}.hero-fertilizer span{margin-left:8px;font-size:14px}
+/* Keep page sections in their template order; only the tree card scales. */
+.rewards-container{display:block}.tree-growth-container{position:relative;order:1;min-height:440px}.rewards-tools{display:none}.tree-growth-container>.rewards-hero{position:relative;order:2;min-height:440px}.tree-growth-container>.rewards-overview{position:absolute;z-index:5;top:0;left:0;display:grid;width:100%;margin:0;pointer-events:none}.tree-growth-container .points-panel,.tree-growth-container .level-panel{border:0;background:transparent;box-shadow:none;color:#fff}.tree-growth-container .panel-label{color:#c5ead9}.tree-growth-container .points-caption,.tree-growth-container .level-row p,.tree-growth-container .level-panel small{color:#d2eee2}.tree-growth-container .points-panel strong,.tree-growth-container .level-row h2{color:#fff}.tree-growth-container .points-panel p{color:#c5ead9}.tree-growth-container .points-panel p b{color:#e0f6a5}.tree-growth-container .progress-track{background:rgba(255,255,255,.3)}.tree-growth-container .progress-fill{background:#b4e36f}.tree-growth-container .level-badge{background:rgba(210,241,216,.25);color:#d9f5aa}.tree-growth-container .level-steps span{background:rgba(255,255,255,.65)}.tree-growth-container .level-steps .complete{background:#b4e36f}.tree-growth-container .hero-points,.tree-growth-container .hero-level{display:none}.hero-points{display:block;margin-top:5px;font-size:34px;line-height:1;font-weight:800;letter-spacing:-1px}.hero-points-label{display:block;margin-top:5px;color:#a6d6c2;font-size:10px;font-weight:700}.hero-tree-scene{right:0;width:100%}.hero-tree{right:auto;left:50%;transform:translateX(-50%)}.hero-level{position:absolute;z-index:4;top:36px;right:30px;display:flex;align-items:flex-end;flex-direction:column;color:#d6f2d3}.hero-level span{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}.hero-level strong{margin-top:4px;font-size:18px}.hero-fertilizer{position:absolute;z-index:4;right:10%;bottom:91px;padding:9px 12px;border:1px solid rgba(201,235,222,.35);border-radius:9px;background:rgba(8,63,46,.5);color:#fff;font-size:10px;font-weight:800;text-decoration:none}.hero-fertilizer span{margin-left:8px;font-size:14px}
 .tree-growth-container .rewards-hero-copy{display:none}
 .rewards-hero{position:relative;min-height:325px;overflow:hidden;padding:52px 58px;border-radius:26px;background:linear-gradient(120deg,#123c31,#1b634b 72%,#398064);box-shadow:0 22px 55px rgba(18,60,49,.17);color:#fff;animation:rewards-rise .65s ease both}
 .rewards-hero:after{position:absolute;right:13%;bottom:-120px;width:310px;height:310px;border:1px solid rgba(255,255,255,.12);border-radius:50%;content:'';box-shadow:0 0 0 46px rgba(255,255,255,.03),0 0 0 92px rgba(255,255,255,.025)}
@@ -79,10 +80,10 @@
 
 /* Keep the growing tree centered within the complete panel. */
 .rewards-hero .hero-tree-scene{right:0;width:100%}.rewards-hero .hero-tree{right:auto;left:50%;transform:translateX(-50%)}.rewards-hero .hero-land{right:-12%;width:125%}
-.rewards-container>.tree-growth-container{order:1}
-.rewards-container>.rewards-shop{order:2}
-.rewards-container>.rewards-section[id="ways-to-earn"]{order:3}
-.rewards-container>.rewards-history{order:5}
+
+
+
+
 @media(max-width:767px){.rewards-hero .hero-tree-scene{right:0;width:100%;height:43%}.rewards-hero .hero-tree{right:auto;left:50%;bottom:23px;transform:translateX(-50%) scale(.78)}}
 .rewards-hero .hero-tree{width:150px;height:220px}.rewards-hero .hero-tree .tree-trunk{width:14px;height:54px;background:#93603b}.rewards-hero .hero-tree .tree-crown-one{width:50px;height:50px}.rewards-hero .hero-tree .tree-crown-two{left:28px;width:42px;height:42px}.rewards-hero .hero-tree .tree-crown-three{right:28px;width:44px;height:44px}.rewards-hero .hero-tree .tree-ground{width:72px;height:15px}
 
@@ -430,7 +431,7 @@
     filter:drop-shadow(0 5px 6px rgba(8,63,46,.16));
 }
 
-/* Level 10 uses distinct foliage blobs, not overlapping full-size ovals. */
+/* Level 10 uses distinct foliage blobs*/
 .rewards-hero .hero-tree.tree-level-10>.tree-crown-two,
 .rewards-hero .hero-tree.tree-level-10>.tree-crown-three{display:none !important}
 .rewards-hero .hero-tree.tree-level-10>.tree-crown-one{
@@ -630,3 +631,134 @@
 /* Keep the trunk clean: hide the two decorative side branches. */
 .rewards-hero .hero-tree>.tree-trunk::before,
 .rewards-hero .hero-tree>.tree-trunk::after{display:none}
+
+/* Preserve the original wide tree scene, scaling it as one unit on phones. */
+.rewards-container > .tree-growth-container {
+    display: block;
+    position: relative;
+    min-height: 0;
+    height: 440px;
+    overflow: hidden;
+    border-radius: 26px;
+    background: #123c31;
+    box-shadow: 0 22px 55px rgba(18,60,49,.17);
+}
+.rewards-tree-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1100px;
+    height: 440px;
+    transform-origin: top left;
+    overflow-wrap: anywhere;
+}
+.rewards-tree-stage > .rewards-overview {
+    position: absolute;
+    z-index: 5;
+    inset: 0 0 auto;
+    display: grid;
+    grid-template-columns: 30% 30%;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+}
+.rewards-tree-stage > .rewards-overview > div {
+    min-width: 0;
+    min-height: 125px;
+    padding: 20px 22px;
+}
+.rewards-tree-stage .panel-label { font-size: 10px; }
+.rewards-tree-stage .points-panel strong { margin-top: 10px; font-size: 28px; }
+.rewards-tree-stage .points-caption,
+.rewards-tree-stage .level-row p { font-size: 11px; }
+.rewards-tree-stage .points-panel p,
+.rewards-tree-stage .level-panel small { font-size: 10px; }
+.rewards-tree-stage .progress-track { margin-top: 16px; }
+.rewards-tree-stage .level-row { gap: 10px; margin-top: 10px; }
+.rewards-tree-stage .level-row h2 { font-size: 13px; }
+.rewards-tree-stage .level-badge { flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px; font-size: 13px; }
+.rewards-tree-stage .level-steps { margin: 12px 0 6px; }
+.rewards-tree-stage > .rewards-hero {
+    position: relative;
+    min-height: 440px;
+    height: 440px;
+    padding: 0;
+    border-radius: 26px;
+    background: linear-gradient(120deg,#123c31,#1b634b 72%,#398064);
+    box-shadow: none;
+    animation: none;
+}
+.rewards-tree-stage .hero-tree-scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+}
+.rewards-tree-stage .hero-tree {
+    right: auto;
+    left: 50%;
+    bottom: 45px;
+    transform: translateX(-50%);
+    transform-origin: bottom center;
+}
+.rewards-tree-stage .hero-land { bottom: -47%; }
+.rewards-tree-stage .hero-tree-height {
+    inset: auto 10% 39px auto;
+    width: auto;
+    padding: 13px 19px;
+    font-size: 14px;
+    text-align: center;
+    transform: none;
+}
+.rewards-tree-stage .hero-fertilizer-form,
+.rewards-tree-stage a.hero-fertilizer {
+    position: absolute;
+    inset: auto 10% 105px auto;
+    width: auto;
+    max-width: 220px;
+    margin: 0;
+    text-align: center;
+}
+.rewards-tree-stage .hero-fertilizer-form .hero-fertilizer {
+    position: static;
+    width: 100%;
+}
+.rewards-tree-stage .hero-fertilizer {
+    min-height: 48px;
+    padding: 15px 24px;
+    font-size: 14px;
+    white-space: normal;
+}
+
+@media (max-width: 991px) {
+    .rewards-page { padding: 166px 0 40px; }
+    .rewards-container .section-heading {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .rewards-container .section-note { display: block; }
+    .rewards-container .level-row > div { min-width: 0; }
+    .rewards-container .level-badge { flex-shrink: 0; }
+    .rewards-container .fertilizer-card-footer { flex-wrap: wrap; }
+    .rewards-container .fertilizer-button { white-space: normal; }
+    .rewards-container .badge-item,
+    .rewards-container .shop-item,
+    .rewards-container .earn-card,
+    .rewards-container .fertilizer-card { min-width: 0; }
+    .rewards-container { overflow-wrap: anywhere; }
+    .rewards-container .collect-button,
+    .rewards-container .fertilizer-button,
+    .rewards-container .shop-button { min-height: 44px; }
+    .rewards-container .history-list { padding: 7px 16px; }
+    .rewards-container .history-row > * { min-width: 0; max-width: 100%; }
+    .rewards-container [id] { scroll-margin-top: 166px; }
+}
+
+@media (max-width: 360px) {
+    .rewards-container .badges-row { grid-template-columns: minmax(0, 1fr); }
+}

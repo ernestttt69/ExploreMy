@@ -971,10 +971,10 @@
 
         if (currentView === 'map') {
             const mappedCount = state.items.filter(hasValidCoordinates).length;
-            return `${mappedCount} mapped stop${mappedCount === 1 ? '' : 's'}`;
+            return t(mappedCount === 1 ? 'mapped_stop' : 'mapped_stops', { count: mappedCount });
         }
 
-        return `${count} ${count === 1 ? 'planned item' : 'planned items'}`;
+        return t(count === 1 ? 'planned_item' : 'planned_items', { count });
     }
 
     /**

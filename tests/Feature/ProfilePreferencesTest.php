@@ -11,6 +11,21 @@ class ProfilePreferencesTest extends TestCase
 {
     use DatabaseTransactions;
 
+    public function test_invalid_profile_values_return_localized_errors(): void
+    {
+        foreach (['en', 'ms', 'zh'] as $locale) {
+            $user = User::factory()->create(['preferred_language' => $locale]);
+            $response = $this->actingAs($user)->postJson(route('profile.update'), [
+                'name' => '', 'phone' => 'invalid!', 'preferred_language' => $locale,
+            ]);
+            $response->assertUnprocessable()->assertJsonValidationErrors(['name', 'phone']);
+            $this->assertSame(trans('profile_errors.phone', [], $locale), $response->json('errors.phone.0'));
+            $this->actingAs($user)->get(route('profile'))->assertOk()
+                ->assertSee('id="profile-save-errors"', false)
+                ->assertSee(trans('profile_errors.failed', [], $locale));
+        }
+    }
+
     public function test_profile_displays_and_saves_place_preferences_without_unused_fields(): void
     {
         $user = User::factory()->create([

@@ -32,44 +32,11 @@ class AttractionController extends Controller
         }
 
         if ($request->input('clear') === '1') {
-            $hasActiveFilters =
-                $request->filled('search') ||
-                $request->filled('state_id') ||
-                $request->filled('budget_level') ||
-                $request->filled('rating') ||
-                ! empty($request->input('categories', [])) ||
-                $request->input('has_selection') === '1';
-
-            if (! $hasActiveFilters) {
-                return redirect()
-                    ->route('attractions.index')
-                    ->withErrors([
-                        'filters' => __('explore.no_filters_to_clear'),
-                    ]);
-            }
-
-            // Filters existed – redirect to a clean index to clear everything
-            return redirect()->route('attractions.index')->with('success', __('explore.filters_cleared'));
+            return redirect()->route('attractions.index', ['search_submitted' => '1'])
+                ->with('success', __('explore.filters_cleared'));
         }
 
         $searchSubmitted = $request->input('search_submitted') === '1';
-
-        if ($searchSubmitted) {
-            $hasCriteria =
-                $request->filled('search') ||
-                $request->filled('state_id') ||
-                $request->filled('budget_level') ||
-                $request->filled('rating') ||
-                ! empty($request->input('categories', []));
-
-            if (! $hasCriteria) {
-                return redirect()
-                    ->route('attractions.index')
-                    ->withErrors([
-                        'search' => __('explore.search_required'),
-                    ]);
-            }
-        }
 
         $query = Attraction::with([
             'images',

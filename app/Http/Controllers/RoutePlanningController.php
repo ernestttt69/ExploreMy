@@ -144,7 +144,8 @@ class RoutePlanningController extends Controller
             $query->whereHas('attraction', function ($attractionQuery) use ($term) {
                 $attractionQuery->where(function ($matchQuery) use ($term) {
                     $matchQuery->where('attraction_name', 'like', '%' . $term . '%')
-                        ->orWhere('category', 'like', '%' . $term . '%')
+                        ->orWhereHas('preferences', fn ($preferenceQuery) =>
+                            $preferenceQuery->where('category_name', 'like', '%' . $term . '%'))
                         ->orWhereHas('state', fn ($stateQuery) =>
                             $stateQuery->where('state_name', 'like', '%' . $term . '%'));
                 });

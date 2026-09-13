@@ -41,7 +41,16 @@ class ProfileController extends Controller
 			'preferences.*' => ['integer', 'distinct', 'exists:preference_categories,preference_id'],
 			'preferred_language' => ['required', 'in:en,ms,zh'],
 			'personalisation_consent' => ['nullable', 'boolean'],
-		]);
+		], [
+            'name.*' => __('profile_errors.name'),
+            'profile_picture.*' => __('profile_errors.photo'),
+            'phone.*' => __('profile_errors.phone'),
+            'date_of_birth.*' => __('profile_errors.dob'),
+            'preferences.*' => __('profile_errors.preferences'),
+            'preferences.*.*' => __('profile_errors.preferences'),
+            'preferred_language.*' => __('profile_errors.language'),
+            'personalisation_consent.*' => __('profile_errors.consent'),
+        ]);
 
 
 		$user->name = $request->name;
@@ -57,15 +66,14 @@ class ProfileController extends Controller
 			$image = $request->file('profile_picture');
 			$profileImageDirectory = public_path('profile_images');
 
+            try {
 			File::ensureDirectoryExists($profileImageDirectory, 0775, true);
 			if (! is_writable($profileImageDirectory)) {
 				@chmod($profileImageDirectory, 0775);
 			}
 
 			if (! is_writable($profileImageDirectory)) {
-				return back()
-					->withInput()
-					->withErrors(['profile_picture' => 'The profile image directory is not writable. Please check its folder permissions.']);
+                throw new \RuntimeException('Profile image directory is not writable.');
 			}
 
 			$imageName = Str::uuid().'.'.$image->extension();
@@ -77,6 +85,12 @@ class ProfileController extends Controller
 			);
 
 			$user->profile_picture = '/profile_images/'.$imageName;
+            } catch (\Throwable $exception) {
+                report($exception);
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'profile_picture' => __('profile_errors.upload'),
+                ]);
+            }
 		}
 
 

@@ -61,6 +61,7 @@ class AdminAttractionTest extends TestCase
 
     public function test_admin_can_create_update_and_delete_an_attraction(): void
     {
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('attractions', 'category'));
         $state = State::create(['state_name' => 'Johor']);
         $session = ['admin_authenticated' => true];
 

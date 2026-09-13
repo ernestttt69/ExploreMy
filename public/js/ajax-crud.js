@@ -23,6 +23,9 @@
 
     async function submit(form) {
         var button = form.querySelector('button[type="submit"]');
+        var profile = form.querySelector('[name="preferred_language"]');
+        var errorBox = profile && document.getElementById('profile-save-errors');
+        if (errorBox) { errorBox.hidden = true; errorBox.textContent = ''; }
         if (button) button.disabled = true;
 
         try {
@@ -35,7 +38,8 @@
                 body: new FormData(form)
             });
             var data = await response.json().catch(function () { return {}; });
-            if (!response.ok) throw new Error(errorMessage(data, response));
+            if (!response.ok) throw new Error(errorBox && (response.status >= 500 || !data.message)
+                ? errorBox.dataset.failed : errorMessage(data, response));
 
             if (form.dataset.ajaxRemove) {
                 var target = form.closest(form.dataset.ajaxRemove) || document.querySelector(form.dataset.ajaxRemove);
@@ -48,6 +52,12 @@
 
             if (data.redirect) window.location.assign(data.redirect);
         } catch (error) {
+            if (errorBox) {
+                errorBox.textContent = error instanceof TypeError ? errorBox.dataset.network : error.message;
+                errorBox.hidden = false;
+                errorBox.focus();
+                errorBox.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
             toast(error.message, true);
             form.dispatchEvent(new CustomEvent('ajax-crud:error', { bubbles: true, detail: error }));
         } finally {
@@ -74,6 +84,19 @@
     document.addEventListener('ajax-crud:success', function (event) {
         var form = event.target;
         var data = event.detail || {};
+        if (form.hasAttribute('data-profile-update') && typeof data.name === 'string') {
+            document.querySelectorAll('[data-profile-name]').forEach(function (label) {
+                label.textContent = data.name;
+            });
+            document.querySelectorAll('#avatarPreview, .nav-avatar').forEach(function (avatar) {
+                avatar.alt = data.name;
+            });
+        }
+        if (form.hasAttribute('data-profile-update') && typeof data.profilePicture === 'string' && data.profilePicture) {
+            document.querySelectorAll('#avatarPreview, .nav-avatar').forEach(function (avatar) {
+                avatar.src = data.profilePicture;
+            });
+        }
         if (form.dataset.ajaxWishlist !== undefined && data.wishlisted !== undefined) {
             var button = form.querySelector('button[type="submit"]');
             form.action = data.action;

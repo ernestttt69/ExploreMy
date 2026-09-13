@@ -16,7 +16,6 @@ class Attraction extends Model
         'place_id',
         'state_id',
         'attraction_name',
-        'category',
         'description',
         'location',
         'operating_hours',
@@ -67,11 +66,14 @@ class Attraction extends Model
         );
     }
 
+    // Category labels come from the existing preference relationship.
+    public function getCategoryAttribute(): string
+    {
+        return implode(', ', $this->categories);
+    }
+
     public function getCategoriesAttribute(): array
     {
-        return array_values(array_filter(array_map(
-            'trim',
-            explode(',', $this->category ?? '')
-        )));
+        return $this->preferences->pluck('category_name')->all();
     }
 }

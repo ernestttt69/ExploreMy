@@ -116,7 +116,6 @@ class AttractionController extends Controller
             'place_id' => ['required', 'string', 'max:255', 'unique:attractions,place_id'.($attraction ? ','.$attraction->attraction_id.',attraction_id' : '')],
             'state_id' => ['required', 'integer', 'exists:states,state_id'],
             'attraction_name' => ['required', 'string', 'max:100'],
-            'category' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'location' => ['required', 'string', 'max:255'],
             'operating_hours' => ['nullable', 'string'],

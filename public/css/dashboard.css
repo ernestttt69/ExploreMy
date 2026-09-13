@@ -39,3 +39,12 @@
 .interest-chips{margin:0;padding:0;list-style:none}.interest-chips li{padding:8px 12px;border:1px solid #b8d4c8;border-radius:99px;background:#edf7f2;color:#174f3b;font-size:12px;font-weight:700}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.skip-link,.reveal-on-scroll,.dashboard-page *{animation:none!important;transition:none!important}.reveal-on-scroll{opacity:1;transform:none}.feature-card:hover,.stat-card:hover,.btn-dashboard-light:hover{transform:none}}
 @media(forced-colors:active){.btn-dashboard,.stat-card,.feature-card,.travel-tip,.personalisation-panel{border:1px solid CanvasText}.skip-link{border:2px solid CanvasText}.stat-icon,.feature-icon{forced-color-adjust:auto}.dashboard-page a:focus-visible{outline:3px solid Highlight}}
+
+/* Keep the shared account controls inside narrow phone screens. */
+@media (max-width: 575px) {
+    .top-header-bar > .d-flex > .d-flex { gap: 6px !important; min-width: 0; }
+    .nav-brand-container, .nav-logo-badge, .nav-avatar { flex-shrink: 0; }
+    .nav-user-pill { flex-shrink: 0; padding: 4px; }
+    .top-header-bar .btn-logout { max-width: 100px; overflow-wrap: anywhere; }
+    .footer-grid > * { min-width: 0; overflow-wrap: anywhere; }
+}
