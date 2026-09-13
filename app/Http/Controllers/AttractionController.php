@@ -32,11 +32,22 @@ class AttractionController extends Controller
         }
 
         if ($request->input('clear') === '1') {
-            return redirect()->route('attractions.index', ['search_submitted' => '1'])
+            return redirect()->route('attractions.index')
                 ->with('success', __('explore.filters_cleared'));
         }
 
         $searchSubmitted = $request->input('search_submitted') === '1';
+
+        if ($searchSubmitted) {
+            $hasSelection = collect($request->only(['search', 'state_id', 'budget_level', 'rating']))
+                ->contains(fn ($value) => is_scalar($value) && trim((string) $value) !== '');
+            $hasCategories = collect((array) $request->input('categories', []))
+                ->contains(fn ($value) => is_scalar($value) && trim((string) $value) !== '');
+            if (! $hasSelection && ! $hasCategories) {
+                return redirect()->route('attractions.index')
+                    ->withErrors(['search' => __('explore.empty_search')]);
+            }
+        }
 
         $query = Attraction::with([
             'images',

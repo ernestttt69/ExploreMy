@@ -50,7 +50,7 @@
 
     </div>
 
-    @if($savedPlaces->count() > 0)
+
         <section class="collections-panel">
             <div class="collections-heading">
                 <div>
@@ -89,7 +89,7 @@
                     </div>
                 </div>
 
-                <label for="collection-places" id="collection-places-label">{{ __('saved_extra.select') }}</label>
+                <label for="collection-places" id="collection-places-label">{{ __('saved_extra.select') }} ({{ __('route_form.optional') }})</label>
 
                 <div class="ms-select" data-fill-target="#collection-places">
                     <div
@@ -152,7 +152,7 @@
                     @endforeach
                 </div>
         </section>
-    @endif
+
 
     @if($savedPlaces->count() > 0)
         <section class="trip-cta">
@@ -633,6 +633,15 @@
 
         document.addEventListener('ajax-crud:success', event => {
             const form = event.target;
+            if (form.matches('[data-update-collection]') && event.detail.html) {
+                const oldCard = form.closest('.collection-card');
+                const template = document.createElement('template');
+                template.innerHTML = event.detail.html.trim();
+                const card = template.content.firstElementChild;
+                oldCard.replaceWith(card);
+                card.querySelectorAll('.ms-select').forEach(initMultiSelect);
+                return;
+            }
             if (!form.matches('[data-create-collection]') || !event.detail.html) return;
             const list = document.getElementById('collection-list');
             list.insertAdjacentHTML('afterbegin', event.detail.html);

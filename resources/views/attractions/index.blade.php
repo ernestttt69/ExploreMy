@@ -79,6 +79,7 @@
 
         @endif
 
+        <p id="empty-search-error" role="alert" tabindex="-1" hidden style="color: #b42318;">{{ __('explore.empty_search') }}</p>
         <form
             method="GET"
             action="{{ route('attractions.index') }}"
@@ -329,6 +330,24 @@
 
         <script>
             (function () {
+                var searchForm = document.querySelector('.search-panel form');
+                var emptyError = document.getElementById('empty-search-error');
+                function hasSearchSelection() {
+                    return ['search', 'state_id', 'budget_level', 'rating'].some(function (name) {
+                        return searchForm.elements[name].value.trim() !== '';
+                    }) || !!searchForm.querySelector('input[name="categories[]"]:checked');
+                }
+                searchForm.addEventListener('submit', function (event) {
+                    if (hasSearchSelection()) return;
+                    event.preventDefault();
+                    emptyError.hidden = false;
+                    emptyError.focus();
+                });
+                ['input', 'change'].forEach(function (type) {
+                    searchForm.addEventListener(type, function () {
+                        if (hasSearchSelection()) emptyError.hidden = true;
+                    });
+                });
                 function showPopupById(id) {
                     var popup = document.getElementById(id);
                     if (!popup || popup.dataset.popupShown === '1') {

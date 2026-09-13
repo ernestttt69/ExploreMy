@@ -47,6 +47,24 @@ class SavedPlaceLogicTest extends TestCase
         $payload['attraction_ids'] = [99999999];
         $this->postJson(route('saved-places.collections.store'), $payload)
             ->assertUnprocessable()->assertJsonValidationErrors('attraction_ids');
+
+        $payload['name'] = 'Empty trip';
+        unset($payload['attraction_ids']);
+        $this->postJson(route('saved-places.collections.store'), $payload)
+            ->assertCreated()->assertJsonStructure(['html']);
+        $collection = \App\Models\SavedPlaceCollection::where('name', 'Empty trip')->firstOrFail();
+        $this->assertSame(0, $collection->items()->count());
+        $add = $this->postJson(route('saved-places.collections.places.store', $collection->getKey()), [
+            'attraction_ids' => [$attraction->getKey()],
+        ])->assertOk()->assertJsonStructure(['html']);
+        $this->assertNull($add->json('redirect'));
+        $this->assertSame(1, $collection->items()->count());
+        $item = $collection->items()->first();
+        $remove = $this->deleteJson(route('saved-places.collections.places.destroy', [$collection->getKey(), $item->getKey()]))
+            ->assertOk()->assertJsonStructure(['html']);
+        $this->assertNull($remove->json('redirect'));
+        $this->assertSame(0, $collection->items()->count());
+        $this->assertStringContainsString('data-update-collection', $remove->json('html'));
     }
 
     public function test_saving_and_removing_a_place_updates_admin_counts_without_legacy_table(): void

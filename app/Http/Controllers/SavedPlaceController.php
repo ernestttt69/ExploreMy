@@ -52,7 +52,7 @@ class SavedPlaceController extends Controller
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'start_time' => ['nullable', 'date_format:H:i'],
             'end_time' => ['nullable', 'date_format:H:i', ...($request->filled('start_time') ? ['after:start_time'] : [])],
-            'attraction_ids' => ['required', 'array', 'min:1'],
+            'attraction_ids' => ['sometimes', 'array'],
             'attraction_ids.*' => ['integer'],
         ], [
             'name.required' => __('messages.collection_name_required'),
@@ -65,10 +65,10 @@ class SavedPlaceController extends Controller
         ]);
 
         $attractionIds = Wishlist::where('user_id', Auth::id())
-            ->whereIn('attraction_id', $validated['attraction_ids'])
+            ->whereIn('attraction_id', ($validated['attraction_ids'] ?? []))
             ->pluck('attraction_id');
 
-        if ($attractionIds->count() !== count(array_unique($validated['attraction_ids']))) {
+        if ($attractionIds->count() !== count(array_unique(($validated['attraction_ids'] ?? [])))) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'attraction_ids' => __('messages.saved_places_only'),
             ]);
@@ -120,18 +120,18 @@ class SavedPlaceController extends Controller
             ->firstOrFail();
 
         $attractionIds = Wishlist::where('user_id', Auth::id())
-            ->whereIn('attraction_id', $validated['attraction_ids'])
+            ->whereIn('attraction_id', ($validated['attraction_ids'] ?? []))
             ->pluck('attraction_id');
 
-        if ($attractionIds->count() !== count(array_unique($validated['attraction_ids']))) {
-            return back()->withErrors(['attraction_ids' => __('messages.saved_places_only')])->withInput();
+        if ($attractionIds->count() !== count(array_unique(($validated['attraction_ids'] ?? [])))) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['attraction_ids' => __('messages.saved_places_only')]);
         }
 
         $existingIds = $collection->items()->pluck('attraction_id')->all();
         $newIds = $attractionIds->diff($existingIds);
 
         if ($newIds->isEmpty()) {
-            return back()->with('error', __('messages.collection_duplicate'));
+            throw \Illuminate\Validation\ValidationException::withMessages(['attraction_ids' => __('messages.collection_duplicate')]);
         }
 
         foreach ($newIds as $attractionId) {
@@ -144,7 +144,7 @@ class SavedPlaceController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => __('messages.collection_added'),
-                'redirect' => route('saved-places.index'),
+                'html' => $this->collectionHtml($collection),
             ]);
         }
 
@@ -180,9 +180,16 @@ class SavedPlaceController extends Controller
         abort_unless($deleted, 404);
 
         if ($request->expectsJson()) {
-            return response()->json(['message' => __('messages.collection_place_removed')]);
+            return response()->json(['message' => __('messages.collection_place_removed'), 'html' => $this->collectionHtml($collection)]);
         }
 
         return redirect()->route('saved-places.index')->with('success', 'Place removed from collection.');
+    }
+    private function collectionHtml(SavedPlaceCollection $collection): string
+    {
+        $collection->load(['items' => fn ($query) => $query->whereHas('attraction'), 'items.attraction.images'])
+            ->loadCount(['items' => fn ($query) => $query->whereHas('attraction')]);
+        $savedPlaces = Wishlist::with('attraction')->whereHas('attraction')->where('user_id', Auth::id())->get();
+        return view('saved-places.collection-card', compact('collection', 'savedPlaces'))->render();
     }
 }

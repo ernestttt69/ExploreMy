@@ -36,7 +36,7 @@
                                                     @endif
                                                     <span>{{ $item->attraction->attraction_name }}</span>
                                                 </a>
-                                                <form method="POST" action="{{ route('saved-places.collections.places.destroy', [$collection->collection_id, $item->collection_item_id]) }}" class="collection-remove-form" data-ajax-crud data-ajax-remove=".collection-attraction-item" onsubmit='return confirm(@js(__("saved.remove_collection_confirm")));'>
+                                                <form method="POST" action="{{ route('saved-places.collections.places.destroy', [$collection->collection_id, $item->collection_item_id]) }}" class="collection-remove-form" data-ajax-crud data-update-collection onsubmit='return confirm(@js(__("saved.remove_collection_confirm")));'>
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="collection-remove-btn" aria-label="{{ __('saved.remove_named', ['name' => $item->attraction->attraction_name]) }}">&times;</button>
@@ -50,7 +50,7 @@
                                 @if($savedPlaces->whereNotIn('attraction_id', $collectionAttractionIds)->isNotEmpty())
                                     <details class="add-to-collection">
                                         <summary>{{ __('saved.add_places') }}</summary>
-                                        <form method="POST" action="{{ route('saved-places.collections.places.store', $collection->collection_id) }}" data-ajax-crud>
+                                        <form method="POST" action="{{ route('saved-places.collections.places.store', $collection->collection_id) }}" data-ajax-crud data-update-collection>
                                             @csrf
                                             <label for="add-places-{{ $collection->collection_id }}" id="add-places-label-{{ $collection->collection_id }}">{{ __('saved_extra.select_add') }}</label>
                                             <div class="ms-select" data-fill-target="#add-places-{{ $collection->collection_id }}">

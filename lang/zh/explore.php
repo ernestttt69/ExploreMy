@@ -1,4 +1,6 @@
 <?php
 return [
+ 'empty_search' => '搜索和筛选条件为空。请输入地点或选择至少一个筛选条件。',
+
  'title'=>'探索景点 | ExploreMY','discover'=>'发现马来西亚','heading'=>'探索景点','intro'=>'寻找符合您下一次旅行体验需求的地点。','check'=>'请检查以下内容：','looking'=>'您想寻找什么地方？','placeholder'=>'例如：LEGOLAND、吉隆坡塔、海滩……','starts'=>'旅程开始','ends'=>'旅程结束','search'=>'搜索','filter'=>'筛选结果','optional'=>'所有筛选条件均为选填。','clear'=>'清除筛选','state'=>'州属','all_states'=>'所有州属','category'=>'类别','budget'=>'预算','any_budget'=>'任何预算','low'=>'低','medium'=>'中','high'=>'高','minimum_rating'=>'最低评分','any_rating'=>'任何评分','and_above'=>':rating ★ 或以上','search_results'=>'搜索结果','results_for'=>'“:query”的搜索结果','recommended'=>'为您推荐','preferences'=>'根据您的旅行偏好','popular'=>'热门景点','explore_malaysia'=>'探索马来西亚','place'=>'个地点','places'=>'个地点','uncategorized'=>'未分类','price_unavailable'=>'价格暂缺','view'=>'查看景点','saved'=>'已收藏','save'=>'收藏','remove_wishlist'=>'从愿望清单移除 :name','add_wishlist'=>'将 :name 加入愿望清单','pages'=>'景点页面','no_results'=>'没有找到景点','back'=>'返回探索','saved_places'=>'查看已收藏地点','images'=>'景点图片','show_image'=>'显示第 :current 张图片，共 :total 张','no_filters_to_clear'=>'您尚未选择任何可清除的筛选条件。', 'filters_cleared'=>'已成功清除所有筛选条件。','search_success'=>'搜索成功！共找到 :count 个匹配的:place_label。','search_required'=>'请输入要搜索的地点或至少选择一个筛选条件。',
 ];
