@@ -92,7 +92,9 @@ class GreenRewardController extends Controller
 
     public function fertilize(Request $request, GreenInventory $inventory)
     {
+        $previousLevel = GreenTree::where('user_id', auth()->id())->value('level') ?? 0;
         $this->rewards->fertilize(auth()->user(), $inventory);
+        $request->session()->flash('tree_growth_from', (int) $previousLevel);
         if ($request->expectsJson()) {
             return response()->json(['message' => __('messages.tree_grew', ['item' => $inventory->item->name])]);
         }

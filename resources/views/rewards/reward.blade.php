@@ -22,7 +22,7 @@
             </div>
             <div class="hero-tree-scene" aria-label="{{ __('rewards.tree_aria', ['tree' => $treeLabel, 'height' => $treeHeight]) }}" role="img">
                 <div class="hero-land"></div>
-                <div class="hero-tree tree-stage-{{ $treeStage }} tree-level-{{ $tree->level }}">
+                <div class="hero-tree tree-stage-{{ $treeStage }} tree-level-{{ $tree->level }}" data-tree-level="{{ $tree->level }}" @if(session()->has('tree_growth_from')) data-growth-from="{{ session('tree_growth_from') }}" @endif>
                     <span class="tree-ground"></span><span class="tree-trunk"></span>
                     <span class="tree-crown tree-crown-one"></span><span class="tree-crown tree-crown-two"></span><span class="tree-crown tree-crown-three"></span>
                     <span class="tree-leaf tree-leaf-one"></span><span class="tree-leaf tree-leaf-two"></span><span class="tree-leaf tree-leaf-three"></span>
@@ -130,6 +130,7 @@
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('js/tree-growth.js') }}?v={{ filemtime(public_path('js/tree-growth.js')) }}" defer></script>
     <script>
         // Scale one composition, including its text and controls, to the card width.
         const treeCard = document.querySelector('.tree-growth-container');
