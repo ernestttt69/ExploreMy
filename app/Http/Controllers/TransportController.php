@@ -387,7 +387,7 @@ public function lineInfo(Request $request)
     $lineCode = strtoupper(trim($request->query('line_code', '')));
 
     if (empty($lineCode)) {
-        return redirect()->back()->with('error', __('messages.transport_line_required'));
+        return redirect()->back()->withInput()->with('error', __('messages.transport_line_required'))->with('open_service_panel', true);
     }
 
     // Transit Line Configuration
@@ -402,7 +402,7 @@ public function lineInfo(Request $request)
     ];
 
     if (!array_key_exists($lineCode, $lines)) {
-        return redirect()->back()->with('error', __('messages.transport_line_missing', ['code' => $lineCode]));
+        return redirect()->back()->withInput()->with('error', __('messages.transport_line_missing', ['code' => $lineCode]))->with('open_service_panel', true);
     }
 
     $selectedLine = $lines[$lineCode];
@@ -454,7 +454,7 @@ public function lineInfo(Request $request)
         'color'       => $selectedLine['color'],
     ];
 
-    return redirect()->back()->with('selected_info', $info);
+    return redirect()->back()->withInput()->with('selected_info', $info)->with('open_service_panel', true);
 }
 
 /**

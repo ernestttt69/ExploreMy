@@ -120,23 +120,23 @@
 
 <!-- Section 2: Transport Line Info & Static Route Map -->
     <div class="card-panel">
-        <div class="service-header" onclick="toggleServiceInfo()">
+        <div class="service-header service-header--hint" onclick="toggleServiceInfo()" data-hint="👆 Click me to view lines & status">
             <h2 class="card-title">ℹ️ {{ __('transport.line_heading') }}</h2>
             <span id="toggle-icon">+</span>
         </div>
 
-        <div id="service-info-panel" class="service-panel-hidden">
+        <div id="service-info-panel" class="service-panel-hidden" @if(session('selected_info') || session('open_service_panel')) data-open-on-load="1" @endif>
             <p class="service-panel-desc">{{ __('transport.line_intro') }}</p>
             <form action="{{ route('transport.line-info') }}" method="GET" class="service-form">
                 <select name="line_code" class="form-control" style="max-width: 320px;">
                     <option value="">{{ __('transport.select_line') }}</option>
-                    <option value="KJ">LRT Kelana Jaya Line (KJ)</option>
-                    <option value="AG">LRT Ampang Line (AG)</option>
-                    <option value="KG">MRT Kajang Line (KG)</option>
-                    <option value="PY">MRT Putrajaya Line (PY)</option>
-                    <option value="MR">KL Monorail Line (MR)</option>
-                    <option value="SA">LRT Shah Alam Line (SA)</option>
-                    <option value="KTM">KTM Komuter Line</option>
+                    <option value="KJ" {{ old('line_code', request('line_code')) === 'KJ' ? 'selected' : '' }}>LRT Kelana Jaya Line (KJ)</option>
+                    <option value="AG" {{ old('line_code', request('line_code')) === 'AG' ? 'selected' : '' }}>LRT Ampang Line (AG)</option>
+                    <option value="KG" {{ old('line_code', request('line_code')) === 'KG' ? 'selected' : '' }}>MRT Kajang Line (KG)</option>
+                    <option value="PY" {{ old('line_code', request('line_code')) === 'PY' ? 'selected' : '' }}>MRT Putrajaya Line (PY)</option>
+                    <option value="MR" {{ old('line_code', request('line_code')) === 'MR' ? 'selected' : '' }}>KL Monorail Line (MR)</option>
+                    <option value="SA" {{ old('line_code', request('line_code')) === 'SA' ? 'selected' : '' }}>LRT Shah Alam Line (SA)</option>
+                    <option value="KTM" {{ old('line_code', request('line_code')) === 'KTM' ? 'selected' : '' }}>KTM Komuter Line</option>
                 </select>
                 <button type="submit" class="btn-service">{{ __('transport.check_line') }}</button>
             </form>
@@ -349,18 +349,21 @@
 
 </div>
 
+@php
+    $transportTranslations = [
+        'gpsFailed' => __('misc.transport.gps_failed'),
+        'gpsUnsupported' => __('misc.transport.gps_unsupported'),
+        'option' => __('misc.transport.option', ['number' => ':number']),
+        'enterOrigin' => __('transport.enter_origin'),
+        'loadFailed' => __('transport.load_failed'),
+        'ratingReviews' => __('messages.transport_rating_reviews', ['count' => '__COUNT__']),
+        'openNow' => __('transport.open_now'),
+        'closed' => __('transport.closed'),
+        'noReviews' => __('transport.no_reviews'),
+    ];
+@endphp
 <script id="transport-translations" type="application/json">
-@json([
-    'gpsFailed' => __('misc.transport.gps_failed'),
-    'gpsUnsupported' => __('misc.transport.gps_unsupported'),
-    'option' => __('misc.transport.option', ['number' => ':number']),
-    'enterOrigin' => __('transport.enter_origin'),
-    'loadFailed' => __('transport.load_failed'),
-    'ratingReviews' => __('messages.transport_rating_reviews', ['count' => '__COUNT__']),
-    'openNow' => __('transport.open_now'),
-    'closed' => __('transport.closed'),
-    'noReviews' => __('transport.no_reviews'),
-])
+{!! json_encode($transportTranslations) !!}
 </script>
 <script>
 const transportTranslations = JSON.parse(document.getElementById('transport-translations').textContent);
@@ -374,14 +377,21 @@ function selectMode(element) {
 function toggleServiceInfo() {
     const panel = document.getElementById('service-info-panel');
     const icon = document.getElementById('toggle-icon');
-    if (panel.classList.contains('service-panel-hidden')) {
-        panel.classList.remove('service-panel-hidden');
-        icon.innerText = '-';
-    } else {
-        panel.classList.add('service-panel-hidden');
-        icon.innerText = '+';
-    }
+    if (!panel) return;
+    const isHidden = panel.classList.toggle('service-panel-hidden');
+    if (icon) icon.innerText = isHidden ? '+' : '-';
 }
+
+// Keep panel state purely user-controlled, but auto-open once after
+// the Check Line form reloads with a result so the info stays visible.
+document.addEventListener('DOMContentLoaded', () => {
+    const panel = document.getElementById('service-info-panel');
+    const icon = document.getElementById('toggle-icon');
+    if (panel && panel.hasAttribute('data-open-on-load')) {
+        panel.classList.remove('service-panel-hidden');
+        if (icon) icon.innerText = '-';
+    }
+});
 
 function showRouteDetails(index) {
     const detailPanel = document.getElementById('route-details-' + index);

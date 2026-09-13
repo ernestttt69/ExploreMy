@@ -367,6 +367,37 @@ body.transport-page {
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
+    position: relative;
+}
+
+/* Hover hint tooltip — shows "Click me" bubble on hover only */
+.service-header--hint::after {
+    content: attr(data-hint);
+    position: absolute;
+    top: -38px;
+    right: 0;
+    background: #1b4332;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 6px 16px rgba(27, 67, 50, 0.3);
+}
+
+.service-header--hint:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.service-header--hint:hover {
+    background: #f0fdf6;
+    border-radius: 12px;
 }
 
 .service-header .card-title {
