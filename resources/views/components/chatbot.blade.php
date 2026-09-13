@@ -8,6 +8,7 @@
     data-url="{{ route('chatbot.message') }}"
     data-welcome="{{ __('chatbot.welcome') }}"
     data-error="{{ __('chatbot.error') }}"
+    data-session-expired="{{ __('chatbot.session_expired') }}"
     data-history="{{ json_encode(auth()->check() ? session('chatbot.history', []) : []) }}"
     aria-label="{{ __('chatbot.title') }}"
 >

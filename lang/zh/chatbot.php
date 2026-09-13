@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'session_expired' => '登录状态已过期或无法验证，请刷新页面，必要时重新登录。',
+
     'faq_title' => '常见问题',
     'faq_questions' => [
         '马来西亚位于哪里？',

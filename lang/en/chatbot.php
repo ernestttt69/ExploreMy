@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'session_expired' => 'Your session has expired or could not be verified. Refresh the page and sign in again if needed.',
+
     'faq_title' => 'Frequently asked questions',
     'faq_questions' => [
         'Where is Malaysia located?',

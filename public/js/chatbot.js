@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loading.classList.add('ai-chat__message--loading');
         loading.setAttribute('aria-label', 'AI is typing');
         loading.innerHTML = '<span></span><span></span><span></span>';
+        let failureMessage = root.dataset.error;
 
         try {
             const response = await fetch(root.dataset.url, {
@@ -91,6 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         : message.content,
                 })) }),
             });
+            if (response.status === 419 || response.status === 401) {
+                failureMessage = root.dataset.sessionExpired;
+                throw new Error('SESSION_EXPIRED');
+            }
             const data = await response.json();
             if (!response.ok) throw new Error(root.dataset.error);
 
@@ -102,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             loading.classList.remove('ai-chat__message--loading');
             loading.removeAttribute('aria-label');
-            loading.textContent = root.dataset.error;
+            loading.textContent = failureMessage;
         } finally {
             submit.disabled = false;
             input.focus();

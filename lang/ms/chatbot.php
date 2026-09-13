@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'session_expired' => 'Sesi anda telah tamat atau tidak dapat disahkan. Muat semula halaman dan log masuk semula jika perlu.',
+
     'faq_title' => 'Soalan lazim',
     'faq_questions' => [
         'Di manakah terletaknya Malaysia?',
