@@ -14,8 +14,8 @@ body {
     padding: 20px;
 }
 
-body.transport-page {
-    padding: 150px 0 0;
+body.transport-page:has(.header-wrapper) {
+    padding: calc(170px + var(--nav-extra-height, 28px)) 0 0;
 }
 
 /* Page Container */
