@@ -1,0 +1,22 @@
+<?php
+return [
+    'greeting' => '欢迎回来，:name',
+    'intro' => '继续规划旅行，或发现下一个想去的地方。',
+    'explore' => '探索景点',
+    'your_trip' => '你的旅程',
+    'in_progress' => '进行中',
+    'upcoming' => '即将出发',
+    'trip_help' => '打开行程，查看每天的安排与路线。',
+    'empty_trip' => '下一次旅行，从这里开始',
+    'empty_trip_help' => '收藏想去的景点，整理成集合，再生成并保存行程。',
+    'start' => '开始规划',
+    'all_trips' => '查看全部行程',
+    'continue' => '继续规划',
+    'empty_collection' => '建立第一个收藏集合',
+    'ready' => '景点已准备好，可以生成路线，也可以继续调整。',
+    'add_places' => '添加景点',
+    'shortcuts' => '常用功能',
+    'saved_help' => '整理想去的景点与收藏集合',
+    'transport_help' => '查找交通路线和附近车站',
+    'rewards_help' => '查看积分和可兑换的奖励',
+];

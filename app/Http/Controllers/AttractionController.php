@@ -32,6 +32,14 @@ class AttractionController extends Controller
         }
 
         if ($request->input('clear') === '1') {
+            $hasSelection = collect($request->only(['search', 'state_id', 'budget_level', 'rating']))
+                ->contains(fn ($value) => is_scalar($value) && trim((string) $value) !== '');
+            $hasCategories = collect((array) $request->input('categories', []))
+                ->contains(fn ($value) => is_scalar($value) && trim((string) $value) !== '');
+            if (!$hasSelection && !$hasCategories && $request->input('has_selection') !== '1') {
+                return redirect()->route('attractions.index')
+                    ->withErrors(['search' => __('explore.empty_search')]);
+            }
             return redirect()->route('attractions.index')
                 ->with('success', __('explore.filters_cleared'));
         }

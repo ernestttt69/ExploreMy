@@ -4,6 +4,7 @@
 	$defaultAvatar = asset('images/default-avatar.svg');
 @endphp
 
+<link rel="stylesheet" href="{{ asset('css/navbar.css') }}?v={{ filemtime(public_path('css/navbar.css')) }}">
 <header class="header-wrapper fixed-top">
 	<div class="container">
 
@@ -32,8 +33,10 @@
 						title="{{ __('ui.footer.saved') }}"
 						aria-label="{{ __('ui.footer.saved') }}"
 					>
-						<span aria-hidden="true">&#9825;</span>
+						<svg class="nav-saved-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+						<span class="nav-saved-label">{{ __('ui.footer.saved') }}</span>
 					</a>
+
 
 					<button
 						type="button"
@@ -69,6 +72,7 @@
 				</div>
 				@else
 				<div class="d-flex align-items-center gap-3">
+					@include('components.language-switcher')
 					<a href="{{ route('login') }}" class="btn btn-logout text-decoration-none">{{ __('ui.nav.login') }}</a>
 				</div>
 				@endauth
@@ -132,5 +136,5 @@
 @auth
 	@include('components.chatbot')
 @endauth
-<script src="{{ asset('js/site-interactions.js') }}" defer></script>
+<script src="{{ asset('js/site-interactions.js') }}?v={{ filemtime(public_path('js/site-interactions.js')) }}" defer></script>
 <script src="{{ asset('js/ajax-crud.js') }}?v={{ filemtime(public_path('js/ajax-crud.js')) }}" defer></script>

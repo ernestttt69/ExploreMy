@@ -50,6 +50,7 @@ class StopOrderTest extends TestCase
             }
             return Http::response(['routes' => [[
                 'duration' => '60s', 'distanceMeters' => 100,
+                'travelAdvisory' => ['transitFare' => ['currencyCode' => 'MYR', 'units' => '3']],
                 'legs' => [['steps' => [['travelMode' => 'WALK', 'staticDuration' => '60s', 'polyline' => ['encodedPolyline' => 'test']]]]],
             ]]]);
         });
@@ -63,11 +64,16 @@ class StopOrderTest extends TestCase
         $payload = ['optimization_preference' => 'fastest', 'destination_keys' => $keys, 'start_time' => '09:00'];
         $this->post(route('route.preference'), $payload)->assertSessionHasNoErrors()->assertRedirect();
         $this->assertSame([$keys[0], $keys[2], $keys[1]], array_column(session('routeResult.stops'), 'route_key'));
+        $transit = collect(session('routeOptions'))->firstWhere('travel_mode', 'TRANSIT');
+        $this->assertSame(6.0, $transit['total_fare']);
         foreach (['TRANSIT', 'DRIVE'] as $mode) {
             $this->post(route('route.preference'), $payload + ['order_mode' => 'manual', 'travel_mode' => $mode])->assertSessionHasNoErrors();
             $this->assertSame($keys, array_column(session('routeResult.stops'), 'route_key'));
             foreach (session('routeOptions') as $option) {
                 $this->assertSame($keys, array_column($option['stops'], 'route_key'));
+            }
+            if ($mode === 'DRIVE') {
+                $this->get(route('route.index'))->assertOk()->assertSee('MYR 6.00');
             }
         }
     }

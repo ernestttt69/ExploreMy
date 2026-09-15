@@ -1,5 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const header = document.querySelector('.header-wrapper');
+    // Existing page spacing allows for a 112px fixed header. Add only its growth.
+    if (header) {
+        const resizeHeader = () => document.body.style.setProperty('--nav-extra-height', `${Math.max(0, header.getBoundingClientRect().height - 112)}px`);
+        resizeHeader();
+        if ('ResizeObserver' in window) new ResizeObserver(resizeHeader).observe(header);
+        else window.addEventListener('resize', resizeHeader);
+    }
     const updateHeader = () => header?.classList.toggle('is-scrolled', window.scrollY > 12);
     updateHeader();
     window.addEventListener('scroll', updateHeader, { passive: true });

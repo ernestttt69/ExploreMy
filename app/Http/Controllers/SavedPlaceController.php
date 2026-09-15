@@ -14,7 +14,7 @@ class SavedPlaceController extends Controller
 {
     public function index()
     {
-        $savedPlaces = Wishlist::with([
+        $savedPlaces = Wishlist::whereHas('attraction')->with([
             'attraction.images',
             'attraction.state',
             'attraction.preferences',

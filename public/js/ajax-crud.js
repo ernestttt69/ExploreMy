@@ -23,7 +23,7 @@
 
     async function submit(form) {
         var button = form.querySelector('button[type="submit"]');
-        var profile = form.querySelector('[name="preferred_language"]');
+        var profile = form.hasAttribute('data-profile-update');
         var errorBox = profile && document.getElementById('profile-save-errors');
         if (errorBox) { errorBox.hidden = true; errorBox.textContent = ''; }
         if (button) button.disabled = true;

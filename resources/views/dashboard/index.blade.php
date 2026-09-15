@@ -7,54 +7,56 @@
     <title>ExploreMY - {{ __('ui.dashboard.title') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
-</head>
+<link rel="stylesheet" href="{{ asset('css/dashboard-home.css') }}?v={{ filemtime(public_path('css/dashboard-home.css')) }}"></head>
 <body>
 <a class="skip-link" href="#main-content">{{ __('misc.dashboard.skip') }}</a>
 @include('components.navbar')
 
 <main id="main-content" class="dashboard-page" tabindex="-1">
     <div class="container content-area">
-        <section class="welcome-panel" aria-labelledby="welcome-title">
-            <div class="welcome-content">
-                <span class="eyebrow">{{ __('ui.dashboard.eyebrow') }}</span>
-                <h1 id="welcome-title">{{ __('ui.dashboard.welcome') }}</h1>
-                <p>{{ __('ui.dashboard.intro') }}</p>
-                <div class="welcome-actions">
-                    <a href="{{ route('attractions.index') }}" class="btn-dashboard btn-dashboard-light">{{ __('ui.dashboard.explore_my') }} <span aria-hidden="true">&rarr;</span></a>
-                    <a href="{{ route('saved-places.index') }}" class="btn-dashboard btn-dashboard-ghost">{{ __('ui.dashboard.view_saved') }}</a>
-                </div>
-            </div>
-            <div class="welcome-visual" aria-hidden="true"><div class="route-line"></div><i class="pin pin-one"></i><i class="pin pin-two"></i><div class="destination-card"><span>MY</span><div><small>{{ __('ui.dashboard.next') }}</small><strong>{{ __('ui.dashboard.explore_my') }}</strong></div></div></div>
-        </section>
-
-        <section class="dashboard-metrics" aria-label="{{ __('ui.dashboard.glance') }}">
-            <a href="{{ route('saved-places.index') }}"><span>{{ __('ui.dashboard.saved') }}</span><strong>{{ number_format($savedCount) }}</strong><small>{{ __('ui.dashboard.collection') }}</small></a>
-            <a href="{{ route('itineraries.index') }}"><span>{{ __('pages.common.trips') }}</span><strong>{{ number_format($tripCount) }}</strong><small>{{ __('pages.shortcuts.trips') }}</small></a>
-            <a href="{{ route('rewards') }}"><span>{{ __('pages.common.rewards') }}</span><strong>{{ number_format($greenPoints) }}</strong><small>{{ __('rewards.green_points') }}</small></a>
-            <div class="dashboard-next-trip"><span>{{ __('ui.dashboard.next') }}</span>@if($recentTrip)<strong>{{ $recentTrip->title }}</strong><small>{{ optional($recentTrip->start_date)->translatedFormat('d M Y') }}</small><a href="{{ route('itineraries.show', $recentTrip) }}" aria-label="{{ __('itinerary.view') }} {{ $recentTrip->title }}">&rarr;</a>@else<strong>{{ __('ui.dashboard.explore_my') }}</strong><small>{{ __('ui.dashboard.intro') }}</small>@endif</div>
-        </section>
-
-        <section class="dashboard-section" aria-labelledby="overview-title">
-            <div class="section-heading"><div><span class="section-kicker">{{ __('ui.dashboard.glance') }}</span><h2 id="overview-title">{{ __('ui.dashboard.travel_dashboard') }}</h2></div><time class="today-label" datetime="{{ now()->toDateString() }}">{{ now()->translatedFormat('l, d M Y') }}</time></div>
-            <div class="stats-grid">
-                <a href="{{ route('transportation') }}" class="stat-card"><span class="stat-icon icon-blue" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M8 7h8M8 13h.01M16 13h.01M8 18l-2 3M16 18l2 3"/></svg></span><span><strong>{{ __('ui.nav.transportation') }}</strong><small>{{ __('pages.shortcuts.transport') }}</small></span><b aria-hidden="true">&rsaquo;</b></a>
-                <a href="{{ route('itineraries.index') }}" class="stat-card"><span class="stat-icon icon-sage" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 7h16v13H4zM9 7V4h6v3M4 12h16M10 12v2h4v-2"/></svg></span><span><strong>{{ __('pages.common.trips') }}</strong><small>{{ __('pages.shortcuts.trips') }}</small></span><b aria-hidden="true">&rsaquo;</b></a>
-                <a href="{{ route('rewards') }}" class="stat-card"><span class="stat-icon icon-amber" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span><strong>{{ __('pages.common.rewards') }}</strong><small>{{ __('pages.shortcuts.rewards') }}</small></span><b aria-hidden="true">&rsaquo;</b></a>
-            </div>
-        </section>
-
-        <section class="dashboard-section personalisation-panel" aria-labelledby="interests-title">
-            <div class="section-heading"><div><span class="section-kicker">{{ __('ui.dashboard.made_for') }}</span><h2 id="interests-title">{{ __('ui.dashboard.your_interests') }}</h2></div></div>
-            @if(!$user->personalisation_consent)
-                <div class="preference-message disabled" role="status">{{ __('ui.dashboard.disabled') }} <a href="{{ route('profile') }}#privacy">{{ __('ui.profile.privacy') }} <span aria-hidden="true">&rarr;</span></a></div>
-            @elseif($preferences->isEmpty())
-                <div class="preference-message" role="status">{{ __('ui.dashboard.no_interests') }} <a href="{{ route('profile') }}#preferences">{{ __('ui.dashboard.update') }} <span aria-hidden="true">&rarr;</span></a></div>
-            @else
-                <p class="preference-intro">{{ __('ui.dashboard.interest_intro') }}</p>
-                <ul class="interest-chips" aria-label="{{ __('misc.dashboard.interests') }}">@foreach($preferences as $preference)<li>{{ $preference->localized_name }}</li>@endforeach</ul>
-            @endif
-        </section>
-
+        @if(session('setup_complete'))<p role="status" class="alert alert-success">{{ __('setup.change_later') }} <a href="{{ route('profile') }}">{{ __('ui.profile.my_profile') }}</a></p>@endif<header class="home-heading">
+            <div><span class="home-eyebrow">ExploreMY</span><h1>{{ __('dashboard_home.greeting', ['name' => $user->name]) }}</h1><p>{{ __('dashboard_home.intro') }}</p></div>
+            <a class="home-button" href="{{ route('attractions.index') }}">{{ __('dashboard_home.explore') }} <span aria-hidden="true">↗</span></a>
+        </header>
+        <div class="home-grid">
+            <section class="home-trip" aria-labelledby="trip-heading">
+                <span class="home-eyebrow">{{ __('dashboard_home.your_trip') }}</span>
+                @if($upcomingTrip)
+                    <span class="home-badge">{{ __($upcomingTrip->start_date->lte(today()) ? 'dashboard_home.in_progress' : 'dashboard_home.upcoming') }}</span>
+                    <h2 id="trip-heading">{{ $upcomingTrip->title }}</h2>
+                    <p class="home-dates">{{ $upcomingTrip->start_date->translatedFormat('d M Y') }}@if($upcomingTrip->end_date) — {{ $upcomingTrip->end_date->translatedFormat('d M Y') }}@endif</p>
+                    <p>{{ __('dashboard_home.trip_help') }}</p>
+                    <a class="home-button home-button-light" href="{{ route('itineraries.show', $upcomingTrip) }}">{{ __('itinerary.view') }} →</a>
+                @else
+                    <h2 id="trip-heading">{{ __('dashboard_home.empty_trip') }}</h2>
+                    <p>{{ __('dashboard_home.empty_trip_help') }}</p>
+                    <a class="home-button home-button-light" href="{{ route('saved-places.index') }}">{{ __('dashboard_home.start') }} →</a>
+                @endif
+                <a class="home-secondary" href="{{ route('itineraries.index') }}">{{ __('dashboard_home.all_trips') }} →</a>
+            </section>
+            <section class="home-planning" aria-labelledby="planning-heading">
+                <span class="home-eyebrow">{{ __('dashboard_home.continue') }}</span>
+                <h2 id="planning-heading">{{ $collection ? $collection->name : __('dashboard_home.empty_collection') }}</h2>
+                @if($collection)
+                    <p class="home-count">{{ __('route.stops', ['count' => $collection->items_count]) }}</p>
+                    <p>{{ __($collection->items_count >= 2 ? 'dashboard_home.ready' : 'dashboard_simple.need_places') }}</p>
+                    @if($collection->items_count >= 2)
+                        <a class="home-button" href="{{ route('route.index', ['source' => 'saved', 'collection' => $collection->collection_id]) }}">{{ __('saved_extra.generate') }} →</a>
+                    @else
+                        <a class="home-button" href="{{ route('saved-places.index') }}#collection-{{ $collection->collection_id }}">{{ __('dashboard_home.add_places') }} →</a>
+                    @endif
+                    <a class="home-secondary" href="{{ route('saved-places.index') }}#collection-{{ $collection->collection_id }}">{{ __('dashboard_simple.edit_collection') }}</a>
+                @else
+                    <p>{{ __('dashboard_simple.no_collection') }}</p>
+                    <a class="home-button" href="{{ route('saved-places.index') }}">{{ __('saved.create_heading') }} →</a>
+                @endif
+            </section>
+        </div>
+        <nav class="home-shortcuts" aria-label="{{ __('dashboard_home.shortcuts') }}">
+            <a href="{{ route('saved-places.index') }}"><span class="home-symbol" aria-hidden="true">♡</span><span><strong>{{ __('ui.dashboard.saved') }}</strong><small>{{ __('dashboard_home.saved_help') }}</small></span><b aria-hidden="true">→</b></a>
+            <a href="{{ route('transportation') }}"><span class="home-symbol" aria-hidden="true">↔</span><span><strong>{{ __('ui.nav.transportation') }}</strong><small>{{ __('dashboard_home.transport_help') }}</small></span><b aria-hidden="true">→</b></a>
+            <a href="{{ route('rewards') }}"><span class="home-symbol" aria-hidden="true">✦</span><span><strong>{{ __('pages.common.rewards') }}</strong><small>{{ __('dashboard_home.rewards_help') }}</small></span><b aria-hidden="true">→</b></a>
+        </nav>
     </div>
 </main>
 @include('components.footer')

@@ -32,7 +32,7 @@
                                 <small class="stop-visit-suggestion">{{ __('schedule.hours_unknown') }}</small>
                             @endif
                             @if(!empty($data['opening_conflict']))
-                                <small class="stop-visit-suggestion">{{ __('schedule.wait_opening', ['time' => \Carbon\CarbonImmutable::parse($data['opening_conflict']['arrival_at'])->format('d M, g:i A')]) }}</small>
+                                <small class="stop-visit-suggestion">{{ __('schedule.wait_opening', ['time' => \Carbon\CarbonImmutable::parse($data['opening_conflict']['arrival_at'])->format('d M, g:i A'), 'visit' => \Carbon\CarbonImmutable::parse($data['visit_start_at'])->format('d M, g:i A')]) }}</small>
                             @endif
                             <small class="stop-visit-suggestion">
                                 {{ __('route_form.explore_until', ['time' => \Carbon\CarbonImmutable::parse($data['visit_end_at'])->format('g:i A'), 'duration' => $data['suggested_visit_display']]) }}
@@ -40,15 +40,17 @@
                         </div>
                     </div>
                 @else
-                    <div class="simple-trip-transport">
+                    <div class="simple-trip-transport transport-with-fare">
+                        <div class="transport-details">
                         <span>{{ $data['transport_summary'] }}</span>
                         <small>{{ $data['departure_time'] }} &ndash; {{ $data['arrival_time'] }} &middot; {{ $data['duration_display'] }}</small>
                         <small>{{ __('route_form.distance_km', ['distance' => number_format($data['distance'], 2)]) }}</small>
-                        @if(($routeResult['travel_mode'] ?? '') !== 'DRIVE' && $data['fare'] !== null)
-                            <small>{{ $data['fare_currency'] }} {{ number_format($data['fare'], 2) }} @if(!empty($data['fare_is_estimated'])) ({{ __('route_form.fare_estimated') }}) @endif</small>
-                        @endif
                         @if(!empty($data['navigation_url']))
                             <a class="guidance-button navigation-button" href="{{ $data['navigation_url'] }}" target="_blank" rel="noopener noreferrer">{{ __('route_form.navigate_google_maps') }}</a>
+                        @endif
+                        </div>
+                        @if($data['fare'] !== null)
+                            <strong class="transport-fare">{{ $data['fare_currency'] }} {{ number_format($data['fare'], 2) }} @if(!empty($data['fare_is_estimated'])) ({{ __('route_form.fare_estimated') }}) @endif</strong>
                         @endif
                     </div>
                 @endif

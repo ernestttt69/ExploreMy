@@ -48,3 +48,5 @@
     .top-header-bar .btn-logout { max-width: 100px; overflow-wrap: anywhere; }
     .footer-grid > * { min-width: 0; overflow-wrap: anywhere; }
 }
+
+.simple-dashboard-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.account-recent-trip{padding:24px;border:1px solid #dde8e3;border-radius:16px;background:#fff;margin-top:24px}.account-recent-trip h2{font-size:18px;margin-bottom:16px}.account-recent-trip a{display:flex;justify-content:space-between;gap:16px;color:#175b42;text-decoration:none}.account-recent-trip small{display:block;margin-top:6px;color:#6c7d76}@media(max-width:600px){.simple-dashboard-metrics{grid-template-columns:1fr}.account-recent-trip a{flex-wrap:wrap}}

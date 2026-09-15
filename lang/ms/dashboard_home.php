@@ -1,0 +1,22 @@
+<?php
+return [
+    'greeting' => 'Selamat kembali, :name',
+    'intro' => 'Teruskan rancangan anda atau terokai tempat baharu.',
+    'explore' => 'Terokai tempat',
+    'your_trip' => 'Perjalanan anda',
+    'in_progress' => 'Sedang berlangsung',
+    'upcoming' => 'Akan datang',
+    'trip_help' => 'Buka jadual perjalanan untuk melihat aktiviti dan laluan.',
+    'empty_trip' => 'Mulakan perjalanan seterusnya',
+    'empty_trip_help' => 'Simpan tempat, susun koleksi, kemudian jana dan simpan jadual perjalanan.',
+    'start' => 'Mula merancang',
+    'all_trips' => 'Lihat semua perjalanan',
+    'continue' => 'Teruskan perancangan',
+    'empty_collection' => 'Bina koleksi pertama',
+    'ready' => 'Koleksi sudah sedia. Jana laluan atau ubah pilihan tempat.',
+    'add_places' => 'Tambah tempat',
+    'shortcuts' => 'Pautan berguna',
+    'saved_help' => 'Susun tempat yang ingin dilawati',
+    'transport_help' => 'Cari laluan dan stesen berdekatan',
+    'rewards_help' => 'Lihat mata dan ganjaran anda',
+];

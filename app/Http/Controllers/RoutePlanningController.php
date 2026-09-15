@@ -365,10 +365,13 @@ class RoutePlanningController extends Controller
             }
             unset($leg);
             $fares = collect($routeResult['transit_legs'])->filter(fn ($leg) => is_numeric($leg['fare'] ?? null));
-            if ($fares->isNotEmpty()) {
+            if ($fares->isNotEmpty() && $fares->count() === count($routeResult['transit_legs'])) {
                 $routeResult['total_fare'] = round($fares->sum('fare'), 2);
+                $routeResult['fare_currency'] = $fares->pluck('fare_currency')->filter()->first() ?? 'MYR';
                 $routeResult['fare_is_estimated'] = $fares->contains(fn ($leg) => !empty($leg['fare_is_estimated']));
                 $routeOptions[$selectedOptionIndex]['total_fare'] = $routeResult['total_fare'];
+                $routeOptions[$selectedOptionIndex]['fare_currency'] = $routeResult['fare_currency'];
+                $routeOptions[$selectedOptionIndex]['fare_is_estimated'] = $routeResult['fare_is_estimated'];
             }
             if ($collection === null) {
                 $planningEndDate = $scheduled['end']->startOfDay();
@@ -613,6 +616,19 @@ class RoutePlanningController extends Controller
                     if (!$openingPlan['original']) {
                         $openingError = __('schedule.order_unavailable', ['sequence' => implode(' -> ', $option['opening_suggested_order'])]);
                         continue;
+                    }
+                }
+                if ($travelMode === 'TRANSIT' && $option['total_fare'] === null) {
+                    try {
+                        $legs = $this->getTransitLegs($option['stops'], $travelMode, $planningStart, $lastDate, $dailyStart);
+                        if (count($legs) === count($option['stops']) - 1
+                            && collect($legs)->every(fn ($leg) => is_numeric($leg['fare'] ?? null))) {
+                            $option['total_fare'] = round(collect($legs)->sum('fare'), 2);
+                            $option['fare_currency'] = collect($legs)->pluck('fare_currency')->filter()->first() ?? 'MYR';
+                            $option['fare_is_estimated'] = collect($legs)->contains(fn ($leg) => !empty($leg['fare_is_estimated']));
+                        }
+                    } catch (Throwable $exception) {
+                        report($exception);
                     }
                 }
                 $options[] = $option;

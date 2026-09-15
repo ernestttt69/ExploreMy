@@ -20,15 +20,15 @@ class AttractionSearchValidationTest extends TestCase
         ]))->assertOk()->assertSessionDoesntHaveErrors();
     }
 
-    public function test_clearing_all_filters_without_a_name_is_allowed(): void
+    public function test_submitting_without_any_search_or_filter_is_rejected(): void
     {
         $this->from(route('attractions.index'))
             ->get(route('attractions.index', ['search_submitted' => '1']))
-            ->assertOk()
-            ->assertSessionDoesntHaveErrors();
+            ->assertRedirect(route('attractions.index'))
+            ->assertSessionHasErrors('search');
     }
 
-    public function test_unchecking_last_category_and_resetting_dropdowns_is_allowed(): void
+    public function test_unchecking_last_category_and_resetting_dropdowns_requires_a_selection(): void
     {
         $this->get(route('attractions.index', [
             'search_submitted' => '1',
@@ -37,6 +37,6 @@ class AttractionSearchValidationTest extends TestCase
             'budget_level' => '',
             'rating' => '',
             'categories' => [],
-        ]))->assertOk()->assertSessionDoesntHaveErrors();
+        ]))->assertRedirect(route('attractions.index'))->assertSessionHasErrors('search');
     }
 }

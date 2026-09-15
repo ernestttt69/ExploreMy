@@ -30,31 +30,17 @@ class ProfileController extends Controller
 		$previousLanguage = $user->preferred_language;
 
 		$validated = $request->validate([
-			'name' => 'required|string|max:255',
+            'preferred_language' => ['sometimes', 'required', 'in:en,ms,zh'],
 			'profile_picture' => 'nullable|image|max:2048',
-			'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+()\-\s]+$/'],
-			'date_of_birth' => ['nullable', 'date', 'before:today'],
 			'preferences' => ['nullable', 'array'],
 			'preferences.*' => ['integer', 'distinct', 'exists:preference_categories,preference_id'],
-			'preferred_language' => ['required', 'in:en,ms,zh'],
-			'personalisation_consent' => ['nullable', 'boolean'],
 		], [
-            'name.*' => __('profile_errors.name'),
             'profile_picture.*' => __('profile_errors.photo'),
-            'phone.*' => __('profile_errors.phone'),
-            'date_of_birth.*' => __('profile_errors.dob'),
             'preferences.*' => __('profile_errors.preferences'),
             'preferences.*.*' => __('profile_errors.preferences'),
-            'preferred_language.*' => __('profile_errors.language'),
-            'personalisation_consent.*' => __('profile_errors.consent'),
         ]);
 
 
-		$user->name = $request->name;
-		$user->phone = $request->phone;
-		$user->date_of_birth = $request->date_of_birth;
-		$user->preferred_language = $request->preferred_language;
-		$user->personalisation_consent = $request->boolean('personalisation_consent');
 		$oldProfilePicture = null;
 
 
@@ -91,13 +77,11 @@ class ProfileController extends Controller
 		}
 
 
+		$user->preferred_language = $validated['preferred_language'] ?? $user->preferred_language;
 		$user->save();
 		$user->preferenceCategories()->sync($validated['preferences'] ?? []);
-
-		// The middleware selected the locale before this request changed the
-		// preference. Switch immediately so the redirected flash message is
-		// translated using the language the user just selected.
-		app()->setLocale($user->preferred_language);
+        app()->setLocale($user->preferred_language);
+        $request->session()->put('locale', $user->preferred_language);
 
 		if ($oldProfilePicture && str_starts_with($oldProfilePicture, '/profile_images/')) {
 			File::delete(public_path(ltrim($oldProfilePicture, '/')));
@@ -108,9 +92,7 @@ class ProfileController extends Controller
 				'message' => __('ui.messages.profile_updated'),
 				'name' => $user->name,
 				'profilePicture' => $user->profile_picture,
-				'redirect' => $previousLanguage !== $user->preferred_language
-					? route('profile')
-					: null,
+				'redirect' => $previousLanguage !== $user->preferred_language ? route('profile') : null,
 			]);
 		}
 

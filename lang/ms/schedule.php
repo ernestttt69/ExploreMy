@@ -6,7 +6,7 @@ return [
     'suggest_open_order' => 'Untuk mengurangkan masa menunggu, kami mencadangkan urutan berdasarkan waktu operasi dan anggaran perjalanan: :sequence. Anda boleh mengubah susunan di bawah.',
     'order_unavailable' => 'Urutan pilihan tidak sesuai dengan waktu operasi dan masa trip. Cadangan urutan: :sequence. Ubah susunan dan jana semula.',
     'hours_unknown' => 'Waktu operasi tidak tersedia atau tidak jelas. Sila sahkan dengan tempat tersebut.',
-    'wait_opening' => 'Sedia melawat pada :time; menunggu waktu operasi yang sesuai.',
+    'wait_opening' => 'Tiba: :time. Lawatan dijadualkan pada :visit selepas menunggu waktu buka yang sesuai.',
     'suggested_order' => 'Ini ialah susunan yang dicadangkan. Anda boleh mengubah urutan jika tidak sesuai dengan rancangan anda.',
     'manual_description' => 'Ikut susunan tempat pilihan anda.',
     'auto_description' => 'Susun tempat mengikut pilihan terpantas, terpendek atau termurah.',

@@ -6,7 +6,7 @@ return [
     'suggest_open_order' => '根据营业时间和预计交通时间，建议以下顺序以减少等待：:sequence。您可以在下方调整地点顺序。',
     'order_unavailable' => '您选择的顺序无法在营业时间和行程时间内完成。建议顺序：:sequence。请调整后重新生成。',
     'hours_unknown' => '营业时间缺失或不明确，请向该地点确认。',
-    'wait_opening' => ':time 已可开始游览；等待合适的营业时段。',
+    'wait_opening' => '抵达时间：:time。等待合适的开放时段后，安排于 :visit 参观。',
     'suggested_order' => '这是建议的地点顺序。如果不适合您的计划，可以自行调整顺序。',
     'manual_description' => '按照您指定的地点顺序生成行程。',
     'auto_description' => '根据最快、最短或最便宜的偏好安排地点顺序。',

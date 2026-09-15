@@ -375,6 +375,11 @@
 
                     clearLink.addEventListener('click', function (event) {
                         event.preventDefault();
+                        if (!hasSearchSelection()) {
+                            emptyError.hidden = false;
+                            emptyError.focus();
+                            return;
+                        }
 
                         var form = document.querySelector('.search-panel form') || clearLink.closest('form');
                         var liveSelected = false;

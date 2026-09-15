@@ -19,7 +19,7 @@
 
     <link
         rel="stylesheet"
-        href="{{ asset('css/saved-places.css') }}"
+        href="{{ asset('css/saved-places.css') }}?v={{ filemtime(public_path('css/saved-places.css')) }}"
     >
 </head>
 

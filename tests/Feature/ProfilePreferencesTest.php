@@ -16,10 +16,10 @@ class ProfilePreferencesTest extends TestCase
         foreach (['en', 'ms', 'zh'] as $locale) {
             $user = User::factory()->create(['preferred_language' => $locale]);
             $response = $this->actingAs($user)->postJson(route('profile.update'), [
-                'name' => '', 'phone' => 'invalid!', 'preferred_language' => $locale,
+                'preferences' => 'invalid',
             ]);
-            $response->assertUnprocessable()->assertJsonValidationErrors(['name', 'phone']);
-            $this->assertSame(trans('profile_errors.phone', [], $locale), $response->json('errors.phone.0'));
+            $response->assertUnprocessable()->assertJsonValidationErrors(['preferences']);
+            $this->assertSame(trans('profile_errors.preferences', [], $locale), $response->json('errors.preferences.0'));
             $this->actingAs($user)->get(route('profile'))->assertOk()
                 ->assertSee('id="profile-save-errors"', false)
                 ->assertSee(trans('profile_errors.failed', [], $locale));
@@ -44,6 +44,10 @@ class ProfilePreferencesTest extends TestCase
             ->assertOk()
             ->assertSee('name="preferences[]"', false)
             ->assertDontSee('name="nationality"', false)
+            ->assertDontSee('name="phone"', false)
+            ->assertDontSee('name="name"', false)
+            ->assertDontSee('name="date_of_birth"', false)
+            ->assertDontSee('id="privacy"', false)
             ->assertDontSee('name="bio"', false);
 
         $this->actingAs($user)->post(route('profile.update'), [

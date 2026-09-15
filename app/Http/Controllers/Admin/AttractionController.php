@@ -30,7 +30,8 @@ class AttractionController extends Controller
 
     public function create()
     {
-        return view('admin.attractions.form', ['attraction' => new Attraction(), 'states' => State::orderBy('state_name')->get()]);
+        $attraction = new Attraction();
+        return view('admin.attractions.form', ['attraction' => $attraction, 'states' => State::orderBy('state_name')->get()]);
     }
 
     public function store(Request $request)
@@ -112,7 +113,7 @@ class AttractionController extends Controller
 
     private function validated(Request $request, ?Attraction $attraction = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'place_id' => ['required', 'string', 'max:255', 'unique:attractions,place_id'.($attraction ? ','.$attraction->attraction_id.',attraction_id' : '')],
             'state_id' => ['required', 'integer', 'exists:states,state_id'],
             'attraction_name' => ['required', 'string', 'max:100'],
@@ -126,6 +127,7 @@ class AttractionController extends Controller
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'max:3072'],
         ]);
+        return $data;
     }
 
     private function storeImages(Request $request, Attraction $attraction): void

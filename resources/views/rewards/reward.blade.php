@@ -30,15 +30,7 @@
                 <span class="hero-tree-height">{{ $treeHeight }} {{ __('rewards.height_unit') }}</span>
                 <div class="hero-level"><span>{{ __('rewards.level', ['level' => $tree->level]) }}</span><strong>{{ $treeLabel }}</strong></div>
             </div>
-            @if($inventory->isNotEmpty())
-                @php($heroFertilizer = $inventory->first())
-                <form method="POST" action="{{ route('rewards.fertilize', $heroFertilizer) }}" class="hero-fertilizer-form" data-async-reward>
-                    @csrf
-                    <button type="submit" class="hero-fertilizer">{{ __('rewards.apply_fertilizer') }}</button>
-                </form>
-            @else
-                <a href="{{ route('rewards') }}#shop-title" class="hero-fertilizer">{{ __('rewards.get_fertilizer') }}</a>
-            @endif
+            <a href="#green-shop" class="hero-fertilizer">{{ __('rewards.get_fertilizer') }}</a>
         </section>
 
         <section class="rewards-overview" aria-label="{{ __('rewards.summary_aria') }}">
@@ -69,7 +61,7 @@
                         <div class="fertilizer-card-footer"><span class="fertilizer-stock">{{ __('rewards.stock', ['count' => $owned->quantity]) }}</span><form method="POST" action="{{ route('rewards.fertilize', $owned) }}" data-async-reward>@csrf<button type="submit" class="fertilizer-button">{{ __('rewards.use_fertilizer') }}</button></form></div>
                     </article>
                 @empty
-                    <div class="fertilizer-empty"><p class="empty-copy">{{ __('rewards.no_fertilizer') }}</p><a href="#shop-title" class="text-action">{{ __('rewards.visit_shop') }}</a></div>
+                    <div class="fertilizer-empty"><p class="empty-copy">{{ __('rewards.no_fertilizer') }}</p><a href="#green-shop" class="text-action">{{ __('rewards.visit_shop') }}</a></div>
                 @endforelse
             </div>
         </section>
@@ -122,7 +114,7 @@
                         <div class="tools-grid"><div class="tree-panel"><div class="tree-illustration tree-stage-{{ $treeStage }}" aria-label="{{ __('rewards.tree_aria', ['tree' => $treeLabel, 'height' => $treeHeight]) }}" role="img"><span class="tree-ground"></span><span class="tree-trunk"></span><span class="tree-crown tree-crown-one"></span><span class="tree-crown tree-crown-two"></span><span class="tree-crown tree-crown-three"></span><span class="tree-leaf tree-leaf-one"></span><span class="tree-leaf tree-leaf-two"></span><span class="tree-leaf tree-leaf-three"></span></div><div><h3>{{ __('rewards.grow_virtual') }}</h3><p>{{ __('rewards.grow_virtual_desc') }}</p><div class="tree-height"><strong>{{ $treeHeight }} {{ __('rewards.height_unit') }}</strong><span>{{ __('rewards.height') }}</span></div></div></div><div class="inventory-panel"><h3>{{ __('rewards.inventory') }}</h3>@forelse($inventory as $owned)@php($ownedItemKey = \Illuminate\Support\Str::snake($owned->item->name))<div class="inventory-row"><span>{{ __("rewards.shop_items.$ownedItemKey.name") }} <b>x{{ $owned->quantity }}</b></span><form method="POST" action="{{ route('rewards.fertilize', $owned) }}" data-async-reward>@csrf<button type="submit" class="text-action">{{ __('rewards.use_fertilizer') }} &rarr;</button></form></div>@empty<p class="empty-copy">{{ __('rewards.inventory_empty') }}</p>@endforelse</div></div>
         </section>
 
-        <section class="rewards-section rewards-shop" aria-labelledby="shop-title"><div class="section-heading"><div><span class="section-kicker">{{ __('rewards.spend') }}</span><h2 id="shop-title">{{ __('rewards.shop') }}</h2></div><span class="section-note" data-shop-balance>{{ __('rewards.available', ['points' => number_format($wallet->points)]) }}</span></div><div class="shop-grid">@foreach($items as $item)@php($itemKey = \Illuminate\Support\Str::snake($item->name))<article class="shop-item"><span class="shop-exp">+{{ $item->exp_value }} EXP</span><h3>{{ __("rewards.shop_items.$itemKey.name") }}</h3><p>{{ __("rewards.shop_items.$itemKey.description") }}</p><form method="POST" action="{{ route('rewards.purchase', $item) }}" data-purchase-form>@csrf<button type="submit" class="shop-button" data-price="{{ $item->price }}" {{ $wallet->points < $item->price ? 'disabled' : '' }}>{{ __('rewards.buy', ['points' => $item->price]) }}</button></form></article>@endforeach</div></section>
+        <section id="green-shop" class="rewards-section rewards-shop" aria-labelledby="shop-title"><div class="section-heading"><div><span class="section-kicker">{{ __('rewards.spend') }}</span><h2 id="shop-title">{{ __('rewards.shop') }}</h2></div><span class="section-note" data-shop-balance>{{ __('rewards.available', ['points' => number_format($wallet->points)]) }}</span></div><div class="shop-grid">@foreach($items as $item)@php($itemKey = \Illuminate\Support\Str::snake($item->name))<article class="shop-item"><span class="shop-exp">+{{ $item->exp_value }} EXP</span><h3>{{ __("rewards.shop_items.$itemKey.name") }}</h3><p>{{ __("rewards.shop_items.$itemKey.description") }}</p><form method="POST" action="{{ route('rewards.purchase', $item) }}" data-purchase-form>@csrf<button type="submit" class="shop-button" data-price="{{ $item->price }}" {{ $wallet->points < $item->price ? 'disabled' : '' }}>{{ __('rewards.buy', ['points' => $item->price]) }}</button></form></article>@endforeach</div></section>
 
         <section class="rewards-section rewards-history" aria-labelledby="history-title"><div class="section-heading"><div><span class="section-kicker">{{ __('rewards.activity') }}</span><h2 id="history-title">{{ __('rewards.history') }}</h2></div></div><div class="history-list">@include('rewards.history')</div></section>
     </div>
@@ -297,18 +289,6 @@
                         stock = card.querySelector('.fertilizer-stock');
                     }
                     stock.textContent = inventory.stockLabel;
-
-                    var heroButton = document.querySelector('.hero-fertilizer');
-                    if (heroButton && heroButton.tagName === 'A') {
-                        var heroForm = document.createElement('form');
-                        heroForm.method = 'POST';
-                        heroForm.action = inventory.fertilizeUrl;
-                        heroForm.className = 'hero-fertilizer-form';
-                        heroForm.innerHTML = '<input type="hidden" name="_token"><button type="submit" class="hero-fertilizer"></button>';
-                        heroForm.querySelector('input[name="_token"]').value = form.querySelector('input[name="_token"]').value;
-                        heroForm.querySelector('button').textContent = inventory.applyLabel;
-                        heroButton.replaceWith(heroForm);
-                    }
 
                     updateRewardSummary(data);
                     showRewardToast(data.message, false);

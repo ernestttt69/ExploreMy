@@ -26,6 +26,11 @@
         <details class="ai-chat__faq">
             <summary>{{ __('chatbot.faq_title') }}</summary>
             <div class="ai-chat__faq-options">
+                <strong>{{ __('chatbot_help.title') }}</strong>
+                @foreach(__('chatbot_help.items') as $help)
+                    <button type="button" data-chat-question>{{ $help['question'] }}</button>
+                @endforeach
+                <strong>{{ __('chatbot.faq_title') }}</strong>
                 @foreach(__('chatbot.faq_questions') as $question)
                     <button type="button" data-chat-question>{{ $question }}</button>
                 @endforeach

@@ -732,6 +732,34 @@
     border-left: 4px solid #24624f;
 }
 
+.simple-trip-transport.transport-with-fare {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.transport-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.transport-details > span,
+.transport-details > small {
+    display: block;
+}
+
+.transit-leg .transport-fare {
+    flex: 0 0 auto;
+    max-width: 45%;
+    color: #164b3b;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.5;
+    text-align: right;
+}
+
 .daily-itinerary .simple-trip-transport .navigation-button {
     display: inline-block;
     margin-top: 8px;

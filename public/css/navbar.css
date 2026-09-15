@@ -1,0 +1,24 @@
+.header-wrapper .container{max-width:1320px}
+.header-wrapper .top-header-bar{padding:14px 0}
+.header-wrapper .top-header-bar>.d-flex{min-height:56px}
+.header-wrapper .nav-brand-container{gap:14px}
+.header-wrapper .nav-logo-badge{width:54px;height:54px;border-radius:15px}
+.header-wrapper .nav-brand-title{font-size:26px}
+.header-wrapper .nav-menu{gap:44px}
+.header-wrapper .nav-link-custom{font-size:16px;padding:15px 3px}
+.header-wrapper .nav-user-pill{font-size:15px;max-width:230px;gap:11px;padding:5px 16px 5px 5px}
+.header-wrapper .nav-avatar{width:40px;height:40px}
+.header-wrapper .btn-logout{font-size:14px;min-height:44px;padding:10px 18px}
+.header-wrapper .nav-saved-places{width:auto;height:auto;min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:10px 15px;border:1px solid #b9d7ca;border-radius:999px;background:#edf7f1;color:#20583f;white-space:nowrap;font-size:14px;font-weight:700;transition:background .15s,border-color .15s,box-shadow .15s}
+.header-wrapper .nav-saved-icon{width:21px;height:21px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.header-wrapper .nav-saved-places:hover,.header-wrapper .nav-saved-places.active{background:#dcefe3;border-color:#7ca98e;color:#174b35;box-shadow:0 3px 10px #20583f12;transform:none}
+.header-wrapper .nav-saved-places.active .nav-saved-icon{fill:currentColor}
+.header-wrapper .nav-saved-places .nav-saved-label{font-size:14px}
+.header-wrapper .nav-saved-places .nav-saved-label::before{content:none}
+@media(max-width:600px){.header-wrapper .nav-saved-places{padding:9px 10px;gap:6px}.header-wrapper .nav-saved-places .nav-saved-label{font-size:12px}}
+.header-wrapper .nav-ai-chatbot{font-size:15px;min-height:46px;padding:8px 15px}
+.header-wrapper .nav-language-switcher button{font-size:14px;min-height:40px;padding:7px 9px}
+body:has(.header-wrapper){padding-top:var(--nav-extra-height,28px)}
+body:has(.header-wrapper) .page-back-control{top:calc(128px + var(--nav-extra-height,28px))}
+@media(max-width:900px){.header-wrapper .nav-menu{gap:28px;justify-content:flex-start;width:max-content;min-width:100%}.header-wrapper .sub-navbar{overflow-x:auto}.header-wrapper .nav-link-custom{white-space:nowrap}.header-wrapper .nav-brand-title{font-size:23px}}
+@media(max-width:600px){.header-wrapper .top-header-bar{padding:10px 0}.header-wrapper .top-header-bar>.d-flex{flex-wrap:wrap;gap:10px}.header-wrapper .top-header-bar>.d-flex>.d-flex{flex-wrap:wrap;gap:8px!important}.header-wrapper .nav-logo-badge{width:46px;height:46px}.header-wrapper .nav-avatar{width:36px;height:36px}.header-wrapper .nav-user-pill{max-width:50px;padding:4px}.header-wrapper .nav-user-pill span{display:none}.header-wrapper .nav-ai-chatbot{width:44px;padding:8px;justify-content:center}.header-wrapper .btn-logout{padding:9px 12px}.header-wrapper .nav-menu{gap:25px;padding-inline:12px}.header-wrapper .nav-link-custom{font-size:15px;padding:13px 2px}}

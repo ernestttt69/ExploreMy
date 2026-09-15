@@ -17,6 +17,7 @@ use App\Http\Controllers\MalaysiaPlaceController;
 use App\Http\Controllers\ChatbotController;
 
 Route::get('/', [AttractionController::class, 'index'])->name('explore');
+Route::post('/language', [\App\Http\Controllers\LanguageController::class, 'update'])->name('language.update');
 
 Route::get('/attractions', [AttractionController::class, 'index'])
     ->name('attractions.index');
@@ -28,20 +29,27 @@ Route::view('/about-malaysia', 'about-malaysia')->name('about-malaysia');
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
+Route::get('/setup', [\App\Http\Controllers\SetupController::class, 'show'])->middleware('auth')->name('setup.show');
+Route::post('/setup', [\App\Http\Controllers\SetupController::class, 'store'])->middleware('auth')->name('setup.store');
 
 Route::get('/dashboard', function () {
 	/** @var \App\Models\User $user */
 	$user = auth()->user();
-	$preferences = collect();
-	if ($user->personalisation_consent) {
-		$preferences = $user->preferenceCategories()->orderBy('category_name')->get();
-	}
-	$savedCount = \App\Models\Wishlist::where('user_id', $user->user_id)->count();
-	$tripCount = \App\Models\Trip::where('user_id', $user->user_id)->count();
-	$greenPoints = (int) (\App\Models\GreenWallet::where('user_id', $user->user_id)->value('points') ?? 0);
-	$recentTrip = \App\Models\Trip::where('user_id', $user->user_id)->latest()->first();
+    if ($user->setup_required) return redirect()->route('setup.show');
 
-	return view('dashboard.index', compact('user', 'preferences', 'savedCount', 'tripCount', 'greenPoints', 'recentTrip'));
+    $collection = \App\Models\SavedPlaceCollection::where('user_id', $user->user_id)
+        ->withCount(['items' => fn ($query) => $query->whereHas('attraction')])
+        ->latest()->first();
+    $upcomingTrip = \App\Models\Trip::where('user_id', $user->user_id)
+        ->whereNotNull('start_date')
+        ->where(function ($query) {
+            $query->whereDate('end_date', '>=', today())
+                ->orWhere(function ($query) {
+                    $query->whereNull('end_date')->whereDate('start_date', '>=', today());
+                });
+        })->orderBy('start_date')->first();
+
+    return view('dashboard.index', compact('user', 'collection', 'upcomingTrip'));
 })->middleware('auth')->name('dashboard');
 
 Route::get('/rewards', [GreenRewardController::class, 'index'])

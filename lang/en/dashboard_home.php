@@ -1,0 +1,22 @@
+<?php
+return [
+    'greeting' => 'Welcome back, :name',
+    'intro' => 'Pick up your plans or find somewhere new to explore.',
+    'explore' => 'Explore places',
+    'your_trip' => 'Your next journey',
+    'in_progress' => 'In progress',
+    'upcoming' => 'Upcoming',
+    'trip_help' => 'Open your itinerary to see your schedule and route.',
+    'empty_trip' => 'Your next trip starts here',
+    'empty_trip_help' => 'Save places, organise a collection, then generate and save your itinerary.',
+    'start' => 'Start planning',
+    'all_trips' => 'View all trips',
+    'continue' => 'Continue planning',
+    'empty_collection' => 'Build your first collection',
+    'ready' => 'Your collection is ready. Generate a route or adjust your places.',
+    'add_places' => 'Add places',
+    'shortcuts' => 'Useful shortcuts',
+    'saved_help' => 'Organise places you want to visit',
+    'transport_help' => 'Find routes and nearby stations',
+    'rewards_help' => 'View your points and rewards',
+];

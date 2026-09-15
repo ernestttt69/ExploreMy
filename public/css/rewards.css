@@ -731,6 +731,39 @@
     padding: 15px 24px;
     font-size: 14px;
     white-space: normal;
+    background: #f0ffc9;
+    color: #174b35;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 0 #699348, 0 8px 18px #123c3133;
+    cursor: pointer;
+}
+
+.rewards-tree-stage .hero-fertilizer::after { content: ' →'; }
+.rewards-tree-stage .hero-fertilizer:hover {
+    background: #dcf8a0;
+    color: #174b35;
+    transform: translateY(-2px);
+}
+.rewards-tree-stage .hero-fertilizer:focus-visible,
+.fertilizer-empty .text-action:focus-visible {
+    outline: 3px solid #8ebd35;
+    outline-offset: 4px;
+}
+.fertilizer-empty .text-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: #1d6b51;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+}
+.fertilizer-empty .text-action:hover { background: #154d3b; }
+.rewards-container #green-shop {
+    scroll-margin-top: calc(140px + var(--nav-extra-height, 0px));
 }
 
 @media (max-width: 991px) {

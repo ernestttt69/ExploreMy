@@ -1,4 +1,4 @@
-                        <article class="collection-card">
+                        <article class="collection-card" id="collection-{{ $collection->collection_id }}" style="scroll-margin-top: 150px;">
                             <div class="collection-card-main">
                                 <div class="collection-card-heading">
                                     <div>
@@ -82,7 +82,7 @@
 
                             @if($collection->items_count < 2)
                                 <p class="collection-trip-note">
-                                    {{ __('saved.add_one') }}
+                                    {{ __('saved_extra.add_remaining', ['count' => 2 - $collection->items_count]) }}
                                 </p>
                             @endif
                         </article>

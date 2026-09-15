@@ -45,6 +45,8 @@ class AuthController extends Controller
 				&& ! file_exists(public_path(ltrim($user->profile_picture, '/')));
 
 			if (! $user->exists) {
+				$user->setup_required = true;
+				$user->preferred_language = in_array(session('locale'), ['en', 'ms', 'zh'], true) ? session('locale') : 'en';
 				$user->name = $payload['name'] ?? $payload['email'];
 			}
 
@@ -69,7 +71,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'redirect' => '/dashboard'
+                'redirect' => $user->setup_required ? route('setup.show') : route('dashboard')
             ]);
 
 		} catch (\Throwable $e) {

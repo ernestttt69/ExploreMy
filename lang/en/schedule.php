@@ -6,7 +6,7 @@ return [
     'suggest_open_order' => 'To reduce waiting, we suggest this sequence based on opening hours and estimated travel: :sequence. You can adjust the stops below.',
     'order_unavailable' => 'Your chosen order cannot fit the opening hours and trip times. We suggest this sequence: :sequence. Adjust the stops and generate again.',
     'hours_unknown' => 'Opening hours unavailable or unclear. Please confirm with the venue.',
-    'wait_opening' => 'Ready to visit at :time; waiting for a suitable opening period.',
+    'wait_opening' => 'Arrived: :time. Visit scheduled for :visit after waiting for a suitable opening period.',
     'suggested_order' => 'This is the suggested order. You can adjust the sequence if it does not suit your plans.',
     'manual_description' => 'Follow your chosen stop order.',
     'auto_description' => 'Order stops by your fastest, shortest or cheapest preference.',

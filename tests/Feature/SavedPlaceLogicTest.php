@@ -40,6 +40,7 @@ class SavedPlaceLogicTest extends TestCase
         $this->assertNull($response->json('redirect'));
         $this->assertStringContainsString('&lt;Trip&gt;', $response->json('html'));
         $this->assertStringContainsString('Collection Place', $response->json('html'));
+        $this->assertStringContainsString(__('saved_extra.add_remaining', ['count' => 1]), $response->json('html'));
         $this->get(route('saved-places.index'))->assertOk()->assertSee('id="collection-list"', false);
         $this->postJson(route('saved-places.collections.store'), $payload)
             ->assertUnprocessable()->assertJsonValidationErrors('name');
@@ -50,8 +51,9 @@ class SavedPlaceLogicTest extends TestCase
 
         $payload['name'] = 'Empty trip';
         unset($payload['attraction_ids']);
-        $this->postJson(route('saved-places.collections.store'), $payload)
+        $emptyResponse = $this->postJson(route('saved-places.collections.store'), $payload)
             ->assertCreated()->assertJsonStructure(['html']);
+        $this->assertStringContainsString(__('saved_extra.add_remaining', ['count' => 2]), $emptyResponse->json('html'));
         $collection = \App\Models\SavedPlaceCollection::where('name', 'Empty trip')->firstOrFail();
         $this->assertSame(0, $collection->items()->count());
         $add = $this->postJson(route('saved-places.collections.places.store', $collection->getKey()), [

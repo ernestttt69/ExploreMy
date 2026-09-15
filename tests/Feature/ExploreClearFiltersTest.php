@@ -10,6 +10,14 @@ use Tests\TestCase;
 
 class ExploreClearFiltersTest extends TestCase
 {
+    public function test_clearing_empty_fields_returns_an_error(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('attractions.index', ['clear' => '1', 'search' => '   ']))
+            ->assertRedirect(route('attractions.index'))
+            ->assertSessionHasErrors('search')
+            ->assertSessionMissing('success');
+    }
     public function test_empty_or_whitespace_search_is_rejected(): void
     {
         $this->actingAs(User::factory()->create());

@@ -131,17 +131,19 @@
                                     <span>{{ __('route.total_time') }}</span>
                                     <strong>{{ $option['total_duration_display'] }}</strong>
                                 </div>
-                                @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE' && $option['total_fare'] !== null)
                                     <div>
                                         <span>{{ __('route.total_fare') }}</span>
                                         <strong>
-                                            {{ $option['fare_currency'] }} {{ number_format($option['total_fare'], 2) }}
+                                            @if ($option['total_fare'] !== null)
+                                            {{ $option['fare_currency'] ?? 'MYR' }} {{ number_format($option['total_fare'], 2) }}
                                             @if(!empty($option['fare_is_estimated']))
                                                 ({{ __('route_form.fare_estimated') }})
                                             @endif
+                                            @else
+                                                {{ __('route.fare_unavailable') }}
+                                            @endif
                                         </strong>
                                     </div>
-                                @endif
                                 <div>
                                     <span>{{ __('route.distance') }}</span>
                                     <strong>{{ __('route_form.distance_km', ['distance' => number_format($option['total_distance'], 2)]) }}</strong>
@@ -287,7 +289,8 @@
                                 </div>
                             </div>
 
-                            <div class="simple-trip-transport">
+                            <div class="simple-trip-transport transport-with-fare">
+                                <div class="transport-details">
                                 <small>{{ $leg['trip_date_display'] }} &middot; {{ $leg['departure_time'] }}</small>
                                 <span>{{ $leg['transport_summary'] }}</span>
                                 <small>
@@ -296,15 +299,12 @@
                                     @else
                                         {{ $leg['duration_display'] }}
                                         &middot; {{ __('route_form.distance_km', ['distance' => number_format($leg['distance'], 2)]) }}
-                                        @if (($routeResult['travel_mode'] ?? 'TRANSIT') !== 'DRIVE' && $leg['fare'] !== null)
-                                            &middot;
-                                            {{ $leg['fare_currency'] }} {{ number_format($leg['fare'], 2) }}
-                                            @if(!empty($leg['fare_is_estimated']))
-                                                ({{ __('route_form.fare_estimated') }})
-                                            @endif
-                                        @endif
                                     @endif
                                 </small>
+                                </div>
+                                @if ($leg['fare'] !== null)
+                                    <strong class="transport-fare">{{ $leg['fare_currency'] }} {{ number_format($leg['fare'], 2) }} @if(!empty($leg['fare_is_estimated'])) ({{ __('route_form.fare_estimated') }}) @endif</strong>
+                                @endif
                             </div>
 
                             <div class="simple-trip-stop">
