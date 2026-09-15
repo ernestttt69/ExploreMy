@@ -212,6 +212,19 @@ class AiChatServiceTest extends TestCase
         $this->assertSame('Johor Zoo has a rating of 4.1 and is in Johor Bahru.', $reply);
     }
 
+    public function test_tables_become_readable_numbered_items(): void
+    {
+        Http::fake(['*' => Http::response([
+            'message' => ['content' => "Places:\n\n| Attraction | Rating |\n| --- | --- |\n| Park | 4.3 |\n| Museum | 4.5 |\n\nCheck hours before visiting."],
+        ])]);
+        $reply = app(AiChatService::class)->reply([
+            ['role' => 'user', 'content' => 'Penang'],
+        ], 'en');
+        $this->assertStringContainsString("1. Park\nRating: 4.3\n\n2. Museum\nRating: 4.5", $reply);
+        $this->assertStringContainsString('Check hours before visiting.', $reply);
+        $this->assertStringNotContainsString('|', $reply);
+    }
+
     public function test_it_removes_italic_labels_without_removing_literal_asterisks(): void
     {
         Http::fake(['*' => Http::response([

@@ -13,3 +13,25 @@
 
 /* Minimal access-code login */
 .simple-admin-login{display:grid;min-height:100vh;margin:0;place-items:center;padding:22px;background:#f4f6f5;color:#21372f;font-family:Arial,sans-serif}.simple-login-card{width:min(370px,100%);padding:32px;border:1px solid #dce4e0;border-radius:12px;background:#fff;box-shadow:0 10px 30px #173d3112}.simple-admin-brand{display:flex;align-items:center;gap:10px;margin-bottom:30px}.simple-admin-brand img{width:38px;height:38px;border-radius:8px;object-fit:cover}.simple-admin-brand strong,.simple-admin-brand span{display:block}.simple-admin-brand strong{font-size:15px}.simple-admin-brand span{margin-top:2px;color:#78877f;font-size:9px;text-transform:uppercase}.simple-login-card h1{margin:0 0 8px;font-size:22px}.simple-login-card>p{margin:0 0 23px;color:#6d7b75;font-size:11px;line-height:1.6}.simple-login-card label{display:block;margin-bottom:7px;font-size:10px;font-weight:700}.code-input{display:flex;margin-bottom:13px}.code-input input{min-width:0;flex:1;padding:11px;border:1px solid #cfdad5;border-right:0;border-radius:7px 0 0 7px;font-size:12px;outline:0}.code-input input:focus{border-color:#2e765a;box-shadow:0 0 0 3px #2e765a14}.code-input button{padding:0 12px;border:1px solid #cfdad5;border-radius:0 7px 7px 0;background:#f3f6f4;color:#4e6259;font-size:9px}.simple-login-submit{width:100%;padding:11px;border:0;border-radius:7px;background:#174b3a;color:#fff;font-size:10px;font-weight:700}.simple-login-submit:hover{background:#22634b}.simple-login-card>small{display:block;margin-top:22px;color:#929c98;font-size:8px;text-align:center}.simple-login-error{margin-bottom:15px;padding:10px;border:1px solid #edc7c4;border-radius:7px;background:#fff1f0;color:#923c37;font-size:9px}
+
+/* Larger, uncropped previews when selecting attraction photos. */
+.image-upload > #imagePreview:has(img) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    min-height: 300px;
+    padding: 16px;
+    gap: 16px;
+    overflow: visible;
+}
+.image-upload > #imagePreview:has(img) img {
+    display: block;
+    width: 100%;
+    height: 300px;
+    object-fit: contain;
+    background: #edf2ef;
+    border: 1px solid #dce7e2;
+    border-radius: 10px;
+}
+@media (max-width: 575px) {
+    .image-upload > #imagePreview:has(img) { padding: 10px; }
+    .image-upload > #imagePreview:has(img) img { height: 240px; }
+}
