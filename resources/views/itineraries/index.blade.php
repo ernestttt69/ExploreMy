@@ -21,9 +21,6 @@
                 <h1>{{ __('itinerary.planned_trips') }}</h1>
                 <p>{{ __('itinerary.intro') }}</p>
             </div>
-            <button type="button" class="button button-primary" onclick="document.getElementById('trip-dialog').showModal()">
-                <span aria-hidden="true">+</span> {{ __('itinerary.create') }}
-            </button>
         </section>
 
         @if(session('status'))
