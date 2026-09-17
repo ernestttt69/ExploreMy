@@ -49,7 +49,7 @@
                             <a class="guidance-button navigation-button" href="{{ $data['navigation_url'] }}" target="_blank" rel="noopener noreferrer">{{ __('route_form.navigate_google_maps') }}</a>
                         @endif
                         </div>
-                        @if($data['fare'] !== null)
+                        @if($data['fare'] !== null && empty($data['is_walking_only']))
                             <strong class="transport-fare">{{ $data['fare_currency'] }} {{ number_format($data['fare'], 2) }} @if(!empty($data['fare_is_estimated'])) ({{ __('route_form.fare_estimated') }}) @endif</strong>
                         @endif
                     </div>

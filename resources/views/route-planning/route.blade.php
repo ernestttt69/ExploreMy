@@ -302,7 +302,7 @@
                                     @endif
                                 </small>
                                 </div>
-                                @if ($leg['fare'] !== null)
+                                @if ($leg['fare'] !== null && empty($leg['is_walking_only']))
                                     <strong class="transport-fare">{{ $leg['fare_currency'] }} {{ number_format($leg['fare'], 2) }} @if(!empty($leg['fare_is_estimated'])) ({{ __('route_form.fare_estimated') }}) @endif</strong>
                                 @endif
                             </div>

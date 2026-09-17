@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'route_departure_past' => 'Tarikh perjalanan anda telah berlalu. Sila pilih tarikh akan datang.',
+    'route_departure_suggestion' => 'Pengangkutan awam dari :from ke :to tersedia pada :time (waktu Malaysia). Ubah tarikh atau waktu perjalanan, kemudian jana semula untuk menyemak keseluruhan pelan.',
     'reward_points_insufficient' => 'Mata Hijau anda tidak mencukupi.',
     'attraction_search_required' => 'Sila masukkan tempat untuk dicari.',
     'attraction_start_required' => 'Sila pilih tarikh mula.',
@@ -42,6 +44,7 @@ return [
     'transport_coordinates_unavailable' => 'Koordinat untuk ":origin" tidak dapat ditemukan.',
     'transport_line_required' => 'Sila pilih laluan pengangkutan yang sah.',
     'transport_line_missing' => 'Kod laluan pengangkutan ":code" tidak ditemukan.',
+    'route_segment_unavailable' => 'Tiada laluan :mode dari :from ke :to untuk :time dikembalikan. Cuba waktu berlepas atau pilihan pengangkutan lain.',
     'route_api_missing' => 'Kunci API Google Maps Routes belum dikonfigurasi.',
     'route_calculation_failed' => 'Google Maps tidak dapat mengira laluan. Sila cuba lagi.',
     'route_calculated' => ':title berjaya dikira.',

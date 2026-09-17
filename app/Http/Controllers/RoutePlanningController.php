@@ -222,6 +222,11 @@ class RoutePlanningController extends Controller
         $planningEndDate = $collection?->end_date
             ? CarbonImmutable::parse($collection->end_date, $planningTimezone)->startOfDay()
             : $planningStartDate;
+        if ($planningStartDate->lessThan(CarbonImmutable::now($planningTimezone)->startOfDay())) {
+            return back()->withInput()->withErrors([
+                'route' => __('messages.route_departure_past'),
+            ]);
+        }
         $planningStartTime = $validated['start_time'] ?? ($collection?->start_time
             ? substr((string) $collection->start_time, 0, 5)
             : CarbonImmutable::now($planningTimezone)->format('H:i'));
@@ -1005,6 +1010,7 @@ class RoutePlanningController extends Controller
                     'X-Goog-FieldMask' => implode(',', [
                         'routes.distanceMeters',
                         'routes.duration',
+                        'routes.polyline.encodedPolyline',
                         'routes.legs.startLocation',
                         'routes.legs.endLocation',
                         'routes.travelAdvisory.transitFare',
@@ -1023,6 +1029,29 @@ class RoutePlanningController extends Controller
                 ->throw()
                 ->json('routes.0');
 
+            if (!is_array($response) || empty($response['legs']) || !isset($response['duration'])) {
+                $message = __('messages.route_segment_unavailable', [
+                    'from' => $from['name'],
+                    'to' => $to['name'],
+                    'time' => $departureTime->format('Y-m-d H:i'),
+                    'mode' => $this->travelModeLabel($travelMode),
+                ]);
+                if ($travelMode === 'TRANSIT' && $initialDepartureTime !== null) {
+                    if ($departureTime->isPast()) {
+                        $message = __('messages.route_departure_past');
+                    }
+                    $suggestion = app(\App\Services\TransitDepartureSuggestion::class)->find($routeRequest, $departureTime);
+                    if ($suggestion) {
+                        $message .= ' '.__('messages.route_departure_suggestion', [
+                            'time' => $suggestion->locale(app()->getLocale())->translatedFormat('j M Y, g:i A'),
+                            'from' => $from['name'],
+                            'to' => $to['name'],
+                        ]);
+                    }
+                }
+                throw new UnexpectedValueException($message);
+            }
+
             $encodedPolylines = [];
             $tripSteps = [];
             $cursor = $departureTime;
@@ -1031,6 +1060,7 @@ class RoutePlanningController extends Controller
             $apiSteps = [];
             $estimatedFareTotal = 0.0;
             $hasEstimatedFare = false;
+            $hasUnknownTransitFare = false;
             foreach ($response['legs'] ?? [] as $routeLeg) {
                 $apiSteps = [...$apiSteps, ...($routeLeg['steps'] ?? [])];
             }
@@ -1079,6 +1109,8 @@ class RoutePlanningController extends Controller
                     if ($estimatedStepFare !== null) {
                         $estimatedFareTotal += $estimatedStepFare;
                         $hasEstimatedFare = true;
+                    } else {
+                        $hasUnknownTransitFare = true;
                     }
 
                     $tripSteps[] = array_merge(
@@ -1132,18 +1164,23 @@ class RoutePlanningController extends Controller
                 $currentLocation = $nextTransitStop;
             }
 
-            if ($encodedPolylines === []) {
-                throw new \RuntimeException('Google Maps did not return a transit route leg.');
+            if ($encodedPolylines === [] && !empty($response['polyline']['encodedPolyline'])) {
+                $encodedPolylines[] = $response['polyline']['encodedPolyline'];
             }
 
             $durationSeconds = $this->durationToSeconds($response['duration'] ?? '0s');
             $arrivalTime = $departureTime->addSeconds($durationSeconds);
             $fare = $response['travelAdvisory']['transitFare'] ?? null;
             $officialFareValue = $fare !== null ? $this->moneyToFloat($fare) : null;
-            $usesEstimatedFare = !($officialFareValue > 0) && $hasEstimatedFare;
-            $fareValue = $officialFareValue > 0
+            // A zero transit fare must not suppress the existing fare estimate.
+            $hasOfficialFare = $officialFareValue !== null && $officialFareValue > 0;
+            $isWalkingOnly = $apiSteps !== [] && collect($apiSteps)->every(
+                fn ($step) => ($step['travelMode'] ?? null) === 'WALK'
+            );
+            $usesEstimatedFare = !$hasOfficialFare && $hasEstimatedFare && !$hasUnknownTransitFare;
+            $fareValue = $hasOfficialFare
                 ? $officialFareValue
-                : ($usesEstimatedFare ? $estimatedFareTotal : null);
+                : ($isWalkingOnly ? 0.0 : ($usesEstimatedFare ? $estimatedFareTotal : null));
             $tripSteps = $this->combineSimilarSteps($tripSteps);
             $transportParts = [];
 
@@ -1205,13 +1242,14 @@ class RoutePlanningController extends Controller
                 ),
                 'steps' => $tripSteps,
                 'transport_summary' => implode(' → ', $transportParts),
-                'fare' => $fareValue !== null && $fareValue > 0
+                'fare' => $fareValue !== null
                     ? round($fareValue, 2)
                     : null,
-                'fare_currency' => $fareValue !== null && $fareValue > 0
+                'fare_currency' => $fareValue !== null
                     ? ($usesEstimatedFare ? 'MYR' : ($fare['currencyCode'] ?? 'MYR'))
                     : null,
                 'fare_is_estimated' => $usesEstimatedFare,
+                'is_walking_only' => $isWalkingOnly,
                 'encoded_polylines' => $encodedPolylines,
             ];
 

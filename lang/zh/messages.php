@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'route_departure_past' => '你的行程日期已过，请选择未来的日期。',
+    'route_departure_suggestion' => '从 :from 到 :to 的公共交通可在 :time（马来西亚时间）出发。请调整行程日期或时间，再重新生成以检查完整行程。',
     'reward_points_insufficient' => '您的绿色积分不足。',
     'attraction_search_required' => '请输入要搜索的地点。',
     'attraction_start_required' => '请选择开始日期。',
@@ -41,6 +43,7 @@ return [
     'transport_coordinates_unavailable' => '无法找到“:origin”的坐标。',
     'transport_line_required' => '请选择有效的交通线路。',
     'transport_line_missing' => '找不到交通线路代码“:code”。',
+    'route_segment_unavailable' => '未能取得 :time 从 :from 到 :to 的 :mode 路线。请尝试其他出发时间或交通方式。',
     'route_api_missing' => '尚未配置 Google Maps Routes API 密钥。',
     'route_calculation_failed' => 'Google Maps 无法计算路线，请重试。',
     'route_calculated' => ':title 已成功计算。',

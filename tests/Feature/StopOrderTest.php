@@ -106,6 +106,18 @@ class StopOrderTest extends TestCase
         $this->from($url)->post(route('route.preference'), $payload + ['order_mode' => 'manual'])->assertSessionHasNoErrors();
         $this->assertSame($keys, array_column(session('routeResult.stops'), 'route_key'));
         $this->assertSame(2, $collection->items()->count());
+        // Expired dates must be rejected before calling Google for any transport mode.
+        $collection->update(['start_date' => today()->subDays(2), 'end_date' => today()->subDay()]);
+        Http::fake();
+        foreach (['DRIVE', 'WALK', 'TRANSIT', 'BICYCLE'] as $mode) {
+            $this->from($url)->post(route('route.preference'), $payload + ['travel_mode' => $mode])
+                ->assertRedirect($url)
+                ->assertSessionHasErrors(['route' => __('messages.route_departure_past')])
+                ->assertSessionHasInput('destination_keys', $keys);
+        }
+        Http::assertNothingSent();
+        $collection->update(['start_date' => today()->addDay(), 'end_date' => today()->addDays(3)]);
+        $this->fakeRoutes();
         $east = State::create(['state_name' => 'Sabah']);
         $island = Attraction::create(['attraction_name' => 'Mabul Island', 'place_id' => 'mabul', 'state_id' => $east->getKey(), 'location' => 'Sabah']);
         $islandSave = Wishlist::create(['user_id' => $user->getKey(), 'attraction_id' => $island->getKey()]);

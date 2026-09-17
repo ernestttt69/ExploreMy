@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'route_departure_past' => 'Your trip date has passed. Please choose a future date.',
+    'route_departure_suggestion' => 'Public transport from :from to :to is available at :time (Malaysia time). Update your trip dates or times, then generate again to check the full plan.',
     'reward_points_insufficient' => 'You do not have enough Green Points.',
     'attraction_search_required' => 'Please enter a place to search.',
     'attraction_start_required' => 'Please select a start date.',
@@ -42,6 +44,7 @@ return [
     'transport_coordinates_unavailable' => 'Unable to find coordinates for ":origin".',
     'transport_line_required' => 'Please select a valid transport line.',
     'transport_line_missing' => 'Transport line code ":code" was not found.',
+    'route_segment_unavailable' => 'No :mode route was returned from :from to :to for :time. Try another departure time or transport option.',
     'route_api_missing' => 'Google Maps Routes API key is not configured.',
     'route_calculation_failed' => 'Google Maps could not calculate the route. Please try again.',
     'route_calculated' => ':title calculated successfully.',
